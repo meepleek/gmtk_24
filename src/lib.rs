@@ -19,6 +19,8 @@ use bevy::{
 };
 use prelude::*;
 
+const GAME_NAME: &str = "GMTK 2024";
+
 pub struct AppPlugin;
 
 impl Plugin for AppPlugin {
@@ -41,7 +43,7 @@ impl Plugin for AppPlugin {
                 })
                 .set(WindowPlugin {
                     primary_window: Window {
-                        title: "Bevy Jam Template".to_string(),
+                        title: GAME_NAME.to_string(),
                         canvas: Some("#bevy".to_string()),
                         fit_canvas_to_parent: true,
                         prevent_default_event_handling: true,
