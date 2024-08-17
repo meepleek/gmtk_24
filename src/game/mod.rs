@@ -7,7 +7,8 @@ use crate::prelude::*;
 
 pub mod level;
 mod player;
+mod typing;
 
 pub(super) fn plugin(app: &mut App) {
-    app.add_plugins((player::plugin, level::plugin));
+    app.add_plugins((player::plugin, level::plugin, typing::plugin));
 }

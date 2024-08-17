@@ -1,4 +1,12 @@
-# Template
+# 2Do
+
+## Game
+
+- typing loop
+- move using typing - just single chars
+- mine using words
+
+## Template
 
 - [x] game prelude
 - [x] bring in tweening

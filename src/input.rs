@@ -86,7 +86,7 @@ impl UiAction {
             .insert(Self::Select, KeyCode::Space)
             .insert(Self::Select, KeyCode::Enter)
             .insert(Self::Back, KeyCode::Escape)
-            .insert(Self::Reset, KeyCode::KeyR);
+            .insert(Self::Reset, KeyCode::F5);
 
         input_map
     }
