@@ -34,7 +34,6 @@ pub enum Screen {
     Splash,
     #[cfg_attr(feature = "dev", default)]
     Loading,
-    Loaded,
     MainMenu,
     Settings,
     Tutorial,

@@ -4,8 +4,11 @@ use bevy_asset_loader::prelude::*;
 pub(super) fn plugin(app: &mut App) {
     app.add_loading_state(
         LoadingState::new(Screen::Loading)
-            // .continue_to_state(Screen::Loaded)
-            .continue_to_state(Screen::MainMenu)
+            .continue_to_state(if cfg!(feature = "dev") {
+                Screen::Game
+            } else {
+                Screen::MainMenu
+            })
             .load_collection::<SpriteAssets>()
             .load_collection::<SfxAssets>()
             .load_collection::<MusicAssets>(),
