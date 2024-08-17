@@ -10,8 +10,17 @@ pub(super) fn plugin(app: &mut App) {
     app.add_systems(Update, draw_level_grid.run_if(in_game));
 }
 
+#[derive(Component, Debug, Deref, DerefMut)]
+pub(crate) struct Coordinate(pub IVec2);
+
+impl Coordinate {
+    pub(crate) fn to_world(&self) -> Vec3 {
+        (self.0.as_vec2() * GRID_SIZE).extend(0.)
+    }
+}
+
 #[derive(Debug)]
-pub struct SpawnLevel;
+pub(crate) struct SpawnLevel;
 
 impl Command for SpawnLevel {
     fn apply(self, world: &mut World) {

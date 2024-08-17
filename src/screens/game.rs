@@ -20,7 +20,7 @@ pub(super) fn plugin(app: &mut App) {
 
 fn spawn_level(mut commands: Commands) {
     commands.add(SpawnLevel);
-    commands.play_music(MusicTrack::Game);
+    // commands.play_music(MusicTrack::Game);
 }
 
 fn stop_music(mut commands: Commands) {

@@ -1,4 +1,8 @@
 use crate::prelude::*;
+use bevy::input::{
+    keyboard::{Key, KeyboardInput},
+    ButtonState,
+};
 use leafwing_input_manager::prelude::*;
 
 pub(super) fn plugin(app: &mut App) {
@@ -7,7 +11,9 @@ pub(super) fn plugin(app: &mut App) {
         .insert_resource(PlayerAction::input_map())
         .add_plugins(InputManagerPlugin::<UiAction>::default())
         .init_resource::<ActionState<UiAction>>()
-        .insert_resource(UiAction::input_map());
+        .insert_resource(UiAction::input_map())
+        .init_resource::<TypedInput>()
+        .add_systems(Update, (text_input).in_set(AppSet::RecordInput));
 }
 
 #[derive(PartialEq, Eq, Clone, Copy, Hash, Debug, Reflect)]
@@ -96,3 +102,30 @@ impl UiAction {
 pub(crate) type PlayerInput<'a> = Res<'a, ActionState<PlayerAction>>;
 #[allow(dead_code)]
 pub(crate) type UiInput<'a> = Res<'a, ActionState<UiAction>>;
+
+#[derive(Resource, Debug, Deref, DerefMut, Default)]
+pub(crate) struct TypedInput(pub(crate) String);
+
+fn text_input(mut evr_kbd: EventReader<KeyboardInput>, mut typed: ResMut<TypedInput>) {
+    for ev in evr_kbd.read() {
+        if ev.state == ButtonState::Released {
+            continue;
+        }
+        match &ev.logical_key {
+            Key::Enter => {
+                println!("Text input: {}", typed.0);
+            }
+            // todo: handle DEL too?
+            Key::Backspace => {
+                typed.pop();
+            }
+            Key::Character(input) => {
+                if input.chars().any(|c| c.is_control()) {
+                    continue;
+                }
+                typed.push_str(&input.to_lowercase());
+            }
+            _ => {}
+        }
+    }
+}
