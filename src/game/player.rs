@@ -27,7 +27,7 @@ fn spawn_player(In(_config): In<SpawnPlayer>, mut cmd: Commands) {
         SpriteBundle {
             sprite: Sprite {
                 color: Color::WHITE,
-                custom_size: Some(Vec2::splat(100.)),
+                custom_size: Some(Vec2::splat(GRID_SIZE)),
                 ..default()
             },
             ..Default::default()

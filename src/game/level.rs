@@ -1,13 +1,13 @@
 //! Spawn the main level.
 
-use bevy::{ecs::world::Command, prelude::*};
-
 use super::player::SpawnPlayer;
+use crate::prelude::*;
+use bevy::ecs::world::Command;
 
-pub(super) fn plugin(_app: &mut App) {
-    // No setup required for this plugin.
-    // It's still good to have a function here so that we can add some setup
-    // later if needed.
+pub(crate) const GRID_SIZE: f32 = 64.;
+
+pub(super) fn plugin(app: &mut App) {
+    app.add_systems(Update, draw_level_grid.run_if(in_game));
 }
 
 #[derive(Debug)]
@@ -23,4 +23,17 @@ impl Command for SpawnLevel {
         // all executed now, as part of this command.
         world.flush_commands();
     }
+}
+
+fn draw_level_grid(mut gizmos: Gizmos) {
+    gizmos
+        .grid_2d(
+            Vec2::ONE * (GRID_SIZE / 2.),
+            0.0,
+            UVec2::splat(64),
+            Vec2::splat(GRID_SIZE),
+            // Dark gray
+            LinearRgba::gray(0.1),
+        )
+        .outer_edges();
 }
