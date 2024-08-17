@@ -1,8 +1,8 @@
 use crate::prelude::*;
-use bevy::ecs::{system::RunSystemOnce as _, world::Command};
 
 pub(super) fn plugin(app: &mut App) {
     app.register_type::<Player>()
+        .register_ldtk_entity::<PlayerBundle>("Player")
         .add_systems(Update, (process_typed_input, move_player));
 }
 
@@ -10,32 +10,10 @@ pub(super) fn plugin(app: &mut App) {
 #[reflect(Component)]
 pub struct Player;
 
-#[derive(Debug)]
-pub struct SpawnPlayer {
-    pub _max_speed: f32,
-}
-
-impl Command for SpawnPlayer {
-    fn apply(self, world: &mut World) {
-        world.run_system_once_with(self, spawn_player);
-    }
-}
-
-fn spawn_player(In(_config): In<SpawnPlayer>, mut cmd: Commands) {
-    cmd.spawn((
-        Name::new("Player"),
-        Player,
-        SpriteBundle {
-            sprite: Sprite {
-                color: Color::WHITE,
-                custom_size: Some(Vec2::splat(GRID_SIZE)),
-                ..default()
-            },
-            ..Default::default()
-        },
-        Coordinate(IVec2::ZERO),
-        StateScoped(Screen::Game),
-    ));
+#[derive(Default, Bundle, LdtkEntity)]
+struct PlayerBundle {
+    #[sprite_sheet_bundle]
+    sprite_sheet_bundle: LdtkSpriteSheetBundle,
 }
 
 fn process_typed_input(

@@ -9,7 +9,7 @@ pub(crate) use crate::{
         sfx::{Sfx, SfxCommands},
     },
     ext::*,
-    game::level::{Coordinate, GRID_SIZE},
+    game::level::{Coordinate, TILE_SIZE},
     input::{PlayerAction, PlayerInput, TypedInput, UiAction, UiInput},
     math::*,
     screens::{in_game, transition::TransitionScreenCommandExt, Screen},
@@ -18,6 +18,7 @@ pub(crate) use crate::{
     AppSet,
 };
 pub(crate) use bevy::{prelude::*, utils::HashMap};
+pub(crate) use bevy_ecs_ldtk::prelude::*;
 pub(crate) use bevy_tweening::{
     asset_animator_system, component_animator_system, Animator, AssetAnimator, Ease, EaseFunction,
     TweenCompleted,

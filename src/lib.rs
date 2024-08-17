@@ -44,6 +44,7 @@ impl Plugin for AppPlugin {
                 .set(WindowPlugin {
                     primary_window: Window {
                         title: GAME_NAME.to_string(),
+                        resolution: Vec2::splat(1024.).into(),
                         canvas: Some("#bevy".to_string()),
                         fit_canvas_to_parent: true,
                         prevent_default_event_handling: true,

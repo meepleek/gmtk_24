@@ -8,9 +8,12 @@ pub(super) fn plugin(app: &mut App) {
 }
 
 fn spawn_camera(mut cmd: Commands) {
+    let mut camera = Camera2dBundle::default();
+    camera.projection.scale = 0.25;
+    camera.transform.translation = Vec2::splat(1024.0 / 8.0).extend(0.0);
     cmd.spawn((
         Name::new("Camera"),
-        Camera2dBundle::default(),
+        camera,
         // Render all UI to this camera.
         // Not strictly necessary since we only use one camera,
         // but if we don't use this component, our UI will disappear as soon
