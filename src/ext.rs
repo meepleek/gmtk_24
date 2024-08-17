@@ -108,3 +108,18 @@ impl<'w, 's, T: Event> EventReaderExt<T> for EventReader<'w, 's, T> {
         }
     }
 }
+
+pub trait GridCoordsExt {
+    fn to_world(&self) -> Vec3;
+    fn to_world_with_z(&self, z: f32) -> Vec3;
+}
+
+impl GridCoordsExt for GridCoords {
+    fn to_world(&self) -> Vec3 {
+        self.to_world_with_z(0.)
+    }
+
+    fn to_world_with_z(&self, z: f32) -> Vec3 {
+        bevy_ecs_ldtk::utils::grid_coords_to_translation(*self, IVec2::splat(TILE_SIZE)).extend(z)
+    }
+}

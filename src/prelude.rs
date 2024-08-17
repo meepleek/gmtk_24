@@ -9,7 +9,7 @@ pub(crate) use crate::{
         sfx::{Sfx, SfxCommands},
     },
     ext::*,
-    game::level::{Coordinate, TILE_SIZE},
+    game::level::TILE_SIZE,
     input::{PlayerAction, PlayerInput, TypedInput, UiAction, UiInput},
     math::*,
     screens::{in_game, transition::TransitionScreenCommandExt, Screen},
