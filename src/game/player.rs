@@ -42,7 +42,6 @@ fn process_typed_input(
         // "w" => Some(GridCoords::y()),
         // "s" => Some(GridCoords::neg_y()),
         _ => {
-            warn!(?typed, "checking for word");
             for neighbour_coords in coords.neighbours() {
                 let neighbour_e = or_continue_quiet!(level_lookup.get(&neighbour_coords));
                 let mut word = or_continue_quiet!(word_q.get_mut(*neighbour_e));

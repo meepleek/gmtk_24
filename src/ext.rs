@@ -159,7 +159,7 @@ impl GridCoordsExt for GridCoords {
     }
 
     fn left(&self) -> Self {
-        Self::new((self.x + 1).max(0), self.y)
+        Self::new((self.x - 1).max(0), self.y)
     }
 
     fn right(&self) -> Self {

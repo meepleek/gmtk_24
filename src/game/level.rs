@@ -1,3 +1,5 @@
+use bevy::color::palettes::tailwind;
+
 use crate::prelude::*;
 
 pub(crate) const TILE_SIZE: i32 = 16;
@@ -12,7 +14,13 @@ pub(super) fn plugin(app: &mut App) {
         .register_type::<TileWord>()
         .add_systems(
             Update,
-            (draw_level_grid, cache_level_entities, spawn_tile_words).run_if(in_game),
+            (
+                draw_level_grid,
+                cache_level_entities,
+                spawn_tile_words,
+                update_ground_text_sections,
+            )
+                .run_if(in_game),
         )
         .add_systems(OnEnter(Screen::Game), spawn_level)
         .add_systems(OnExit(Screen::Game), teardown_level);
@@ -42,17 +50,19 @@ struct UnbreakableGroundBundle {
     unbreakable_ground: UnbreakableGround,
 }
 
-#[derive(Component, Reflect)]
+#[derive(Component, Reflect, Debug)]
 pub(crate) struct TileWord {
     text: String,
     typed_char_len: usize,
+    text_e: Entity,
 }
 
 impl TileWord {
-    pub(crate) fn new(text: impl Into<String>) -> Self {
+    pub(crate) fn new(text: impl Into<String>, text_e: Entity) -> Self {
         Self {
             text: text.into(),
             typed_char_len: 0,
+            text_e,
         }
     }
 
@@ -62,11 +72,48 @@ impl TileWord {
 
     pub(crate) fn advance(&mut self, count: usize) {
         self.typed_char_len += count;
-        warn!(text = self.text, rem = self.remaining());
     }
 
     pub(crate) fn done(&self) -> bool {
         self.text.len() <= self.typed_char_len
+    }
+
+    pub(crate) fn section(text: impl Into<String>, color: Color) -> TextSection {
+        TextSection::new(
+            text.into(),
+            TextStyle {
+                color,
+                font_size: 24.0,
+                ..default()
+            },
+        )
+    }
+
+    pub(crate) fn done_section(text: impl Into<String>) -> TextSection {
+        Self::section(text, tailwind::GRAY_400.into())
+    }
+
+    pub(crate) fn text_sections(&self) -> Vec<TextSection> {
+        let mut res = Vec::with_capacity(4);
+        if self.typed_char_len > 0 {
+            res.push(Self::done_section(
+                self.text[..self.typed_char_len].to_string(),
+            ));
+        }
+        if !self.done() {
+            res.push(Self::section("|", tailwind::GRAY_950.into()));
+            let next_char_i = self.typed_char_len + 1;
+            res.push(Self::section(
+                self.text[self.typed_char_len..next_char_i].to_string(),
+                tailwind::GREEN_700.into(),
+            ));
+            res.push(Self::section(
+                self.text[next_char_i..].to_string(),
+                tailwind::GRAY_950.into(),
+            ));
+        }
+
+        res
     }
 }
 
@@ -115,10 +162,43 @@ const WORDS: &[&str] = &["bar", "baz", "test", "dig"];
 fn spawn_tile_words(ground_q: Query<Entity, Added<Ground>>, mut cmd: Commands) {
     let mut rng = thread_rng();
     for e in &ground_q {
+        let word = *WORDS.choose(&mut rng).expect("random word picked");
+        let mut text_e = None;
         let mut e_cmd = or_continue!(cmd.get_entity(e));
-        e_cmd.try_insert(TileWord::new(
-            *WORDS.choose(&mut rng).expect("random word picked"),
-        ));
+        e_cmd
+            .with_children(|b| {
+                text_e = Some(
+                    b.spawn(Text2dBundle {
+                        text: Text::from_sections(vec![TileWord::done_section(word)]),
+                        transform: Transform::from_translation(Vec2::ZERO.extend(0.1))
+                            .with_scale(Vec2::splat(0.25).extend(1.)),
+                        ..default()
+                    })
+                    .id(),
+                );
+            })
+            .try_insert(TileWord::new(word, text_e.unwrap()))
+            .add_child(text_e.unwrap());
+    }
+}
+
+fn update_ground_text_sections(
+    word_q: Query<&TileWord, Changed<TileWord>>,
+    mut text_q: Query<&mut Text>,
+) {
+    for word in &word_q {
+        let mut text = or_continue!(text_q.get_mut(word.text_e));
+        text.sections = word.text_sections();
+    }
+}
+
+// tween text in/out as the player approaches/leaves
+fn tween_ground_texts(
+    player_q: Query<(Entity, &GridCoords), (With<Player>, Changed<GridCoords>)>,
+    mut cmd: Commands,
+) {
+    for (e, coord) in &player_q {
+        cmd.tween_translation(e, coord.to_world(), 110, EaseFunction::QuadraticOut);
     }
 }
 
