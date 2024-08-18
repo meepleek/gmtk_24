@@ -5,7 +5,7 @@ pub(super) fn plugin(app: &mut App) {
         .register_ldtk_entity::<PlayerBundle>("Player")
         .add_systems(
             Update,
-            (process_typed_input, move_player).run_if(level_ready),
+            (process_typed_input, tween_player_movement).run_if(level_ready),
         );
 }
 
@@ -26,7 +26,7 @@ fn process_typed_input(
     mut typed: ResMut<TypedInput>,
     mut player_q: Query<&mut GridCoords, With<Player>>,
     level_lookup: Res<LevelEntityLookup>,
-    ground_q: Query<&Ground>,
+    ground_q: Query<(), Or<(With<Ground>, With<UnbreakableGround>)>>,
 ) {
     if let Some(move_by) = match typed.as_str() {
         "a" => Some(GridCoords::new(-1, 0)),
@@ -54,7 +54,7 @@ fn process_typed_input(
     }
 }
 
-fn move_player(
+fn tween_player_movement(
     player_q: Query<(Entity, &GridCoords), (With<Player>, Changed<GridCoords>)>,
     mut cmd: Commands,
 ) {

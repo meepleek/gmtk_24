@@ -5,12 +5,10 @@ pub(crate) const TILE_SIZE: i32 = 16;
 pub(super) fn plugin(app: &mut App) {
     app.add_plugins(LdtkPlugin)
         .register_ldtk_int_cell::<GroundBundle>(1)
-        .register_ldtk_int_cell::<GroundBundle>(2)
-        // .register_ldtk_int_cell::<BoundaryBundle>(2)
+        .register_ldtk_int_cell::<UnbreakableGroundBundle>(2)
         .insert_resource(LevelSelection::index(0))
         // .insert_resource(LevelSelection::index(1))
         .register_type::<LevelEntityLookup>()
-        .register_type::<Ground>()
         .add_systems(
             Update,
             (draw_level_grid.run_if(in_game), cache_level_entities),
@@ -24,34 +22,21 @@ pub(super) fn plugin(app: &mut App) {
 pub(crate) struct LevelEntityLookup(pub HashMap<GridCoords, Entity>);
 
 // todo: make this an enum & use the intgrid value to determine the variant
-#[derive(Component, Reflect)]
-pub(crate) enum Ground {
-    Unbreakable,
-    Rock,
-}
+#[derive(Component, Default)]
+pub(crate) struct Ground;
 
-impl From<IntGridCell> for Ground {
-    fn from(cell: IntGridCell) -> Self {
-        match cell.value {
-            1 => Ground::Rock,
-            _ => Ground::Unbreakable,
-        }
-    }
-}
-
-#[derive(Bundle, LdtkIntCell)]
+#[derive(Default, Bundle, LdtkIntCell)]
 struct GroundBundle {
-    #[from_int_grid_cell]
     ground: Ground,
 }
 
-// #[derive(Default, Component)]
-// struct Boundary;
+#[derive(Default, Component)]
+pub(crate) struct UnbreakableGround;
 
-// #[derive(Default, Bundle, LdtkIntCell)]
-// struct BoundaryBundle {
-//     boundary: Boundary,
-// }
+#[derive(Default, Bundle, LdtkIntCell)]
+struct UnbreakableGroundBundle {
+    unbreakable_ground: UnbreakableGround,
+}
 
 pub(crate) fn level_ready(lookup: Option<Res<LevelEntityLookup>>) -> bool {
     lookup.is_some()
