@@ -9,10 +9,7 @@ pub(super) fn plugin(app: &mut App) {
         .insert_resource(LevelSelection::index(0))
         // .insert_resource(LevelSelection::index(1))
         .register_type::<LevelEntityLookup>()
-        .add_systems(
-            Update,
-            (draw_level_grid, cache_level_entities).run_if(in_game),
-        )
+        .add_systems(Update, (cache_level_entities).run_if(in_game))
         .add_systems(OnEnter(Screen::Game), spawn_level)
         .add_systems(OnExit(Screen::Game), teardown_level);
 }
@@ -80,17 +77,4 @@ fn cache_level_entities(
             cmd.insert_resource(LevelEntityLookup(coords_entity_lookup));
         }
     }
-}
-
-fn draw_level_grid(mut gizmos: Gizmos) {
-    gizmos
-        .grid_2d(
-            Vec2::ZERO,
-            0.0,
-            UVec2::splat(64),
-            Vec2::splat(TILE_SIZE as f32),
-            // Dark gray
-            LinearRgba::gray(0.1),
-        )
-        .outer_edges();
 }
