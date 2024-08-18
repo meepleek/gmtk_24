@@ -7,7 +7,7 @@
 - mine using words
   - [x] type words
   - [x] remove ground when fully typed
-- [ ] fix level reset
+- [x] fix level reset
 - [ ] get a reasonable word collection to pull from
 - [ ] don't use words with movement characters/keys
 - [ ] add exit

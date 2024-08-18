@@ -11,7 +11,8 @@ pub(super) fn plugin(app: &mut App) {
             })
             .load_collection::<SpriteAssets>()
             .load_collection::<SfxAssets>()
-            .load_collection::<MusicAssets>(),
+            .load_collection::<MusicAssets>()
+            .load_collection::<WordlistAssets>(),
     );
     // app.add_systems(Startup, setup_particles);
 }
@@ -24,6 +25,12 @@ pub fn assets_exist(
     // particles: Option<Res<ParticleAssets>>,
 ) -> bool {
     sprites.is_some() && sfx.is_some() && music.is_some() /*&& particles.is_some()*/
+}
+
+#[derive(AssetCollection, Resource)]
+pub struct WordlistAssets {
+    #[asset(path = "en.words.txt")]
+    pub en: Handle<WordList>,
 }
 
 // https://github.com/NiklasEi/bevy_asset_loader?tab=readme-ov-file#supported-asset-fields

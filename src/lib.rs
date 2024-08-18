@@ -12,6 +12,7 @@ mod screens;
 mod theme;
 mod time;
 mod tween;
+mod word_loader;
 
 use bevy::{
     asset::AssetMetaCheck,
@@ -64,6 +65,7 @@ impl Plugin for AppPlugin {
 
         // Add other plugins.
         app.add_plugins((
+            word_loader::plugin,
             game::plugin,
             screens::plugin,
             theme::plugin,
