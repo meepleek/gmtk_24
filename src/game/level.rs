@@ -4,24 +4,28 @@ pub(crate) const TILE_SIZE: i32 = 16;
 
 pub(super) fn plugin(app: &mut App) {
     app.add_plugins(LdtkPlugin)
-        .register_ldtk_int_cell::<GroundBundle>(1)
-        .register_ldtk_int_cell::<UnbreakableGroundBundle>(2)
+        .register_ldtk_int_cell::<UnbreakableGroundBundle>(1)
+        .register_ldtk_int_cell::<GroundBundle>(2)
         .insert_resource(LevelSelection::index(0))
         // .insert_resource(LevelSelection::index(1))
         .register_type::<LevelEntityLookup>()
+        .register_type::<TileWord>()
         .add_systems(
             Update,
-            (draw_level_grid.run_if(in_game), cache_level_entities),
+            (draw_level_grid, cache_level_entities, spawn_tile_words).run_if(in_game),
         )
         .add_systems(OnEnter(Screen::Game), spawn_level)
         .add_systems(OnExit(Screen::Game), teardown_level);
+}
+
+pub(crate) fn level_ready(lookup: Option<Res<LevelEntityLookup>>) -> bool {
+    lookup.is_some()
 }
 
 #[derive(Resource, Deref, DerefMut, Reflect)]
 #[reflect(Resource)]
 pub(crate) struct LevelEntityLookup(pub HashMap<GridCoords, Entity>);
 
-// todo: make this an enum & use the intgrid value to determine the variant
 #[derive(Component, Default)]
 pub(crate) struct Ground;
 
@@ -38,8 +42,32 @@ struct UnbreakableGroundBundle {
     unbreakable_ground: UnbreakableGround,
 }
 
-pub(crate) fn level_ready(lookup: Option<Res<LevelEntityLookup>>) -> bool {
-    lookup.is_some()
+#[derive(Component, Reflect)]
+pub(crate) struct TileWord {
+    text: String,
+    typed_char_len: usize,
+}
+
+impl TileWord {
+    pub(crate) fn new(text: impl Into<String>) -> Self {
+        Self {
+            text: text.into(),
+            typed_char_len: 0,
+        }
+    }
+
+    pub(crate) fn remaining(&self) -> String {
+        self.text.chars().skip(self.typed_char_len).collect()
+    }
+
+    pub(crate) fn advance(&mut self, count: usize) {
+        self.typed_char_len += count;
+        warn!(text = self.text, rem = self.remaining());
+    }
+
+    pub(crate) fn done(&self) -> bool {
+        self.text.len() <= self.typed_char_len
+    }
 }
 
 fn spawn_level(ass: Res<AssetServer>, mut cmd: Commands) {
@@ -79,6 +107,18 @@ fn cache_level_entities(
                 .collect();
             cmd.insert_resource(LevelEntityLookup(coords_entity_lookup));
         }
+    }
+}
+
+const WORDS: &[&str] = &["bar", "baz", "test", "dig"];
+
+fn spawn_tile_words(ground_q: Query<Entity, Added<Ground>>, mut cmd: Commands) {
+    let mut rng = thread_rng();
+    for e in &ground_q {
+        let mut e_cmd = or_continue!(cmd.get_entity(e));
+        e_cmd.try_insert(TileWord::new(
+            *WORDS.choose(&mut rng).expect("random word picked"),
+        ));
     }
 }
 

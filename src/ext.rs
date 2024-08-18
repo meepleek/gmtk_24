@@ -1,5 +1,7 @@
 #![allow(dead_code)]
 
+use bevy::utils::HashSet;
+
 use crate::prelude::*;
 
 pub trait Vec2Ext {
@@ -112,6 +114,15 @@ impl<'w, 's, T: Event> EventReaderExt<T> for EventReader<'w, 's, T> {
 pub trait GridCoordsExt {
     fn to_world(&self) -> Vec3;
     fn to_world_with_z(&self, z: f32) -> Vec3;
+    fn x() -> Self;
+    fn neg_x() -> Self;
+    fn y() -> Self;
+    fn neg_y() -> Self;
+    fn up(&self) -> Self;
+    fn down(&self) -> Self;
+    fn left(&self) -> Self;
+    fn right(&self) -> Self;
+    fn neighbours(&self) -> Vec<GridCoords>;
 }
 
 impl GridCoordsExt for GridCoords {
@@ -121,5 +132,42 @@ impl GridCoordsExt for GridCoords {
 
     fn to_world_with_z(&self, z: f32) -> Vec3 {
         bevy_ecs_ldtk::utils::grid_coords_to_translation(*self, IVec2::splat(TILE_SIZE)).extend(z)
+    }
+
+    fn y() -> Self {
+        Self::new(0, 1)
+    }
+
+    fn neg_y() -> Self {
+        Self::new(0, -1)
+    }
+
+    fn x() -> Self {
+        Self::new(1, 0)
+    }
+
+    fn neg_x() -> Self {
+        Self::new(-1, 0)
+    }
+
+    fn up(&self) -> Self {
+        Self::new(self.x, (self.y - 1).max(0))
+    }
+
+    fn down(&self) -> Self {
+        Self::new(self.x, self.y + 1)
+    }
+
+    fn left(&self) -> Self {
+        Self::new((self.x + 1).max(0), self.y)
+    }
+
+    fn right(&self) -> Self {
+        Self::new(self.x + 1, self.y)
+    }
+
+    fn neighbours(&self) -> Vec<GridCoords> {
+        let res = HashSet::from([self.up(), self.down(), self.left(), self.right()]);
+        res.into_iter().collect()
     }
 }

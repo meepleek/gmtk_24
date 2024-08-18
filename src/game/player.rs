@@ -1,5 +1,7 @@
 use crate::prelude::*;
 
+use super::level::TileWord;
+
 pub(super) fn plugin(app: &mut App) {
     app.register_type::<Player>()
         .register_ldtk_entity::<PlayerBundle>("Player")
@@ -27,20 +29,33 @@ fn process_typed_input(
     mut player_q: Query<&mut GridCoords, With<Player>>,
     level_lookup: Res<LevelEntityLookup>,
     ground_q: Query<(), Or<(With<Ground>, With<UnbreakableGround>)>>,
+    mut word_q: Query<&mut TileWord>,
 ) {
+    let mut coords = or_return!(player_q.get_single_mut());
+
     if let Some(move_by) = match typed.as_str() {
-        "a" => Some(GridCoords::new(-1, 0)),
-        "d" => Some(GridCoords::new(1, 0)),
-        "w" => Some(GridCoords::new(0, 1)),
-        "s" => Some(GridCoords::new(0, -1)),
+        "" => return,
+        // "a" => Some(GridCoords::neg_x()),
+        // "d" => Some(GridCoords::x()),
+        "n" => Some(GridCoords::neg_x()),
+        "o" => Some(GridCoords::x()),
+        // "w" => Some(GridCoords::y()),
+        // "s" => Some(GridCoords::neg_y()),
         _ => {
-            // todo?
+            warn!(?typed, "checking for word");
+            for neighbour_coords in coords.neighbours() {
+                let neighbour_e = or_continue_quiet!(level_lookup.get(&neighbour_coords));
+                let mut word = or_continue_quiet!(word_q.get_mut(*neighbour_e));
+                if word.remaining().starts_with(&typed.0) {
+                    word.advance(typed.len());
+                }
+            }
+
             typed.clear();
             None
         }
     } {
         typed.clear();
-        let mut coords = or_return!(player_q.get_single_mut());
         let new_coords = *coords + move_by;
 
         if let Some(e) = level_lookup.get(&new_coords) {
