@@ -20,6 +20,7 @@ enum PlayMusic {
     Disable,
 }
 
+#[allow(dead_code)]
 #[derive(Debug)]
 pub(crate) enum MusicTrack {
     MainMenu,
