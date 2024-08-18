@@ -22,4 +22,5 @@ fn spawn_camera(mut cmd: Commands) {
         // for debugging. So it's good to have this here for future-proofing.
         IsDefaultUiCamera,
     ));
+    cmd.insert_resource(Msaa::Off);
 }
