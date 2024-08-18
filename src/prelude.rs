@@ -19,7 +19,7 @@ pub(crate) use crate::{
     screens::{in_game, transition::TransitionScreenCommandExt, Screen},
     theme::prelude::*,
     time::*,
-    word_loader::WordList,
+    word_loader::WordListSource,
     AppSet,
 };
 pub(crate) use bevy::{prelude::*, utils::HashMap};

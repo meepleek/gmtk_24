@@ -1,10 +1,15 @@
-use crate::prelude::*;
+use crate::{assets::WordlistAssets, prelude::*};
 use bevy::{color::palettes::tailwind, utils::HashSet};
 
 pub(super) fn plugin(app: &mut App) {
     app.register_type::<TileWord>()
         .add_event::<WordAdvancedEvent>()
         .add_event::<WordFinishedEvent>()
+        .add_systems(OnExit(Screen::Loading), update_word_list)
+        .add_systems(
+            Update,
+            update_word_list.run_if(assets_exist.and_then(resource_changed::<MovementBindings>)),
+        )
         .add_systems(
             Update,
             (spawn_tile_words, update_ground_text_sections).run_if(in_game),
@@ -13,6 +18,13 @@ pub(super) fn plugin(app: &mut App) {
             Update,
             (tween_ground_texts, tween_out_finished_words).run_if(level_ready),
         );
+}
+
+#[derive(Resource, Reflect, Debug, Deref, DerefMut)]
+pub struct WordList {
+    ground_words: Vec<String>,
+    // other words for bosses etc
+    // enemy_words: Vec<String>,
 }
 
 #[derive(Component, Reflect, Debug)]
@@ -85,6 +97,42 @@ impl TileWord {
     }
 }
 
+fn update_word_list(
+    wordlists: Res<Assets<WordListSource>>,
+    wordlist_assets: Res<WordlistAssets>,
+    bindings: Res<MovementBindings>,
+    mut cmd: Commands,
+) {
+    let blacklist = [
+        &bindings.up,
+        &bindings.down,
+        &bindings.left,
+        &bindings.right,
+    ];
+    let source = or_return!(wordlists.get(&wordlist_assets.en));
+    let mut words: Vec<_> = source
+        .0
+        .iter()
+        .filter(|w| {
+            blacklist
+                .iter()
+                .any(|blacklisted| !w.contains(*blacklisted))
+        })
+        .cloned()
+        .collect();
+    words.sort_unstable_by_key(|w| w.len());
+    let split_i = or_return!(words.iter().enumerate().find_map(|(i, w)| if w.len() > 5 {
+        Some(i)
+    } else {
+        None
+    }));
+    let _longer_words = words.split_off(split_i);
+
+    cmd.insert_resource(WordList {
+        ground_words: words,
+    });
+}
+
 fn tile_word_text_sections<'a>(
     text: impl Into<&'a str>,
     typed_len: usize,
@@ -118,12 +166,17 @@ fn tile_word_text_sections<'a>(
 #[derive(Component, Default)]
 struct TileWordVisible;
 
-const WORDS: &[&str] = &["bar", "baz", "prat", "brat", "butt", "put"];
-
-fn spawn_tile_words(ground_q: Query<Entity, Added<Ground>>, mut cmd: Commands) {
+fn spawn_tile_words(
+    ground_q: Query<Entity, Added<Ground>>,
+    mut cmd: Commands,
+    wordlist: Res<WordList>,
+) {
     let mut rng = thread_rng();
     for e in &ground_q {
-        let word = *WORDS.choose(&mut rng).expect("random word picked");
+        let word = &wordlist
+            .ground_words
+            .choose(&mut rng)
+            .expect("random word picked");
         let mut text_e = None;
         let mut e_cmd = or_continue!(cmd.get_entity(e));
         e_cmd
@@ -131,7 +184,7 @@ fn spawn_tile_words(ground_q: Query<Entity, Added<Ground>>, mut cmd: Commands) {
                 text_e = Some(
                     b.spawn(Text2dBundle {
                         text: Text::from_sections(tile_word_text_sections(
-                            word,
+                            word.as_str(),
                             0,
                             WordStatus::Pristine,
                             0.0,
@@ -143,7 +196,7 @@ fn spawn_tile_words(ground_q: Query<Entity, Added<Ground>>, mut cmd: Commands) {
                     .id(),
                 );
             })
-            .try_insert(TileWord::new(word, text_e.unwrap()))
+            .try_insert(TileWord::new(word.to_string(), text_e.unwrap()))
             .add_child(text_e.unwrap());
     }
 }

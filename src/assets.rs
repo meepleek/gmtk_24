@@ -22,15 +22,17 @@ pub fn assets_exist(
     sprites: Option<Res<SpriteAssets>>,
     sfx: Option<Res<SfxAssets>>,
     music: Option<Res<MusicAssets>>,
+    wordlists: Option<Res<WordlistAssets>>,
     // particles: Option<Res<ParticleAssets>>,
 ) -> bool {
-    sprites.is_some() && sfx.is_some() && music.is_some() /*&& particles.is_some()*/
+    sprites.is_some() && sfx.is_some() && music.is_some() && wordlists.is_some()
+    /*&& particles.is_some()*/
 }
 
 #[derive(AssetCollection, Resource)]
 pub struct WordlistAssets {
     #[asset(path = "en.words.txt")]
-    pub en: Handle<WordList>,
+    pub en: Handle<WordListSource>,
 }
 
 // https://github.com/NiklasEi/bevy_asset_loader?tab=readme-ov-file#supported-asset-fields

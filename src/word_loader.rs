@@ -6,17 +6,17 @@ use bevy::{
 
 pub(super) fn plugin(app: &mut App) {
     app.init_asset_loader::<WordListLoader>()
-        .init_asset::<WordList>();
+        .init_asset::<WordListSource>();
 }
 
 #[derive(Asset, TypePath, Debug)]
-pub(crate) struct WordList(Vec<String>);
+pub(crate) struct WordListSource(pub Vec<String>);
 
 #[derive(Default)]
 struct WordListLoader;
 
 impl AssetLoader for WordListLoader {
-    type Asset = WordList;
+    type Asset = WordListSource;
     type Settings = ();
     type Error = std::io::Error;
     async fn load<'a>(
@@ -34,7 +34,7 @@ impl AssetLoader for WordListLoader {
             .map(|l| l.trim().to_string())
             .filter(|w| !w.is_empty())
             .collect();
-        Ok(WordList(words))
+        Ok(WordListSource(words))
     }
 
     fn extensions(&self) -> &[&str] {
