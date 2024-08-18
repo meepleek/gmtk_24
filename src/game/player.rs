@@ -3,7 +3,10 @@ use crate::prelude::*;
 pub(super) fn plugin(app: &mut App) {
     app.register_type::<Player>()
         .register_ldtk_entity::<PlayerBundle>("Player")
-        .add_systems(Update, (process_typed_input, move_player));
+        .add_systems(
+            Update,
+            (process_typed_input, move_player).run_if(level_ready),
+        );
 }
 
 #[derive(Component, Debug, Default, Reflect)]
@@ -22,6 +25,8 @@ struct PlayerBundle {
 fn process_typed_input(
     mut typed: ResMut<TypedInput>,
     mut player_q: Query<&mut GridCoords, With<Player>>,
+    level_lookup: Res<LevelEntityLookup>,
+    ground_q: Query<&Ground>,
 ) {
     if let Some(move_by) = match typed.as_str() {
         "a" => Some(GridCoords::new(-1, 0)),
@@ -37,6 +42,14 @@ fn process_typed_input(
         typed.clear();
         let mut coords = or_return!(player_q.get_single_mut());
         let new_coords = *coords + move_by;
+
+        if let Some(e) = level_lookup.get(&new_coords) {
+            if ground_q.contains(*e) {
+                // todo: hit wall feedback
+                return;
+            }
+        }
+
         *coords = new_coords;
     }
 }
