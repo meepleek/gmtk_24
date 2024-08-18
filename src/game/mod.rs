@@ -5,10 +5,11 @@
 
 use crate::prelude::*;
 
+pub mod goal;
 pub mod level;
 pub mod player;
 pub mod word;
 
 pub(super) fn plugin(app: &mut App) {
-    app.add_plugins((player::plugin, level::plugin, word::plugin));
+    app.add_plugins((player::plugin, level::plugin, word::plugin, goal::plugin));
 }
