@@ -14,7 +14,7 @@ pub(crate) use crate::{
         player::Player,
         word::{WordAdvancedEvent, WordFinishedEvent, WordStatus},
     },
-    input::{MovementBindings, PlayerAction, PlayerInput, TypedInput, UiAction, UiInput},
+    input::{MovementBindings, TypedInput, UiAction, UiInput},
     math::*,
     screens::{in_game, transition::TransitionScreenCommandExt, Screen},
     theme::prelude::*,

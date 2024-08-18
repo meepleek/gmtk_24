@@ -7,20 +7,11 @@ use leafwing_input_manager::prelude::*;
 
 pub(super) fn plugin(app: &mut App) {
     app.init_resource::<MovementBindings>()
-        .add_plugins(InputManagerPlugin::<PlayerAction>::default())
-        .init_resource::<ActionState<PlayerAction>>()
-        .insert_resource(PlayerAction::input_map())
         .add_plugins(InputManagerPlugin::<UiAction>::default())
         .init_resource::<ActionState<UiAction>>()
         .insert_resource(UiAction::input_map())
         .init_resource::<TypedInput>()
         .add_systems(Update, (text_input).in_set(AppSet::RecordInput));
-}
-
-#[derive(PartialEq, Eq, Clone, Copy, Hash, Debug, Reflect)]
-pub enum PlayerAction {
-    Move,
-    Jump,
 }
 
 #[derive(Resource, Reflect)]
@@ -43,33 +34,6 @@ impl Default for MovementBindings {
             left: "n".to_string(),
             right: "o".to_string(),
         }
-    }
-}
-
-impl Actionlike for PlayerAction {
-    fn input_control_kind(&self) -> InputControlKind {
-        match self {
-            PlayerAction::Move => InputControlKind::DualAxis,
-            _ => InputControlKind::Button,
-        }
-    }
-}
-
-impl PlayerAction {
-    fn input_map() -> InputMap<Self> {
-        let mut input_map = InputMap::default();
-
-        // gamepad
-        input_map.insert_dual_axis(Self::Move, GamepadStick::LEFT);
-        input_map.insert_dual_axis(Self::Move, GamepadVirtualDPad::DPAD);
-        input_map.insert(Self::Jump, GamepadButtonType::South);
-
-        // MKB
-        input_map.insert_dual_axis(Self::Move, KeyboardVirtualDPad::WASD);
-        input_map.insert_dual_axis(Self::Move, KeyboardVirtualDPad::ARROW_KEYS);
-        input_map.insert(Self::Jump, MouseButton::Left);
-
-        input_map
     }
 }
 
@@ -122,8 +86,6 @@ impl UiAction {
     }
 }
 
-#[allow(dead_code)]
-pub(crate) type PlayerInput<'a> = Res<'a, ActionState<PlayerAction>>;
 #[allow(dead_code)]
 pub(crate) type UiInput<'a> = Res<'a, ActionState<UiAction>>;
 
