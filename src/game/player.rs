@@ -94,6 +94,7 @@ fn move_player_to_finished_word_cell(
     coords_q: Query<&GridCoords, Without<Player>>,
 ) {
     // only move when there's an exactly ONE finished word
+    // todo: instead of doing that, move only in the facing/last move direction
     if word_finished_evr.len() != 1 {
         word_finished_evr.clear();
         return;
