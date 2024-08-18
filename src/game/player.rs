@@ -43,10 +43,12 @@ fn process_typed_input(
         "" => return,
         // "a" => Some(GridCoords::neg_x()),
         // "d" => Some(GridCoords::x()),
-        "n" => Some(GridCoords::neg_x()),
-        "o" => Some(GridCoords::x()),
         // "w" => Some(GridCoords::y()),
         // "s" => Some(GridCoords::neg_y()),
+        "n" => Some(GridCoords::neg_x()),
+        "o" => Some(GridCoords::x()),
+        "i" => Some(GridCoords::y()),
+        "e" => Some(GridCoords::neg_y()),
         _ => {
             for neighbour_coords in coords.neighbours() {
                 let neighbour_e = or_continue_quiet!(level_lookup.get(&neighbour_coords));

@@ -118,7 +118,7 @@ fn tile_word_text_sections<'a>(
 #[derive(Component, Default)]
 struct TileWordVisible;
 
-const WORDS: &[&str] = &["bar", "baz", "test", "dig"];
+const WORDS: &[&str] = &["bar", "baz", "prat", "brat", "butt", "put"];
 
 fn spawn_tile_words(ground_q: Query<Entity, Added<Ground>>, mut cmd: Commands) {
     let mut rng = thread_rng();

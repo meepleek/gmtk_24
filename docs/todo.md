@@ -6,7 +6,16 @@
 - [x] move using typing - just single chars
 - mine using words
   - [x] type words
-  - [ ] remove ground when fully typed
+  - [x] remove ground when fully typed
+- [ ] fix level reset
+- [ ] get a reasonable word collection to pull from
+- [ ] don't use words with movement characters/keys
+- [ ] add exit
+- [ ] move to next level
+- [ ] add gravity enabled rocks that can crush the player
+- [ ] add lvl fog of war
+- [ ] add patrolling enemy
+- [ ] highlight neighbour tiles
 
 ## Template
 
