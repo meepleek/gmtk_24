@@ -10,10 +10,10 @@
 - [x] fix level reset
 - [x] get a reasonable word collection to pull from
 - [x] don't use words with movement characters/keys
-- [ ] add exit
-- [ ] move to next level
-- [ ] add gravity enabled rocks that can crush the player
+- [x] add exit
+- [x] move to next level
 - [ ] add lvl fog of war
+- [ ] add gravity enabled rocks that can crush the player
 - [ ] add patrolling enemy
 - [ ] highlight neighbour tiles
 
