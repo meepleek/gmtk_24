@@ -30,6 +30,8 @@ fn process_typed_input(
     level_lookup: Res<LevelEntityLookup>,
     ground_q: Query<(), Or<(With<Ground>, With<UnbreakableGround>)>>,
     mut word_q: Query<&mut TileWord>,
+    mut word_advanced_evw: EventWriter<WordAdvancedEvent>,
+    mut word_finished_evw: EventWriter<WordFinishedEvent>,
 ) {
     let mut coords = or_return!(player_q.get_single_mut());
 
@@ -47,6 +49,12 @@ fn process_typed_input(
                 let mut word = or_continue_quiet!(word_q.get_mut(*neighbour_e));
                 if word.remaining().starts_with(&typed.0) {
                     word.advance(typed.len());
+                }
+
+                if word.finished() {
+                    word_finished_evw.send(WordFinishedEvent(*neighbour_e));
+                } else {
+                    word_advanced_evw.send(WordAdvancedEvent(*neighbour_e));
                 }
             }
 

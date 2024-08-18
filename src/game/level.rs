@@ -12,6 +12,8 @@ pub(super) fn plugin(app: &mut App) {
         // .insert_resource(LevelSelection::index(1))
         .register_type::<LevelEntityLookup>()
         .register_type::<TileWord>()
+        .add_event::<WordAdvancedEvent>()
+        .add_event::<WordFinishedEvent>()
         .add_systems(
             Update,
             (
@@ -58,6 +60,12 @@ pub(crate) struct TileWord {
     text_e: Entity,
 }
 
+#[derive(Event, Debug, Reflect)]
+pub(crate) struct WordAdvancedEvent(pub Entity);
+
+#[derive(Event, Debug, Reflect)]
+pub(crate) struct WordFinishedEvent(pub Entity);
+
 impl TileWord {
     pub(crate) fn new(text: impl Into<String>, text_e: Entity) -> Self {
         Self {
@@ -75,7 +83,7 @@ impl TileWord {
         self.typed_char_len += count;
     }
 
-    pub(crate) fn done(&self) -> bool {
+    pub(crate) fn finished(&self) -> bool {
         self.text.len() <= self.typed_char_len
     }
 
@@ -106,7 +114,7 @@ impl TileWord {
                 alpha,
             ));
         }
-        if !self.done() {
+        if !self.finished() {
             res.push(Self::section(
                 "|",
                 tailwind::GRAY_300.with_alpha(alpha).into(),
@@ -195,14 +203,28 @@ fn spawn_tile_words(ground_q: Query<Entity, Added<Ground>>, mut cmd: Commands) {
 }
 
 fn update_ground_text_sections(
-    word_q: Query<&TileWord, Changed<TileWord>>,
+    mut word_advanced_evr: EventReader<WordAdvancedEvent>,
+    mut word_finished_evr: EventReader<WordFinishedEvent>,
+    word_q: Query<&TileWord>,
     mut text_q: Query<&mut Text>,
 ) {
-    for word in &word_q {
+    let mut entities: Vec<_> = word_advanced_evr.read().map(|ev| ev.0).collect();
+    entities.extend(word_finished_evr.read().map(|ev| ev.0));
+    for word_e in entities {
+        let word = or_continue!(word_q.get(word_e));
         let mut text = or_continue!(text_q.get_mut(word.text_e));
         text.sections = word.text_sections(if word.damaged() { 1.0 } else { 0.0 });
     }
 }
+
+// fn remove_finished_words(
+//     word_q: Query<&TileWord, Changed<TileWord>>,
+//     mut text_q: Query<&mut Text>,
+// ) {
+//     for word in word_q.iter().filter(|w| w.finished()) {
+//         // cmd.tween_text_alpha(word.text_e, 0.0, 110, EaseFunction::QuadraticOut);
+//     }
+// }
 
 // tween text in/out as the player approaches/leaves
 fn tween_ground_texts(
@@ -240,6 +262,7 @@ fn tween_ground_texts(
             cmd_e.try_insert(TileWordVisible);
             cmd.tween_text_alpha(
                 word.text_e,
+                // opacity based on distance from player
                 1.0 - ((dist - 1.0) / radius as f32) * 0.8,
                 110,
                 EaseFunction::QuadraticOut,
@@ -247,6 +270,7 @@ fn tween_ground_texts(
         }
     }
 }
+
 fn draw_level_grid(mut gizmos: Gizmos) {
     gizmos
         .grid_2d(
