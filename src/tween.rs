@@ -132,6 +132,15 @@ relative_tween_impl!(
 );
 
 relative_tween_impl!(
+    text_alpha,
+    Animator,
+    Text,
+    TextRelativeAlphaLens,
+    Vec<f32>,
+    f32
+);
+
+relative_tween_impl!(
     ui_bg_color,
     Animator,
     BackgroundColor,
@@ -225,6 +234,46 @@ impl Lens<Text> for TextRelativeColorLens {
     ) {
         self.start
             .get_or_insert_with(|| target.sections.iter().map(|s| s.style.color).collect());
+    }
+}
+
+#[derive(Default)]
+pub struct TextRelativeAlphaLens {
+    pub start: Option<Vec<f32>>,
+    pub end: f32,
+}
+
+impl TextRelativeAlphaLens {
+    pub fn relative(end: f32) -> Self {
+        Self { start: None, end }
+    }
+}
+
+impl Lens<Text> for TextRelativeAlphaLens {
+    fn lerp(&mut self, target: &mut dyn Targetable<Text>, ratio: f32) {
+        for i in 0..target.sections.len() {
+            if let Some(alpha) = self.start.as_ref().unwrap().get(i) {
+                target.sections[i]
+                    .style
+                    .color
+                    .set_alpha((*alpha).lerp(self.end, ratio));
+            }
+        }
+    }
+
+    fn update_on_tween_start(
+        &mut self,
+        target: &mut dyn Targetable<Text>,
+        _direction: TweeningDirection,
+        _times_completed: i32,
+    ) {
+        self.start.get_or_insert_with(|| {
+            target
+                .sections
+                .iter()
+                .map(|s| s.style.color.alpha())
+                .collect()
+        });
     }
 }
 
