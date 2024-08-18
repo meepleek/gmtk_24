@@ -109,15 +109,12 @@ fn update_word_list(
         &bindings.left,
         &bindings.right,
     ];
+    warn!(?blacklist);
     let source = or_return!(wordlists.get(&wordlist_assets.en));
     let mut words: Vec<_> = source
         .0
         .iter()
-        .filter(|w| {
-            blacklist
-                .iter()
-                .any(|blacklisted| !w.contains(*blacklisted))
-        })
+        .filter(|w| !blacklist.iter().any(|blacklisted| w.contains(*blacklisted)))
         .cloned()
         .collect();
     words.sort_unstable_by_key(|w| w.len());
