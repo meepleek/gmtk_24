@@ -9,7 +9,10 @@ pub(super) fn plugin(app: &mut App) {
             Update,
             (spawn_tile_words, update_ground_text_sections).run_if(in_game),
         )
-        .add_systems(Update, (tween_ground_texts,).run_if(level_ready));
+        .add_systems(
+            Update,
+            (tween_ground_texts, tween_out_finished_words).run_if(level_ready),
+        );
 }
 
 #[derive(Component, Reflect, Debug)]
@@ -160,19 +163,19 @@ fn update_ground_text_sections(
     }
 }
 
-// fn tween_out_finished_words(
-//     mut word_finished_evr: EventReader<WordFinishedEvent>,
-//     word_q: Query<&TileWord, Changed<TileWord>>,
-//     mut text_q: Query<&mut Text>,
-// ) {
-//     let mut move_player = word_finished_evr.len() == 0;
-//     for ev in word_finished_evr.read() {
-//         if move_player {
-//             move_player = false;
-
-//         }
-//     }
-// }
+fn tween_out_finished_words(
+    mut word_finished_evr: EventReader<WordFinishedEvent>,
+    word_q: Query<&TileWord, Changed<TileWord>>,
+    mut cmd: Commands,
+) {
+    for ev in word_finished_evr.read() {
+        let word = or_continue!(word_q.get(ev.0));
+        let mut cmd_e = or_continue!(cmd.get_entity(ev.0));
+        cmd_e.try_insert(DespawnOnTweenCompleted::Itself);
+        cmd.tween_tile_color(ev.0, Color::NONE, 150, EaseFunction::QuadraticIn);
+        cmd.tween_text_alpha(word.text_e, 0.0, 110, EaseFunction::QuadraticIn);
+    }
+}
 
 // tween text in/out as the player approaches/leaves
 fn tween_ground_texts(

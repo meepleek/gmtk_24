@@ -278,7 +278,7 @@
 			"worldY": -1,
 			"worldDepth": 0,
 			"pxWid": 32,
-			"pxHei": 48,
+			"pxHei": 16,
 			"__bgColor": "#696A79",
 			"bgColor": null,
 			"useAutoIdentifier": true,
@@ -295,7 +295,7 @@
 					"__identifier": "Entities",
 					"__type": "Entities",
 					"__cWid": 2,
-					"__cHei": 3,
+					"__cHei": 1,
 					"__gridSize": 16,
 					"__opacity": 1,
 					"__pxTotalOffsetX": 0,
@@ -317,7 +317,7 @@
 					"entityInstances": [
 						{
 							"__identifier": "Player",
-							"__grid": [1,1],
+							"__grid": [0,0],
 							"__pivot": [0,0],
 							"__tags": [],
 							"__tile": { "tilesetUid": 6, "x": 0, "y": 0, "w": 16, "h": 16 },
@@ -326,7 +326,7 @@
 							"width": 16,
 							"height": 16,
 							"defUid": 3,
-							"px": [16,16],
+							"px": [0,0],
 							"fieldInstances": []
 						}
 					]
@@ -335,7 +335,7 @@
 					"__identifier": "Ground",
 					"__type": "IntGrid",
 					"__cWid": 2,
-					"__cHei": 3,
+					"__cHei": 1,
 					"__gridSize": 16,
 					"__opacity": 1,
 					"__pxTotalOffsetX": 0,
@@ -349,7 +349,7 @@
 					"pxOffsetY": 0,
 					"visible": true,
 					"optionalRules": [],
-					"intGridCsv": [0,0,0,0,0,0],
+					"intGridCsv": [0,2],
 					"autoLayerTiles": [],
 					"seed": 4669260,
 					"overrideTilesetUid": null,

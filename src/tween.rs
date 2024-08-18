@@ -1,6 +1,7 @@
 #![allow(dead_code)]
 
 use bevy::{ecs::system::EntityCommands, prelude::*};
+use bevy_ecs_tilemap::tiles::TileColor;
 use bevy_tweening::*;
 use std::{marker::PhantomData, time::Duration};
 
@@ -57,6 +58,7 @@ pub(super) fn plugin(app: &mut App) {
         Update,
         (
             component_animator_system::<BackgroundColor>,
+            component_animator_system::<TileColor>,
             despawn_after_tween,
         ),
     );
@@ -166,6 +168,8 @@ relative_tween_impl!(
     Color,
     Color
 );
+
+relative_tween_impl!(tile_color, Animator, TileColor, TileColorLens, Color, Color);
 
 relative_lens!(Transform, Vec3, TransformRelativeScaleLens, scale);
 relative_lens!(Transform, Vec3, TransformRelativePositionLens, translation);
@@ -313,6 +317,7 @@ relative_tween_impl!(
 color_lens!(BackgroundColor, UiBackgroundColorLens, 0);
 color_lens!(UiImage, UiImageColorLens, color);
 color_lens!(ColorMaterial, ColorMaterialRelativeColorLens, color);
+color_lens!(TileColor, TileColorLens, 0);
 
 pub fn lerp_color(from: Color, to: Color, ratio: f32) -> Color {
     let start = from.to_linear().to_vec4();
