@@ -6,7 +6,12 @@ pub(super) fn plugin(app: &mut App) {
         .register_ldtk_entity::<PlayerBundle>("Player")
         .add_systems(
             Update,
-            (process_typed_input, tween_player_movement).run_if(level_ready),
+            (
+                process_typed_input,
+                tween_player_movement,
+                move_player_to_finished_word_cell,
+            )
+                .run_if(level_ready),
         );
 }
 
@@ -81,4 +86,21 @@ fn tween_player_movement(
     for (e, coord) in &player_q {
         cmd.tween_translation(e, coord.to_world(), 110, EaseFunction::QuadraticOut);
     }
+}
+
+fn move_player_to_finished_word_cell(
+    mut word_finished_evr: EventReader<WordFinishedEvent>,
+    mut player_q: Query<&mut GridCoords, With<Player>>,
+    coords_q: Query<&GridCoords, Without<Player>>,
+) {
+    // only move when there's an exactly ONE finished word
+    if word_finished_evr.len() != 1 {
+        word_finished_evr.clear();
+        return;
+    }
+
+    let ev = word_finished_evr.read().next().unwrap();
+    let tile_coords = or_return!(coords_q.get(ev.0));
+    let mut player_coords = or_return!(player_q.get_single_mut());
+    *player_coords = *tile_coords;
 }

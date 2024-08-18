@@ -160,12 +160,17 @@ fn update_ground_text_sections(
     }
 }
 
-// fn remove_finished_words(
+// fn tween_out_finished_words(
+//     mut word_finished_evr: EventReader<WordFinishedEvent>,
 //     word_q: Query<&TileWord, Changed<TileWord>>,
 //     mut text_q: Query<&mut Text>,
 // ) {
-//     for word in word_q.iter().filter(|w| w.finished()) {
-//         // cmd.tween_text_alpha(word.text_e, 0.0, 110, EaseFunction::QuadraticOut);
+//     let mut move_player = word_finished_evr.len() == 0;
+//     for ev in word_finished_evr.read() {
+//         if move_player {
+//             move_player = false;
+
+//         }
 //     }
 // }
 
