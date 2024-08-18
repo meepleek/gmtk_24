@@ -179,17 +179,20 @@ fn spawn_tile_words(
         e_cmd
             .with_children(|b| {
                 text_e = Some(
-                    b.spawn(Text2dBundle {
-                        text: Text::from_sections(tile_word_text_sections(
-                            word.as_str(),
-                            0,
-                            WordStatus::Pristine,
-                            0.0,
-                        )),
-                        transform: Transform::from_translation(Vec2::ZERO.extend(0.1))
-                            .with_scale(Vec2::splat(0.25).extend(1.)),
-                        ..default()
-                    })
+                    b.spawn((
+                        Text2dBundle {
+                            text: Text::from_sections(tile_word_text_sections(
+                                word.as_str(),
+                                0,
+                                WordStatus::Pristine,
+                                0.0,
+                            )),
+                            transform: Transform::from_translation(Vec2::ZERO.extend(0.1))
+                                .with_scale(Vec2::splat(0.25).extend(1.)),
+                            ..default()
+                        },
+                        HIGH_RES_RENDER_LAYER,
+                    ))
                     .id(),
                 );
             })

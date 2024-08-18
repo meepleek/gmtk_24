@@ -8,6 +8,7 @@ pub(crate) use crate::{
         music::{MusicCommands, MusicTrack},
         sfx::{Sfx, SfxCommands},
     },
+    camera::HIGH_RES_RENDER_LAYER,
     ext::*,
     game::{
         level::{level_ready, Ground, LevelEntityLookup, UnbreakableGround, TILE_SIZE},
