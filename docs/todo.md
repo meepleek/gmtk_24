@@ -8,8 +8,8 @@
   - [x] type words
   - [x] remove ground when fully typed
 - [x] fix level reset
-- [ ] get a reasonable word collection to pull from
-- [ ] don't use words with movement characters/keys
+- [x] get a reasonable word collection to pull from
+- [x] don't use words with movement characters/keys
 - [ ] add exit
 - [ ] move to next level
 - [ ] add gravity enabled rocks that can crush the player
