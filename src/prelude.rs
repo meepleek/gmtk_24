@@ -10,11 +10,9 @@ pub(crate) use crate::{
     },
     ext::*,
     game::{
-        level::{
-            level_ready, Ground, LevelEntityLookup, UnbreakableGround, WordAdvancedEvent,
-            WordFinishedEvent, TILE_SIZE,
-        },
+        level::{level_ready, Ground, LevelEntityLookup, UnbreakableGround, TILE_SIZE},
         player::Player,
+        word::{WordAdvancedEvent, WordFinishedEvent},
     },
     input::{PlayerAction, PlayerInput, TypedInput, UiAction, UiInput},
     math::*,

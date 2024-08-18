@@ -1,6 +1,5 @@
+use super::word::TileWord;
 use crate::prelude::*;
-
-use super::level::TileWord;
 
 pub(super) fn plugin(app: &mut App) {
     app.register_type::<Player>()
