@@ -114,6 +114,8 @@ impl<'w, 's, T: Event> EventReaderExt<T> for EventReader<'w, 's, T> {
 pub trait GridCoordsExt {
     fn to_world(&self) -> Vec3;
     fn to_world_with_z(&self, z: f32) -> Vec3;
+    fn to_vec2(&self) -> Vec2;
+    fn distance(&self, rhl: &Self) -> f32;
     fn x() -> Self;
     fn neg_x() -> Self;
     fn y() -> Self;
@@ -187,8 +189,7 @@ impl GridCoordsExt for GridCoords {
                     continue;
                 }
 
-                let distance_sq = Vec2::new(x as f32, y as f32)
-                    .distance_squared((self.x as f32, self.y as f32).into());
+                let distance_sq = Vec2::new(x as f32, y as f32).distance_squared(self.to_vec2());
                 if distance_sq <= radius_sq {
                     res.push(GridCoords::new(x, y));
                 }
@@ -196,5 +197,13 @@ impl GridCoordsExt for GridCoords {
         }
 
         res
+    }
+
+    fn to_vec2(&self) -> Vec2 {
+        Vec2::new(self.x as f32, self.y as f32)
+    }
+
+    fn distance(&self, rhl: &Self) -> f32 {
+        self.to_vec2().distance(rhl.to_vec2())
     }
 }
