@@ -36,19 +36,16 @@ fn process_typed_input(
     mut word_q: Query<&mut TileWord>,
     mut word_advanced_evw: EventWriter<WordAdvancedEvent>,
     mut word_finished_evw: EventWriter<WordFinishedEvent>,
+    bindings: Res<MovementBindings>,
 ) {
     let mut coords = or_return!(player_q.get_single_mut());
 
     if let Some(move_by) = match typed.as_str() {
         "" => return,
-        // "a" => Some(GridCoords::neg_x()),
-        // "d" => Some(GridCoords::x()),
-        // "w" => Some(GridCoords::y()),
-        // "s" => Some(GridCoords::neg_y()),
-        "n" => Some(GridCoords::neg_x()),
-        "o" => Some(GridCoords::x()),
-        "i" => Some(GridCoords::y()),
-        "e" => Some(GridCoords::neg_y()),
+        c if c == bindings.left => Some(GridCoords::neg_x()),
+        c if c == bindings.right => Some(GridCoords::x()),
+        c if c == bindings.up => Some(GridCoords::y()),
+        c if c == bindings.down => Some(GridCoords::neg_y()),
         _ => {
             for neighbour_coords in coords.neighbours() {
                 let neighbour_e = or_continue_quiet!(level_lookup.get(&neighbour_coords));

@@ -6,7 +6,8 @@ use bevy::input::{
 use leafwing_input_manager::prelude::*;
 
 pub(super) fn plugin(app: &mut App) {
-    app.add_plugins(InputManagerPlugin::<PlayerAction>::default())
+    app.init_resource::<MovementBindings>()
+        .add_plugins(InputManagerPlugin::<PlayerAction>::default())
         .init_resource::<ActionState<PlayerAction>>()
         .insert_resource(PlayerAction::input_map())
         .add_plugins(InputManagerPlugin::<UiAction>::default())
@@ -20,6 +21,29 @@ pub(super) fn plugin(app: &mut App) {
 pub enum PlayerAction {
     Move,
     Jump,
+}
+
+#[derive(Resource, Reflect)]
+pub struct MovementBindings {
+    pub up: String,
+    pub down: String,
+    pub left: String,
+    pub right: String,
+}
+
+impl Default for MovementBindings {
+    fn default() -> Self {
+        Self {
+            // up: "w".to_string(),
+            // down: "s".to_string(),
+            // left: "a".to_string(),
+            // right: "d".to_string(),
+            up: "i".to_string(),
+            down: "e".to_string(),
+            left: "n".to_string(),
+            right: "o".to_string(),
+        }
+    }
 }
 
 impl Actionlike for PlayerAction {
