@@ -123,6 +123,7 @@ pub trait GridCoordsExt {
     fn left(&self) -> Self;
     fn right(&self) -> Self;
     fn neighbours(&self) -> Vec<GridCoords>;
+    fn radius(&self, radius: u32, skip_center: bool) -> Vec<GridCoords>;
 }
 
 impl GridCoordsExt for GridCoords {
@@ -169,5 +170,31 @@ impl GridCoordsExt for GridCoords {
     fn neighbours(&self) -> Vec<GridCoords> {
         let res = HashSet::from([self.up(), self.down(), self.left(), self.right()]);
         res.into_iter().collect()
+    }
+
+    fn radius(&self, radius: u32, skip_center: bool) -> Vec<GridCoords> {
+        let mut res = vec![];
+        let radius = radius as i32;
+        let x_min = (self.x - radius).max(0);
+        let x_max = self.x + radius;
+        let y_min = (self.y - radius).max(0);
+        let y_max = self.y + radius;
+        let radius_sq = radius.pow(2) as f32;
+
+        for x in x_min..=x_max {
+            for y in y_min..=y_max {
+                if skip_center && x == self.x && y == self.y {
+                    continue;
+                }
+
+                let distance_sq = Vec2::new(x as f32, y as f32)
+                    .distance_squared((self.x as f32, self.y as f32).into());
+                if distance_sq <= radius_sq {
+                    res.push(GridCoords::new(x, y));
+                }
+            }
+        }
+
+        res
     }
 }
