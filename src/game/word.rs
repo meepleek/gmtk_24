@@ -114,7 +114,7 @@ fn update_word_list(
     let mut words: Vec<_> = source
         .0
         .iter()
-        .filter(|w| !blacklist.iter().any(|blacklisted| w.contains(*blacklisted)))
+        .filter(|w| w.len() >= 3 && !blacklist.iter().any(|blacklisted| w.contains(*blacklisted)))
         .cloned()
         .collect();
     words.sort_unstable_by_key(|w| w.len());
