@@ -2,9 +2,11 @@
 
 ## Game
 
-- typing loop
-- move using typing - just single chars
+- [x] typing loop
+- [x] move using typing - just single chars
 - mine using words
+  - [x] type words
+  - [ ] remove ground when fully typed
 
 ## Template
 
