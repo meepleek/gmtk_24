@@ -48,12 +48,11 @@ fn process_typed_input(
                 let mut word = or_continue_quiet!(word_q.get_mut(*neighbour_e));
                 if word.remaining().starts_with(&typed.0) {
                     word.advance(typed.len());
-                }
-
-                if word.finished() {
-                    word_finished_evw.send(WordFinishedEvent(*neighbour_e));
-                } else {
-                    word_advanced_evw.send(WordAdvancedEvent(*neighbour_e));
+                    if word.status() == WordStatus::Finished {
+                        word_finished_evw.send(WordFinishedEvent(*neighbour_e));
+                    } else {
+                        word_advanced_evw.send(WordAdvancedEvent(*neighbour_e));
+                    }
                 }
             }
 

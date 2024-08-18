@@ -25,6 +25,13 @@ pub(crate) struct WordAdvancedEvent(pub Entity);
 #[derive(Event, Debug, Reflect)]
 pub(crate) struct WordFinishedEvent(pub Entity);
 
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+pub(crate) enum WordStatus {
+    Pristine,
+    Damaged,
+    Finished,
+}
+
 impl TileWord {
     pub(crate) fn new(text: impl Into<String>, text_e: Entity) -> Self {
         Self {
@@ -42,12 +49,12 @@ impl TileWord {
         self.typed_char_len += count;
     }
 
-    pub(crate) fn finished(&self) -> bool {
-        self.text.len() <= self.typed_char_len
-    }
-
-    pub(crate) fn damaged(&self) -> bool {
-        self.typed_char_len > 0
+    pub(crate) fn status(&self) -> WordStatus {
+        match self.typed_char_len {
+            0 => WordStatus::Pristine,
+            typed if typed >= self.text.len() => WordStatus::Finished,
+            _ => WordStatus::Damaged,
+        }
     }
 
     pub(crate) fn section(text: impl Into<String>, color: Color) -> TextSection {
@@ -66,31 +73,43 @@ impl TileWord {
     }
 
     pub(crate) fn text_sections(&self, alpha: f32) -> Vec<TextSection> {
-        let mut res = Vec::with_capacity(4);
-        if self.damaged() {
-            res.push(Self::done_section(
-                self.text[..self.typed_char_len].to_string(),
-                alpha,
-            ));
-        }
-        if !self.finished() {
-            res.push(Self::section(
-                "|",
-                tailwind::GRAY_300.with_alpha(alpha).into(),
-            ));
-            let next_char_i = self.typed_char_len + 1;
-            res.push(Self::section(
-                self.text[self.typed_char_len..next_char_i].to_string(),
-                tailwind::GREEN_200.with_alpha(alpha).into(),
-            ));
-            res.push(Self::section(
-                self.text[next_char_i..].to_string(),
-                tailwind::GRAY_200.with_alpha(alpha).into(),
-            ));
-        }
-
-        res
+        tile_word_text_sections(
+            self.text.as_str(),
+            self.typed_char_len,
+            self.status(),
+            alpha,
+        )
     }
+}
+
+fn tile_word_text_sections<'a>(
+    text: impl Into<&'a str>,
+    typed_len: usize,
+    status: WordStatus,
+    alpha: f32,
+) -> Vec<TextSection> {
+    let text = text.into();
+    let mut res = Vec::with_capacity(4);
+    if status != WordStatus::Pristine {
+        res.push(TileWord::done_section(text[..typed_len].to_string(), alpha));
+    }
+    if status != WordStatus::Finished {
+        res.push(TileWord::section(
+            "|",
+            tailwind::GRAY_300.with_alpha(alpha).into(),
+        ));
+        let next_char_i = typed_len + 1;
+        res.push(TileWord::section(
+            text[typed_len..next_char_i].to_string(),
+            tailwind::GREEN_200.with_alpha(alpha).into(),
+        ));
+        res.push(TileWord::section(
+            text[next_char_i..].to_string(),
+            tailwind::GRAY_200.with_alpha(alpha).into(),
+        ));
+    }
+
+    res
 }
 
 #[derive(Component, Default)]
@@ -108,7 +127,12 @@ fn spawn_tile_words(ground_q: Query<Entity, Added<Ground>>, mut cmd: Commands) {
             .with_children(|b| {
                 text_e = Some(
                     b.spawn(Text2dBundle {
-                        text: Text::from_sections(vec![TileWord::done_section(word, 0.0)]),
+                        text: Text::from_sections(tile_word_text_sections(
+                            word,
+                            0,
+                            WordStatus::Pristine,
+                            0.0,
+                        )),
                         transform: Transform::from_translation(Vec2::ZERO.extend(0.1))
                             .with_scale(Vec2::splat(0.25).extend(1.)),
                         ..default()
@@ -132,7 +156,7 @@ fn update_ground_text_sections(
     for word_e in entities {
         let word = or_continue!(word_q.get(word_e));
         let mut text = or_continue!(text_q.get_mut(word.text_e));
-        text.sections = word.text_sections(if word.damaged() { 1.0 } else { 0.0 });
+        text.sections = word.text_sections(1.0);
     }
 }
 
