@@ -6,18 +6,20 @@
 @group(2) @binding(3) var mask_texture: texture_2d<f32>;
 @group(2) @binding(4) var mask_texture_sampler: sampler;
 
-
 @fragment
 fn fragment(mesh: VertexOutput) -> @location(0) vec4<f32> {
     let tex_color = textureSample(texture, texture_sampler, mesh.uv);
-    var blurSize: f32 = 1.0 / f32(textureDimensions(mask_texture).x);
+    var blur_size: f32 = 1.0 / f32(textureDimensions(mask_texture).x);
     var mask_alpha: f32 = 0.0;
     // blur
     var kernel_extents: i32 = 4;
-    var blur_size: i32 = 1;
+    var blur_factor
+    : i32 = 1;
     for (var x: i32 = -kernel_extents; x <= kernel_extents; x = x + 1) {
         for (var y: i32 = -kernel_extents; y <= kernel_extents; y = y + 1) {
-            mask_alpha = mask_alpha + textureSample(mask_texture, mask_texture_sampler, mesh.uv + vec2<f32>(f32(x * blur_size), f32(y * blur_size)) * blurSize).r;
+            mask_alpha = mask_alpha + textureSample(mask_texture, mask_texture_sampler, mesh.uv + vec2<f32>(f32(x * blur_factor
+            ), f32(y * blur_factor
+            )) * blur_size).r;
         }
     }
     var kernel_size: f32 = f32(kernel_extents) * 2.0 + 1.0;

@@ -63,6 +63,7 @@ fn add_visibility_to_tile(visibility_q: Query<Entity, Added<GridCoords>>, mut cm
 fn update_tile_visibility(
     player_q: Query<&GridCoords, (With<Player>, Changed<GridCoords>)>,
     mut visibility_q: Query<&mut TileVisibility>,
+    wall_q: Query<&UnbreakableGround>,
     level_lookup: Res<LevelEntityLookup>,
     mut cmd: Commands,
 ) {
@@ -75,6 +76,13 @@ fn update_tile_visibility(
         .collect();
 
     for (tile_coords, tile_e) in radius_tile_pairs {
+        if grid_line((*player_coords).into(), tile_coords.into())
+            .iter()
+            .skip(1) // skip the initial/player coord
+            .any(|c| level_lookup.get(c).map_or(true, |e| wall_q.contains(*e)))
+        {
+            continue;
+        }
         let dist = tile_coords.distance(player_coords).floor();
         let new_visibility = 1.0 - ((dist - 1.0) / radius as f32) * 0.8;
         let mut tile_vis = or_continue!(visibility_q.get_mut(tile_e));
@@ -87,5 +95,88 @@ fn update_tile_visibility(
                 EaseFunction::QuadraticInOut,
             );
         }
+    }
+}
+
+pub(crate) fn grid_line(a: IVec2, b: IVec2) -> Vec<GridCoords> {
+    if a == b {
+        return vec![a.into()];
+    }
+
+    let dir = b - a;
+    let dir_abs = dir.abs();
+    let sign = IVec2::new(
+        if dir.x > 0 { 1 } else { -1 },
+        if dir.y > 0 { 1 } else { -1 },
+    );
+
+    let mut points = Vec::with_capacity(dir_abs.max_element() as usize);
+    let mut point = a;
+    points.push(point.into());
+    let mut i = IVec2::ZERO;
+    loop {
+        let what = (i.as_vec2() + Vec2::splat(0.5)) / dir_abs.as_vec2();
+        if what.x < what.y {
+            // horizontal step
+            point.x += sign.x;
+            i.x += 1;
+        } else {
+            // vertical step
+            point.y += sign.y;
+            i.y += 1;
+        }
+
+        points.push(point.into());
+        if i.x >= dir_abs.x && i.y >= dir_abs.y {
+            break;
+        }
+    }
+    points
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use test_case::test_case;
+    use tracing_test::traced_test;
+
+    #[traced_test]
+    #[test_case(IVec2::ZERO, IVec2::ZERO => vec![GridCoords::new(0, 0)])]
+    #[test_case(IVec2::ZERO, IVec2::new(3, 0) =>
+        vec![
+            GridCoords::new(0, 0),
+            GridCoords::new(1, 0),
+            GridCoords::new(2, 0),
+            GridCoords::new(3, 0),
+        ]
+    )]
+    #[test_case(IVec2::ZERO, IVec2::new(0, 3) =>
+        vec![
+            GridCoords::new(0, 0),
+            GridCoords::new(0, 1),
+            GridCoords::new(0, 2),
+            GridCoords::new(0, 3),
+        ]
+    )]
+    #[test_case(IVec2::ZERO, IVec2::new(2, 2) =>
+        vec![
+            GridCoords::new(0, 0),
+            GridCoords::new(0, 1),
+            GridCoords::new(1, 1),
+            GridCoords::new(1, 2),
+            GridCoords::new(2, 2),
+        ]
+    )]
+    #[test_case(IVec2::new(1, 2), IVec2::new(4, 3) =>
+        vec![
+            GridCoords::new(1, 2),
+            GridCoords::new(2, 2),
+            GridCoords::new(2, 3),
+            GridCoords::new(3, 3),
+            GridCoords::new(4, 3),
+        ]
+    )]
+    fn grid_line_coords(a: IVec2, b: IVec2) -> Vec<GridCoords> {
+        grid_line(a, b)
     }
 }

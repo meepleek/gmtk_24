@@ -62,7 +62,7 @@ fn spawn_camera(
     // cmd.spawn((
     //     Name::new("fog_of_war_canvas"),
     //     SpriteBundle {
-    //         texture: mask_handle.clone(),
+    //         texture: fog_of_war_mask_handle.clone(),
     //         sprite: Sprite {
     //             // color: Color::WHITE.with_alpha(0.25),
     //             ..default()
