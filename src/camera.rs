@@ -27,7 +27,7 @@ pub(super) fn plugin(app: &mut App) {
 /// Low-resolution texture that contains the pixel-perfect world.
 /// Canvas itself is rendered to the high-resolution world.
 #[derive(Component)]
-struct Canvas;
+struct LowResCanvas;
 
 /// Camera that renders the pixel-perfect world to the [`Canvas`].
 #[derive(Component)]
@@ -43,32 +43,8 @@ fn spawn_camera(
     mut meshes: ResMut<Assets<Mesh>>,
     mut fog_of_war_mats: ResMut<Assets<FogOfWarMaterial>>,
 ) {
-    let canvas_size = Extent3d {
-        width: DOWNSCALE_RES,
-        height: DOWNSCALE_RES,
-        ..default()
-    };
-    let mut canvas = Image {
-        texture_descriptor: TextureDescriptor {
-            label: None,
-            size: canvas_size,
-            dimension: TextureDimension::D2,
-            format: TextureFormat::Bgra8UnormSrgb,
-            mip_level_count: 1,
-            sample_count: 1,
-            usage: TextureUsages::TEXTURE_BINDING
-                | TextureUsages::COPY_DST
-                | TextureUsages::RENDER_ATTACHMENT,
-            view_formats: &[],
-        },
-        ..default()
-    };
-    // resizes by zero-ing out the buffer
-    canvas.resize(canvas_size);
-    let fog_of_war_mask_handle = images.add(canvas.clone());
-    let pixel_perfect_canvas_handle = images.add(canvas);
-
     // fog of war
+    let fog_of_war_mask_handle = images.add(render_texture_image(DOWNSCALE_RES, DOWNSCALE_RES));
     cmd.spawn((
         Name::new("fog_of_war_cam"),
         Camera2dBundle {
@@ -97,6 +73,8 @@ fn spawn_camera(
     // ));
 
     // pixel perfect render
+    let pixel_perfect_canvas_handle =
+        images.add(render_texture_image(DOWNSCALE_RES, DOWNSCALE_RES));
     cmd.spawn((
         Name::new("pixel_perfect_cam"),
         Camera2dBundle {
@@ -125,11 +103,7 @@ fn spawn_camera(
             }),
             ..default()
         },
-        // SpriteBundle {
-        //     texture: image_handle,
-        //     ..default()
-        // },
-        Canvas,
+        LowResCanvas,
         HIGH_RES_RENDER_LAYER,
     ));
 
@@ -142,4 +116,30 @@ fn spawn_camera(
         HighResCamera,
         HIGH_RES_RENDER_LAYER,
     ));
+}
+
+fn render_texture_image(width: u32, height: u32) -> Image {
+    let size = Extent3d {
+        width,
+        height,
+        ..default()
+    };
+    let mut img = Image {
+        texture_descriptor: TextureDescriptor {
+            label: None,
+            size,
+            dimension: TextureDimension::D2,
+            format: TextureFormat::Bgra8UnormSrgb,
+            mip_level_count: 1,
+            sample_count: 1,
+            usage: TextureUsages::TEXTURE_BINDING
+                | TextureUsages::COPY_DST
+                | TextureUsages::RENDER_ATTACHMENT,
+            view_formats: &[],
+        },
+        ..default()
+    };
+    // resizes by zero-ing out the buffer
+    img.resize(size);
+    img
 }

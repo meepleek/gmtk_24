@@ -1,6 +1,6 @@
 use crate::prelude::*;
 
-pub(crate) const TILE_SIZE: i32 = 16;
+pub(crate) const TILE_SIZE: u32 = 16;
 
 pub(super) fn plugin(app: &mut App) {
     app.add_plugins(LdtkPlugin)
@@ -9,7 +9,7 @@ pub(super) fn plugin(app: &mut App) {
         .insert_resource(LevelSelection::index(0))
         // .insert_resource(LevelSelection::index(1))
         .register_type::<LevelEntityLookup>()
-        .add_systems(Update, (cache_level_entities).run_if(in_game))
+        .add_systems(Update, (cache_level_entities,).run_if(in_game))
         .add_systems(OnEnter(Screen::Game), spawn_level)
         .add_systems(OnExit(Screen::Game), teardown_level);
 }

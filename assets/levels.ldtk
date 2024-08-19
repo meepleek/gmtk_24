@@ -103,7 +103,7 @@
 			"uiFilterTags": [],
 			"useAsyncRender": false,
 			"intGridValues": [
-				{ "value": 1, "identifier": "Unbreakable", "color": "#000000", "tile": null, "groupUid": 0 },
+				{ "value": 1, "identifier": "Unbreakable", "color": "#39241B", "tile": null, "groupUid": 0 },
 				{ "value": 2, "identifier": "Ground", "color": "#B86F50", "tile": null, "groupUid": 0 }
 			],
 			"intGridValuesGroups": [],

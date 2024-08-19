@@ -43,7 +43,7 @@ fn add_visibility_to_tile(visibility_q: Query<Entity, Added<GridCoords>>, mut cm
                 SpriteBundle {
                     sprite: Sprite {
                         color: Color::BLACK,
-                        custom_size: Some(Vec2::splat(16.)),
+                        custom_size: Some(Vec2::splat(TILE_SIZE as f32)),
                         ..default()
                     },
                     ..default()

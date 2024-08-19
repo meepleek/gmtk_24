@@ -134,7 +134,8 @@ impl GridCoordsExt for GridCoords {
     }
 
     fn to_world_with_z(&self, z: f32) -> Vec3 {
-        bevy_ecs_ldtk::utils::grid_coords_to_translation(*self, IVec2::splat(TILE_SIZE)).extend(z)
+        bevy_ecs_ldtk::utils::grid_coords_to_translation(*self, IVec2::splat(TILE_SIZE as i32))
+            .extend(z)
     }
 
     fn y() -> Self {
