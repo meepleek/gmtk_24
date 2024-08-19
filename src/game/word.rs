@@ -109,7 +109,6 @@ fn update_word_list(
         &bindings.left,
         &bindings.right,
     ];
-    warn!(?blacklist);
     let source = or_return!(wordlists.get(&wordlist_assets.en));
     let mut words: Vec<_> = source
         .0
@@ -118,7 +117,7 @@ fn update_word_list(
         .cloned()
         .collect();
     words.sort_unstable_by_key(|w| w.len());
-    let split_i = or_return!(words.iter().enumerate().find_map(|(i, w)| if w.len() > 5 {
+    let split_i = or_return!(words.iter().enumerate().find_map(|(i, w)| if w.len() > 4 {
         Some(i)
     } else {
         None
