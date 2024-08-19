@@ -1,16 +1,20 @@
-use bevy::render::{
-    camera::RenderTarget,
-    render_resource::{
-        Extent3d, TextureDescriptor, TextureDimension, TextureFormat, TextureUsages,
+use bevy::{
+    render::{
+        camera::RenderTarget,
+        render_resource::{
+            Extent3d, TextureDescriptor, TextureDimension, TextureFormat, TextureUsages,
+        },
+        view::RenderLayers,
     },
-    view::RenderLayers,
+    sprite::MaterialMesh2dBundle,
 };
 
-use crate::prelude::*;
+use crate::{game::fog_of_war::FogOfWarMaterial, prelude::*};
 
 const DOWNSCALE_RES: u32 = 512;
 /// Render layers for high-resolution rendering.
 pub const HIGH_RES_RENDER_LAYER: RenderLayers = RenderLayers::layer(1);
+pub const FOG_OF_WAR_RENDER_LAYER: RenderLayers = RenderLayers::layer(2);
 
 pub(crate) const BACKGROUND_COLOR: Color = Color::srgb(0.157, 0.157, 0.157);
 
@@ -33,14 +37,17 @@ struct PixelPerfectCamera;
 #[derive(Component)]
 struct HighResCamera;
 
-fn spawn_camera(mut cmd: Commands, mut images: ResMut<Assets<Image>>) {
+fn spawn_camera(
+    mut cmd: Commands,
+    mut images: ResMut<Assets<Image>>,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut fog_of_war_mats: ResMut<Assets<FogOfWarMaterial>>,
+) {
     let canvas_size = Extent3d {
         width: DOWNSCALE_RES,
         height: DOWNSCALE_RES,
         ..default()
     };
-
-    // this Image serves as a canvas representing the low-resolution game screen
     let mut canvas = Image {
         texture_descriptor: TextureDescriptor {
             label: None,
@@ -56,16 +63,47 @@ fn spawn_camera(mut cmd: Commands, mut images: ResMut<Assets<Image>>) {
         },
         ..default()
     };
-
     // resizes by zero-ing out the buffer
     canvas.resize(canvas_size);
-    let image_handle = images.add(canvas);
+    let fog_of_war_mask_handle = images.add(canvas.clone());
+    let pixel_perfect_canvas_handle = images.add(canvas);
+
+    // fog of war
     cmd.spawn((
+        Name::new("fog_of_war_cam"),
+        Camera2dBundle {
+            camera: Camera {
+                order: -2,
+                target: RenderTarget::Image(fog_of_war_mask_handle.clone()),
+                ..default()
+            },
+            ..default()
+        },
+        FOG_OF_WAR_RENDER_LAYER,
+    ));
+
+    // // debug mask
+    // cmd.spawn((
+    //     Name::new("fog_of_war_canvas"),
+    //     SpriteBundle {
+    //         texture: mask_handle.clone(),
+    //         sprite: Sprite {
+    //             // color: Color::WHITE.with_alpha(0.25),
+    //             ..default()
+    //         },
+    //         ..default()
+    //     },
+    //     HIGH_RES_RENDER_LAYER,
+    // ));
+
+    // pixel perfect render
+    cmd.spawn((
+        Name::new("pixel_perfect_cam"),
         Camera2dBundle {
             camera: Camera {
                 // render before the "main pass" camera
                 order: -1,
-                target: RenderTarget::Image(image_handle.clone()),
+                target: RenderTarget::Image(pixel_perfect_canvas_handle.clone()),
                 ..default()
             },
             ..default()
@@ -76,10 +114,21 @@ fn spawn_camera(mut cmd: Commands, mut images: ResMut<Assets<Image>>) {
 
     // spawn the canvas
     cmd.spawn((
-        SpriteBundle {
-            texture: image_handle,
+        Name::new("pixel_canvas"),
+        MaterialMesh2dBundle {
+            mesh: meshes.add(Rectangle::default()).into(),
+            transform: Transform::from_scale(Vec2::splat(512.0).extend(1.)),
+            material: fog_of_war_mats.add(FogOfWarMaterial {
+                texture: pixel_perfect_canvas_handle,
+                mask_texture: Some(fog_of_war_mask_handle),
+                blur: 1.0,
+            }),
             ..default()
         },
+        // SpriteBundle {
+        //     texture: image_handle,
+        //     ..default()
+        // },
         Canvas,
         HIGH_RES_RENDER_LAYER,
     ));
@@ -87,10 +136,10 @@ fn spawn_camera(mut cmd: Commands, mut images: ResMut<Assets<Image>>) {
     let mut screen_camera = Camera2dBundle::default();
     screen_camera.projection.scale = 0.25;
     screen_camera.transform.translation = Vec2::splat(1024.0 / 8.0).extend(0.0);
-    cmd.spawn((screen_camera, HighResCamera, HIGH_RES_RENDER_LAYER));
-
-    // let mut camera = Camera2dBundle::default();
-    // camera.projection.scale = 0.25;
-    // camera.transform.translation = Vec2::splat(1024.0 / 8.0).extend(0.0);
-    // cmd.spawn((Name::new("Camera"), camera, IsDefaultUiCamera));
+    cmd.spawn((
+        Name::new("screen_cam"),
+        screen_camera,
+        HighResCamera,
+        HIGH_RES_RENDER_LAYER,
+    ));
 }
