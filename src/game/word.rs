@@ -238,17 +238,16 @@ fn tween_ground_texts(
     level_lookup: Res<LevelEntityLookup>,
     mut cmd: Commands,
 ) {
-    let radius = 3;
     let player_coords = or_return_quiet!(player_q.get_single());
     let visible_tile_ids: HashSet<_> = visible_word_q.iter().collect();
-    let radius_tile_pairs: Vec<_> = player_coords
-        .radius(radius, false)
+    let radius_tile_ids: HashSet<_> = player_coords
+        .neighbours()
         .iter()
-        .filter_map(|c| level_lookup.get(c).map(|e| (*c, *e)))
+        .filter_map(|c| level_lookup.get(c))
+        .copied()
         .collect();
 
     // tween out when player has moved away
-    let radius_tile_ids: HashSet<_> = radius_tile_pairs.iter().map(|(_, e)| *e).collect();
     for out_tile_e in visible_tile_ids.difference(&radius_tile_ids) {
         let word = or_continue_quiet!(word_q.get(*out_tile_e));
         if let Some(mut cmd_e) = cmd.get_entity(*out_tile_e) {
@@ -258,19 +257,11 @@ fn tween_ground_texts(
     }
 
     // tween in when player has moved in
-    for (tile_coords, tile_e) in radius_tile_pairs {
+    for tile_e in radius_tile_ids {
         let word = or_continue_quiet!(word_q.get(tile_e));
-        let dist = tile_coords.distance(player_coords).floor();
-
         if let Some(mut cmd_e) = cmd.get_entity(tile_e) {
             cmd_e.try_insert(TileWordVisible);
-            cmd.tween_text_alpha(
-                word.text_e,
-                // opacity based on distance from player
-                1.0 - ((dist - 1.0) / radius as f32) * 0.8,
-                110,
-                EaseFunction::QuadraticOut,
-            );
+            cmd.tween_text_alpha(word.text_e, 1.0, 110, EaseFunction::QuadraticOut);
         }
     }
 }
