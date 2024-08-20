@@ -17,6 +17,17 @@
 - [ ] add patrolling enemy
 - [ ] highlight neighbour tiles
 
+### juice
+
+- type/mine animation
+  - [ ] animation
+  - [ ] screenshake
+  - [ ] SFX
+
+### notes
+
+- game res => probly 320x180
+
 ## Template
 
 - [x] game prelude
