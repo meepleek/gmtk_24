@@ -4182,9 +4182,9 @@ dependencies = [
 
 [[package]]
 name = "tiny_bail"
-version = "0.1.2"
+version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "58b188988b0bd734f9ff002b39db10a25f97ed4b1bec958c538bb62a07030076"
+checksum = "75814a573fb24985a87a518968108d687b1d6f8136434d8e580e4ded5eef8aaa"
 dependencies = [
  "tracing",
 ]
