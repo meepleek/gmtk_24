@@ -1,6 +1,6 @@
 use crate::prelude::*;
 
-pub(crate) const TILE_SIZE: u32 = 16;
+pub(crate) const TILE_SIZE: u32 = 32;
 
 pub(super) fn plugin(app: &mut App) {
     app.add_plugins(LdtkPlugin)
