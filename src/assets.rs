@@ -39,7 +39,7 @@ pub struct WordlistAssets {
 #[derive(AssetCollection, Resource)]
 pub struct SpriteAssets {
     #[asset(texture_atlas_layout(tile_size_x = 32, tile_size_y = 32, columns = 5, rows = 1))]
-    idle_anim_layout: Handle<TextureAtlasLayout>,
+    pub idle_anim_layout: Handle<TextureAtlasLayout>,
     #[asset(texture_atlas_layout(
         tile_size_x = 32,
         tile_size_y = 32,
@@ -47,7 +47,7 @@ pub struct SpriteAssets {
         rows = 1,
         offset_y = 32
     ))]
-    mine_anim_layout: Handle<TextureAtlasLayout>,
+    pub mine_anim_layout: Handle<TextureAtlasLayout>,
     #[asset(texture_atlas_layout(
         tile_size_x = 32,
         tile_size_y = 32,
@@ -55,7 +55,7 @@ pub struct SpriteAssets {
         rows = 1,
         offset_y = 64
     ))]
-    mine_fast_anim_layout: Handle<TextureAtlasLayout>,
+    pub mine_fast_anim_layout: Handle<TextureAtlasLayout>,
     #[asset(path = "images/player.png")]
     pub player_sheet: Handle<Image>,
 }

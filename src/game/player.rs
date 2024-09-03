@@ -10,6 +10,8 @@ pub(super) fn plugin(app: &mut App) {
                 process_typed_input,
                 tween_player_movement,
                 move_player_to_finished_word_cell,
+                on_player_spawned,
+                animate_player,
             )
                 .run_if(level_ready),
         );
@@ -22,10 +24,27 @@ pub struct Player;
 #[derive(Default, Bundle, LdtkEntity)]
 struct PlayerBundle {
     player: Player,
-    #[sprite_sheet_bundle]
-    sprite_sheet_bundle: LdtkSpriteSheetBundle,
     #[grid_coords]
     grid_coords: GridCoords,
+}
+
+fn on_player_spawned(
+    player_q: Query<Entity, Added<Player>>,
+    mut cmd: Commands,
+    sprites: Res<SpriteAssets>,
+) {
+    for e in &player_q {
+        cmd.entity(e).try_insert((
+            SpriteBundle {
+                texture: sprites.player_sheet.clone_weak(),
+                ..default()
+            },
+            TextureAtlas {
+                layout: sprites.idle_anim_layout.clone_weak(),
+                index: 0,
+            },
+        ));
+    }
 }
 
 fn process_typed_input(
@@ -94,6 +113,7 @@ fn move_player_to_finished_word_cell(
 ) {
     // only move when there's an exactly ONE finished word
     // todo: instead of doing that, move only in the facing/last move direction when there's more than 1 finished word
+    // or maybe move in that direction only when the word is followed by pressing space
     if word_finished_evr.len() != 1 {
         word_finished_evr.clear();
         return;
@@ -103,4 +123,10 @@ fn move_player_to_finished_word_cell(
     let tile_coords = or_return!(coords_q.get(ev.0));
     let mut player_coords = or_return!(player_q.get_single_mut());
     *player_coords = *tile_coords;
+}
+
+fn animate_player(time: Res<Time>, mut sprites_to_animate: Query<&mut TextureAtlas, With<Player>>) {
+    for mut atlas in &mut sprites_to_animate {
+        atlas.index = (time.elapsed_seconds() / 0.12).round() as usize % 4;
+    }
 }
