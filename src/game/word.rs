@@ -72,27 +72,37 @@ impl TileWord {
         }
     }
 
-    pub(crate) fn section(text: impl Into<String>, color: Color) -> TextSection {
+    pub(crate) fn section(
+        text: impl Into<String>,
+        color: Color,
+        font: Handle<Font>,
+    ) -> TextSection {
         TextSection::new(
             text.into(),
             TextStyle {
                 color,
-                font_size: 24.0,
+                font_size: 36.0,
+                font,
                 ..default()
             },
         )
     }
 
-    pub(crate) fn done_section(text: impl Into<String>, alpha: f32) -> TextSection {
-        Self::section(text, tailwind::GRAY_700.with_alpha(alpha).into())
+    pub(crate) fn done_section(
+        text: impl Into<String>,
+        alpha: f32,
+        font: Handle<Font>,
+    ) -> TextSection {
+        Self::section(text, tailwind::GRAY_700.with_alpha(alpha).into(), font)
     }
 
-    pub(crate) fn text_sections(&self, alpha: f32) -> Vec<TextSection> {
+    pub(crate) fn text_sections(&self, alpha: f32, font: Handle<Font>) -> Vec<TextSection> {
         tile_word_text_sections(
             self.text.as_str(),
             self.typed_char_len,
             self.status(),
             alpha,
+            font,
         )
     }
 }
@@ -134,25 +144,33 @@ fn tile_word_text_sections<'a>(
     typed_len: usize,
     status: WordStatus,
     alpha: f32,
+    font: Handle<Font>,
 ) -> Vec<TextSection> {
     let text = text.into();
     let mut res = Vec::with_capacity(4);
     if status != WordStatus::Pristine {
-        res.push(TileWord::done_section(text[..typed_len].to_string(), alpha));
+        res.push(TileWord::done_section(
+            text[..typed_len].to_string(),
+            alpha,
+            font.clone_weak(),
+        ));
     }
     if status != WordStatus::Finished {
         res.push(TileWord::section(
             "|",
             tailwind::GRAY_300.with_alpha(alpha).into(),
+            font.clone_weak(),
         ));
         let next_char_i = typed_len + 1;
         res.push(TileWord::section(
             text[typed_len..next_char_i].to_string(),
             tailwind::GREEN_200.with_alpha(alpha).into(),
+            font.clone_weak(),
         ));
         res.push(TileWord::section(
             text[next_char_i..].to_string(),
             tailwind::GRAY_200.with_alpha(alpha).into(),
+            font.clone_weak(),
         ));
     }
 
@@ -166,6 +184,7 @@ fn spawn_tile_words(
     ground_q: Query<Entity, Added<Ground>>,
     mut cmd: Commands,
     wordlist: Res<WordList>,
+    fonts: Res<FontAssets>,
 ) {
     let mut rng = thread_rng();
     for e in &ground_q {
@@ -185,6 +204,7 @@ fn spawn_tile_words(
                                 0,
                                 WordStatus::Pristine,
                                 0.0,
+                                fonts.tile.clone_weak(),
                             )),
                             transform: Transform::from_translation(Vec2::ZERO.extend(0.1))
                                 .with_scale(Vec2::splat(0.25).extend(1.)),
@@ -205,13 +225,14 @@ fn update_ground_text_sections(
     mut word_finished_evr: EventReader<WordFinishedEvent>,
     word_q: Query<&TileWord>,
     mut text_q: Query<&mut Text>,
+    fonts: Res<FontAssets>,
 ) {
     let mut entities: Vec<_> = word_advanced_evr.read().map(|ev| ev.0).collect();
     entities.extend(word_finished_evr.read().map(|ev| ev.0));
     for word_e in entities {
         let word = or_continue!(word_q.get(word_e));
         let mut text = or_continue!(text_q.get_mut(word.text_e));
-        text.sections = word.text_sections(1.0);
+        text.sections = word.text_sections(1.0, fonts.tile.clone_weak());
     }
 }
 

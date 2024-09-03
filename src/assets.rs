@@ -10,6 +10,7 @@ pub(super) fn plugin(app: &mut App) {
                 Screen::MainMenu
             })
             .load_collection::<SpriteAssets>()
+            .load_collection::<FontAssets>()
             .load_collection::<SfxAssets>()
             .load_collection::<MusicAssets>()
             .load_collection::<WordlistAssets>(),
@@ -20,12 +21,13 @@ pub(super) fn plugin(app: &mut App) {
 #[allow(dead_code)]
 pub fn assets_exist(
     sprites: Option<Res<SpriteAssets>>,
+    fonts: Option<Res<WordlistAssets>>,
     sfx: Option<Res<SfxAssets>>,
     music: Option<Res<MusicAssets>>,
-    wordlists: Option<Res<WordlistAssets>>,
+    wordlists: Option<Res<FontAssets>>,
     // particles: Option<Res<ParticleAssets>>,
 ) -> bool {
-    sprites.is_some() && sfx.is_some() && music.is_some() && wordlists.is_some()
+    sprites.is_some() && fonts.is_some() && sfx.is_some() && music.is_some() && wordlists.is_some()
     /*&& particles.is_some()*/
 }
 
@@ -58,6 +60,12 @@ pub struct SpriteAssets {
     pub mine_fast_anim_layout: Handle<TextureAtlasLayout>,
     #[asset(path = "images/player.png")]
     pub player_sheet: Handle<Image>,
+}
+
+#[derive(AssetCollection, Resource)]
+pub struct FontAssets {
+    #[asset(path = "fonts/m5x7.ttf")]
+    pub tile: Handle<Font>,
 }
 
 #[derive(AssetCollection, Resource)]

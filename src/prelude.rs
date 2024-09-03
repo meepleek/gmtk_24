@@ -3,7 +3,7 @@
 
 pub(crate) use crate::tween::*;
 pub(crate) use crate::{
-    assets::{assets_exist, MusicAssets, SfxAssets, SpriteAssets},
+    assets::{assets_exist, FontAssets, MusicAssets, SfxAssets, SpriteAssets},
     audio::{
         music::{MusicCommands, MusicTrack},
         sfx::{Sfx, SfxCommands},
