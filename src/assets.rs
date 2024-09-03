@@ -38,8 +38,26 @@ pub struct WordlistAssets {
 // https://github.com/NiklasEi/bevy_asset_loader?tab=readme-ov-file#supported-asset-fields
 #[derive(AssetCollection, Resource)]
 pub struct SpriteAssets {
-    // #[asset(path = "images/transition_circle.png")]
-    // pub transition_circle: Handle<Image>,
+    #[asset(texture_atlas_layout(tile_size_x = 32, tile_size_y = 32, columns = 5, rows = 1))]
+    idle_anim_layout: Handle<TextureAtlasLayout>,
+    #[asset(texture_atlas_layout(
+        tile_size_x = 32,
+        tile_size_y = 32,
+        columns = 8,
+        rows = 1,
+        offset_y = 32
+    ))]
+    mine_anim_layout: Handle<TextureAtlasLayout>,
+    #[asset(texture_atlas_layout(
+        tile_size_x = 32,
+        tile_size_y = 32,
+        columns = 3,
+        rows = 1,
+        offset_y = 64
+    ))]
+    mine_fast_anim_layout: Handle<TextureAtlasLayout>,
+    #[asset(path = "images/player.png")]
+    pub player_sheet: Handle<Image>,
 }
 
 #[derive(AssetCollection, Resource)]
