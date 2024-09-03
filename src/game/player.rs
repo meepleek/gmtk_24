@@ -44,13 +44,11 @@ impl PlayerAnimation {
     fn frame_base_duration_ms(&self, frame: usize) -> u64 {
         match self {
             PlayerAnimation::Idle => 100,
-            PlayerAnimation::Mine => {
-                if frame >= 3 {
-                    50
-                } else {
-                    100
-                }
-            }
+            PlayerAnimation::Mine => match frame {
+                0..=2 => 110,
+                3 => 90,
+                _ => 60,
+            },
             PlayerAnimation::MineFast => 80,
         }
     }
@@ -185,9 +183,11 @@ fn animate_player(
     if word_advanced_evr.clear_any() || word_finished_evr.clear_any() {
         atlas.layout = sprites.mine_anim_layout.clone_weak();
         *player_anim = PlayerAnimation::Mine;
-        timer.set_duration(Duration::from_millis(50));
+        atlas.index = 3;
+        timer.set_duration(Duration::from_millis(
+            player_anim.frame_base_duration_ms(atlas.index),
+        ));
         timer.reset();
-        atlas.index = 0;
     }
 
     timer.tick(time.delta());
