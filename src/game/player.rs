@@ -1,3 +1,5 @@
+use std::time::Duration;
+
 use super::word::TileWord;
 use crate::prelude::*;
 
@@ -21,6 +23,44 @@ pub(super) fn plugin(app: &mut App) {
 #[reflect(Component)]
 pub struct Player;
 
+#[derive(Component, Debug, Default, Reflect)]
+#[reflect(Component)]
+pub enum PlayerAnimation {
+    #[default]
+    Idle,
+    Mine,
+    MineFast,
+}
+
+impl PlayerAnimation {
+    fn len(&self) -> usize {
+        match self {
+            PlayerAnimation::Idle => 5,
+            PlayerAnimation::Mine => 8,
+            PlayerAnimation::MineFast => 3,
+        }
+    }
+
+    fn frame_base_duration_ms(&self, frame: usize) -> u64 {
+        match self {
+            PlayerAnimation::Idle => 100,
+            PlayerAnimation::Mine => {
+                if frame >= 3 {
+                    50
+                } else {
+                    100
+                }
+            }
+            PlayerAnimation::MineFast => 80,
+        }
+    }
+}
+
+// todo: move
+#[derive(Component, Deref, DerefMut, Reflect)]
+#[reflect(Component)]
+pub struct AnimationTimer(Timer);
+
 #[derive(Default, Bundle, LdtkEntity)]
 struct PlayerBundle {
     player: Player,
@@ -43,6 +83,11 @@ fn on_player_spawned(
                 layout: sprites.idle_anim_layout.clone_weak(),
                 index: 0,
             },
+            PlayerAnimation::default(),
+            AnimationTimer(Timer::new(
+                Duration::from_millis(PlayerAnimation::Idle.frame_base_duration_ms(0)),
+                TimerMode::Repeating,
+            )),
         ));
     }
 }
@@ -125,8 +170,35 @@ fn move_player_to_finished_word_cell(
     *player_coords = *tile_coords;
 }
 
-fn animate_player(time: Res<Time>, mut sprites_to_animate: Query<&mut TextureAtlas, With<Player>>) {
-    for mut atlas in &mut sprites_to_animate {
-        atlas.index = (time.elapsed_seconds() / 0.12).round() as usize % 4;
+fn animate_player(
+    time: Res<Time>,
+    mut player_q: Query<
+        (&mut AnimationTimer, &mut PlayerAnimation, &mut TextureAtlas),
+        With<Player>,
+    >,
+    mut word_advanced_evr: EventReader<WordAdvancedEvent>,
+    mut word_finished_evr: EventReader<WordFinishedEvent>,
+    sprites: Res<SpriteAssets>,
+) {
+    let (mut timer, mut player_anim, mut atlas) = or_return!(player_q.get_single_mut());
+
+    if word_advanced_evr.clear_any() || word_finished_evr.clear_any() {
+        atlas.layout = sprites.mine_anim_layout.clone_weak();
+        *player_anim = PlayerAnimation::Mine;
+        timer.set_duration(Duration::from_millis(50));
+        timer.reset();
+        atlas.index = 0;
+    }
+
+    timer.tick(time.delta());
+    if timer.just_finished() {
+        atlas.index = (atlas.index + 1) % player_anim.len();
+        if atlas.index == 0 {
+            atlas.layout = sprites.idle_anim_layout.clone_weak();
+            *player_anim = PlayerAnimation::Idle;
+        }
+        timer.set_duration(Duration::from_millis(
+            player_anim.frame_base_duration_ms(atlas.index),
+        ));
     }
 }
