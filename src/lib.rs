@@ -1,3 +1,4 @@
+mod anim;
 mod assets;
 mod audio;
 mod camera;
@@ -72,6 +73,7 @@ impl Plugin for AppPlugin {
             assets::plugin,
             audio::plugin,
             tween::plugin,
+            anim::plugin,
             camera::plugin,
             input::plugin,
             time::plugin,

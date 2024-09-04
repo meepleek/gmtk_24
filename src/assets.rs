@@ -76,6 +76,16 @@ pub struct SpriteAssets {
     pub swing_fast_anim_layout: Handle<TextureAtlasLayout>,
     #[asset(path = "images/player.png")]
     pub player_sheet: Handle<Image>,
+    #[asset(texture_atlas_layout(
+        tile_size_x = 32,
+        tile_size_y = 32,
+        columns = 3,
+        rows = 1,
+        offset_y = 480
+    ))]
+    pub tilemap_cracks_layout: Handle<TextureAtlasLayout>,
+    #[asset(path = "images/tilemap.png")]
+    pub tilemap: Handle<Image>,
 }
 
 #[derive(AssetCollection, Resource)]

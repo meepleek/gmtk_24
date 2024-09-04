@@ -3,6 +3,7 @@
 
 pub(crate) use crate::tween::*;
 pub(crate) use crate::{
+    anim::FadeOutSpriteHiearchy,
     assets::{assets_exist, FontAssets, MusicAssets, SfxAssets, SpriteAssets},
     audio::{
         music::{MusicCommands, MusicTrack},

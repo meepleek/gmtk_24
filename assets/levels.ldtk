@@ -11,7 +11,7 @@
 	"iid": "e625ed60-4ce0-11ef-b1da-97c07c3566c1",
 	"jsonVersion": "1.5.3",
 	"appBuildId": 478212,
-	"nextUid": 508,
+	"nextUid": 509,
 	"identifierStyle": "Capitalize",
 	"toc": [],
 	"worldLayout": "LinearHorizontal",
@@ -2207,9 +2207,9 @@
 			"color": "#BE4A2F",
 			"renderMode": "Tile",
 			"showName": true,
-			"tilesetId": 11,
+			"tilesetId": 508,
 			"tileRenderMode": "FitInside",
-			"tileRect": { "tilesetUid": 11, "x": 0, "y": 480, "w": 32, "h": 32 },
+			"tileRect": { "tilesetUid": 508, "x": 0, "y": 0, "w": 32, "h": 32 },
 			"uiTileRect": null,
 			"nineSliceBorders": [],
 			"maxCount": 1,
@@ -2222,13 +2222,13 @@
 	], "tilesets": [
 		{
 			"__cWid": 5,
-			"__cHei": 4,
+			"__cHei": 5,
 			"identifier": "Player",
 			"uid": 6,
 			"relPath": "images/player.png",
 			"embedAtlas": null,
 			"pxWid": 160,
-			"pxHei": 128,
+			"pxHei": 160,
 			"tileGridSize": 32,
 			"spacing": 0,
 			"padding": 0,
@@ -2238,8 +2238,8 @@
 			"customData": [],
 			"savedSelections": [],
 			"cachedPixelData": {
-				"opaqueTiles": "00000000000000000000",
-				"averageColors": "6c966c966c966c966b966b966b966c96000000008ba76c966b966c966b9789a89998a9a800000000"
+				"opaqueTiles": "0000000000000000000000000",
+				"averageColors": "6c966c966c966c966b966c966b966c96000000006c966c966c966c9600008ba76c966b966c966b9789a89998a9a800000000"
 			}
 		},
 		{
@@ -2261,8 +2261,27 @@
 			"savedSelections": [],
 			"cachedPixelData": {
 				"opaqueTiles": "01000100111101100100111000111111001111111100111111001111000000000100010011111111010011110011111000110110110000001100000000000000",
-				"averageColors": "f745f745f745f745f745f745f7450000f645f645f645f745f745f645f6450000f745f745f745f745f645f645f6450000f745f745f745f745f645f645f645f745f745f745f745f745f645f645f745f645f645f64500000000f966f966f966f966f645f64500000000f966f966f966f96600000000000000000000000000000000f223f223f223f223f223f223f2230000f223f223f223f223f223f223f223f223f223f223f223f223f223f223f223f223f223f223f223f223f223f223f2230000f223f223f223f223f223f223f2230000f223f223000000000000000000000000f223f2230000000000000000000000004d970000000000000000000000000000"
+				"averageColors": "f745f745f745f745f745f745f7450000f645f645f645f745f745f645f6450000f745f745f745f745f645f645f6450000f745f745f745f745f645f645f645f745f745f745f745f745f645f645f745f645f645f64500000000f966f966f966f966f645f64500000000f966f966f966f96600000000000000000000000000000000f223f223f223f223f223f223f2230000f223f223f223f223f223f223f223f223f223f223f223f223f223f223f223f223f223f223f223f223f223f223f2230000f223f223f223f223f223f223f2230000f223f223000000000000000000000000f223f22300000000000000000000000012232223322300000000000000000000"
 			}
+		},
+		{
+			"__cWid": 1,
+			"__cHei": 1,
+			"identifier": "Props",
+			"uid": 508,
+			"relPath": "images/props.png",
+			"embedAtlas": null,
+			"pxWid": 32,
+			"pxHei": 32,
+			"tileGridSize": 32,
+			"spacing": 0,
+			"padding": 0,
+			"tags": [],
+			"tagsSourceEnumUid": null,
+			"enumTags": [],
+			"customData": [],
+			"savedSelections": [],
+			"cachedPixelData": { "opaqueTiles": "0", "averageColors": "4d97" }
 		}
 	], "enums": [], "externalEnums": [], "levelFields": [] },
 	"levels": [
@@ -2330,7 +2349,7 @@
 							"__grid": [5,1],
 							"__pivot": [0,0],
 							"__tags": [],
-							"__tile": { "tilesetUid": 11, "x": 0, "y": 480, "w": 32, "h": 32 },
+							"__tile": { "tilesetUid": 508, "x": 0, "y": 0, "w": 32, "h": 32 },
 							"__smartColor": "#BE4A2F",
 							"iid": "d2c9eee0-4ce0-11ef-8063-0d0b6bf2b38c",
 							"width": 32,
@@ -2455,7 +2474,7 @@
 							"__grid": [6,1],
 							"__pivot": [0,0],
 							"__tags": [],
-							"__tile": { "tilesetUid": 11, "x": 0, "y": 480, "w": 32, "h": 32 },
+							"__tile": { "tilesetUid": 508, "x": 0, "y": 0, "w": 32, "h": 32 },
 							"__smartColor": "#BE4A2F",
 							"iid": "06495fd1-4ce0-11ef-8063-43abb59bdf47",
 							"width": 32,
@@ -2583,7 +2602,7 @@
 							"__grid": [2,3],
 							"__pivot": [0,0],
 							"__tags": [],
-							"__tile": { "tilesetUid": 11, "x": 0, "y": 480, "w": 32, "h": 32 },
+							"__tile": { "tilesetUid": 508, "x": 0, "y": 0, "w": 32, "h": 32 },
 							"__smartColor": "#BE4A2F",
 							"iid": "630c5290-4ce0-11ef-8063-cbd29a5e4ff4",
 							"width": 32,
@@ -2808,7 +2827,7 @@
 							"__grid": [5,8],
 							"__pivot": [0,0],
 							"__tags": [],
-							"__tile": { "tilesetUid": 11, "x": 0, "y": 480, "w": 32, "h": 32 },
+							"__tile": { "tilesetUid": 508, "x": 0, "y": 0, "w": 32, "h": 32 },
 							"__smartColor": "#BE4A2F",
 							"iid": "913508b0-4ce0-11ef-8063-db4ace5ba7a1",
 							"width": 32,

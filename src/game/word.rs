@@ -15,7 +15,13 @@ pub(super) fn plugin(app: &mut App) {
         )
         .add_systems(
             Update,
-            (tween_ground_texts, tween_out_finished_words, play_word_sfx).run_if(level_ready),
+            (
+                tween_ground_texts,
+                tween_out_finished_tiles,
+                play_word_sfx,
+                spawn_cracks,
+            )
+                .run_if(level_ready),
         );
 }
 
@@ -281,7 +287,7 @@ fn update_ground_text_sections(
     }
 }
 
-fn tween_out_finished_words(
+fn tween_out_finished_tiles(
     mut word_tile_evr: EventReader<WordTileEvent>,
     word_q: Query<&WordTile, Changed<WordTile>>,
     mut cmd: Commands,
@@ -292,7 +298,10 @@ fn tween_out_finished_words(
     {
         let word = or_continue!(word_q.get(ev.e));
         let mut cmd_e = or_continue!(cmd.get_entity(ev.e));
-        cmd_e.try_insert(DespawnOnTweenCompleted::Itself);
+        cmd_e.try_insert((
+            DespawnOnTweenCompleted::Itself,
+            FadeOutSpriteHiearchy { duration_ms: 150 },
+        ));
         cmd.tween_tile_color(ev.e, Color::NONE, 150, EaseFunction::QuadraticIn);
         cmd.tween_text_alpha(word.text_e, 0.0, 110, EaseFunction::QuadraticIn);
     }
@@ -348,3 +357,52 @@ fn play_word_sfx(mut word_tile_evr: EventReader<WordTileEvent>, mut cmd: Command
         cmd.play_sfx(Sfx::FinishWord(i));
     };
 }
+
+fn spawn_cracks(
+    mut word_tile_evr: EventReader<WordTileEvent>,
+    mut cmd: Commands,
+    sprites: Res<SpriteAssets>,
+) {
+    for (i, e) in word_tile_evr.read().filter_map(|ev| match ev.kind {
+        WordTileEventKind::WordFinished(i) => Some((i - 1, ev.e)),
+        WordTileEventKind::TileFinished(i) => Some((i, ev.e)),
+        _ => None,
+    }) {
+        let mut e_cmd = or_continue_quiet!(cmd.get_entity(e));
+        e_cmd.with_children(|b| {
+            b.spawn((
+                SpriteBundle {
+                    transform: Transform::from_translation(Vec3::Z),
+                    texture: sprites.tilemap.clone_weak(),
+                    sprite: Sprite {
+                        color: Color::NONE,
+                        ..default()
+                    },
+                    ..default()
+                },
+                TextureAtlas {
+                    layout: sprites.tilemap_cracks_layout.clone_weak(),
+                    index: i,
+                },
+                sprite_color_anim(Color::WHITE, 70, EaseFunction::QuadraticOut),
+            ));
+        });
+    }
+}
+
+// // todo:
+// fn flash_on_word_finished(
+//     mut word_tile_evr: EventReader<WordTileEvent>,
+//     word_q: Query<&WordTile, Changed<WordTile>>,
+//     mut cmd: Commands,
+// ) {
+//     for ev in word_tile_evr
+//         .read()
+//         .filter(|ev| matches!(ev.kind, WordTileEventKind::WordFinished(_)))
+//     {
+//         let word_tile = or_continue!(word_q.get(ev.e));
+//         let mut cmd_e = or_continue!(cmd.get_entity(ev.e));
+
+//         cmd.tween_tile_color(ev.e, Color::NONE, 150, EaseFunction::QuadraticIn);
+//     }
+// }
