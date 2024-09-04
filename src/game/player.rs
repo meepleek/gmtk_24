@@ -102,14 +102,14 @@ fn on_player_spawned(
 
 fn process_typed_input(
     mut typed: ResMut<TypedInput>,
-    mut player_q: Query<&mut GridCoords, With<Player>>,
+    mut player_q: Query<(&mut GridCoords, &mut Transform), With<Player>>,
     level_lookup: Res<LevelEntityLookup>,
     ground_q: Query<(), Or<(With<Ground>, With<UnbreakableGround>)>>,
     mut word_tile_q: Query<&mut WordTile>,
     mut word_tile_evw: EventWriter<WordTileEvent>,
     bindings: Res<MovementBindings>,
 ) {
-    let mut coords = or_return!(player_q.get_single_mut());
+    let (mut player_coords, mut player_t) = or_return!(player_q.get_single_mut());
 
     if let Some(move_by) = match typed.as_str() {
         "" => return,
@@ -118,7 +118,7 @@ fn process_typed_input(
         c if c == bindings.up => Some(GridCoords::y()),
         c if c == bindings.down => Some(GridCoords::neg_y()),
         _ => {
-            for neighbour_coords in coords.neighbours() {
+            for neighbour_coords in player_coords.neighbours() {
                 let neighbour_e = or_continue_quiet!(level_lookup.get(&neighbour_coords));
                 let mut word_tile = or_continue_quiet!(word_tile_q.get_mut(*neighbour_e));
                 if word_tile.remaining().starts_with(&typed.0) {
@@ -136,8 +136,11 @@ fn process_typed_input(
         }
     } {
         typed.clear();
-        let new_coords = *coords + move_by;
 
+        if move_by.x != 0 {
+            player_t.scale.x = move_by.x.signum() as f32;
+        }
+        let new_coords = *player_coords + move_by;
         if let Some(e) = level_lookup.get(&new_coords) {
             if ground_q.contains(*e) {
                 // todo: hit wall feedback
@@ -145,7 +148,7 @@ fn process_typed_input(
             }
         }
 
-        *coords = new_coords;
+        *player_coords = new_coords;
     }
 }
 
