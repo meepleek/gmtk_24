@@ -1,6 +1,8 @@
 # Untitled game for GMTK 2024
 
-a game for [GMTK 2024](https://itch.io/jam/gmtk-2024) made using [bevy](https://bevyengine.org/).
+a game for [GMTK 2024](https://itch.io/jam/gmtk-2024) made using [bevy](https://bevyengine.org/).  
+
+![just mining](promo/just_mining.gif)  
 
 ## License
 
