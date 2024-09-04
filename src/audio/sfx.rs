@@ -10,16 +10,19 @@ pub(super) fn plugin(_app: &mut App) {
 pub(crate) enum Sfx {
     ButtonClick,
     ButtonHover,
+    FinishWord(usize),
 }
 
 impl SfxAssets {
     fn play(&self, sfx: Sfx, world: &mut World, settings: PlaybackSettings) {
+        let rng = &mut thread_rng();
         let source = match sfx {
-            // can randomize for some SFX
-            // let rng = &mut thread_rng();
-            // let random_sfx = sfx_list.choose(rng).expect("Non-empty sfx list");
             Sfx::ButtonClick => self.button_click.clone_weak(),
             Sfx::ButtonHover => self.button_hover.clone_weak(),
+            Sfx::FinishWord(1) => self.hit_1.choose(rng).unwrap().clone_weak(),
+            Sfx::FinishWord(2) => self.hit_2.choose(rng).unwrap().clone_weak(),
+            Sfx::FinishWord(3) => self.hit_3.choose(rng).unwrap().clone_weak(),
+            Sfx::FinishWord(_) => todo!(),
         };
 
         world.spawn(AudioBundle { source, settings });

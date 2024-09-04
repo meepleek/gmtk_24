@@ -90,9 +90,33 @@ pub struct SfxAssets {
     pub button_hover: Handle<AudioSource>,
     #[asset(path = "audio/sfx/button_press.ogg")]
     pub button_click: Handle<AudioSource>,
-    // collection example
-    // #[asset(paths("audio/sfx/click_1.ogg", "audio/sfx/click_2.ogg"), collection(typed))]
-    // files_typed: Vec<Handle<AudioSource>>,
+    #[asset(
+        paths(
+            "audio/sfx/hit_1_1.ogg",
+            "audio/sfx/hit_1_1.ogg",
+            "audio/sfx/hit_1_3.ogg"
+        ),
+        collection(typed)
+    )]
+    pub hit_1: Vec<Handle<AudioSource>>,
+    #[asset(
+        paths(
+            "audio/sfx/hit_2_1.ogg",
+            "audio/sfx/hit_2_1.ogg",
+            "audio/sfx/hit_2_3.ogg"
+        ),
+        collection(typed)
+    )]
+    pub hit_2: Vec<Handle<AudioSource>>,
+    #[asset(
+        paths(
+            "audio/sfx/hit_3_1.ogg",
+            "audio/sfx/hit_3_1.ogg",
+            "audio/sfx/hit_3_3.ogg"
+        ),
+        collection(typed)
+    )]
+    pub hit_3: Vec<Handle<AudioSource>>,
 }
 
 #[derive(AssetCollection, Resource)]

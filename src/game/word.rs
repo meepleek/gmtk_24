@@ -15,7 +15,7 @@ pub(super) fn plugin(app: &mut App) {
         )
         .add_systems(
             Update,
-            (tween_ground_texts, tween_out_finished_words).run_if(level_ready),
+            (tween_ground_texts, tween_out_finished_words, play_word_sfx).run_if(level_ready),
         );
 }
 
@@ -38,8 +38,8 @@ pub(crate) struct WordTile {
 pub(crate) enum WordTileEventKind {
     WordStarted,
     WordAdvanced,
-    WordFinished,
-    TileFinished,
+    WordFinished(usize),
+    TileFinished(usize),
 }
 
 #[derive(Event, Debug, Reflect)]
@@ -83,9 +83,9 @@ impl WordTile {
             if self.word_i < (self.words.len() - 1) {
                 self.word_i += 1;
                 self.typed_char_len = 0;
-                WordTileEventKind::WordFinished
+                WordTileEventKind::WordFinished(self.word_i)
             } else {
-                WordTileEventKind::TileFinished
+                WordTileEventKind::TileFinished(self.word_i)
             }
         } else if typed_len_prev == 0 {
             WordTileEventKind::WordStarted
@@ -288,7 +288,7 @@ fn tween_out_finished_words(
 ) {
     for ev in word_tile_evr
         .read()
-        .filter(|ev| ev.kind == WordTileEventKind::TileFinished)
+        .filter(|ev| matches!(ev.kind, WordTileEventKind::TileFinished(_)))
     {
         let word = or_continue!(word_q.get(ev.e));
         let mut cmd_e = or_continue!(cmd.get_entity(ev.e));
@@ -332,4 +332,19 @@ fn tween_ground_texts(
             cmd.tween_text_alpha(word.text_e, 1.0, 110, EaseFunction::QuadraticOut);
         }
     }
+}
+
+fn play_word_sfx(mut word_tile_evr: EventReader<WordTileEvent>, mut cmd: Commands) {
+    if let Some(i) = word_tile_evr
+        .read()
+        .filter_map(|ev| match ev.kind {
+            WordTileEventKind::WordFinished(i) => Some(i),
+            WordTileEventKind::TileFinished(i) => Some(i + 1),
+            _ => None,
+        })
+        .next()
+    {
+        word_tile_evr.clear();
+        cmd.play_sfx(Sfx::FinishWord(i));
+    };
 }

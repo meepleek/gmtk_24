@@ -171,7 +171,8 @@ fn move_player_to_finished_word_cell(
     // or maybe move in that direction only when the word is followed by pressing space
     let Some(ev) = word_tile_evr
         .read()
-        .find(|ev| ev.kind == WordTileEventKind::TileFinished)
+        .filter(|ev| matches!(ev.kind, WordTileEventKind::TileFinished(_)))
+        .next()
     else {
         return;
     };
@@ -199,7 +200,7 @@ fn animate_player(
                 *player_anim = PlayerAnimation::SwingAnticipation;
                 true
             }
-            WordTileEventKind::WordFinished | WordTileEventKind::TileFinished => {
+            WordTileEventKind::WordFinished(_) | WordTileEventKind::TileFinished(_) => {
                 atlas.layout = sprites.swing_anim_layout.clone_weak();
                 *player_anim = PlayerAnimation::Swing;
                 true
