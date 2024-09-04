@@ -2,7 +2,7 @@ use crate::{assets::WordlistAssets, prelude::*};
 use bevy::{color::palettes::tailwind, utils::HashSet};
 
 pub(super) fn plugin(app: &mut App) {
-    app.register_type::<TileWord>()
+    app.register_type::<WordTile>()
         .add_event::<WordAdvancedEvent>()
         .add_event::<WordFinishedEvent>()
         .add_systems(OnExit(Screen::Loading), update_word_list)
@@ -28,8 +28,9 @@ pub struct WordList {
 }
 
 #[derive(Component, Reflect, Debug)]
-pub(crate) struct TileWord {
-    text: String,
+pub(crate) struct WordTile {
+    words: Vec<String>,
+    word_i: usize,
     typed_char_len: usize,
     text_e: Entity,
 }
@@ -41,34 +42,50 @@ pub(crate) struct WordAdvancedEvent(pub Entity);
 pub(crate) struct WordFinishedEvent(pub Entity);
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
-pub(crate) enum WordStatus {
+pub(crate) enum WordTileStatus {
     Pristine,
     Damaged,
     Finished,
 }
 
-impl TileWord {
-    pub(crate) fn new(text: impl Into<String>, text_e: Entity) -> Self {
+impl WordTile {
+    pub(crate) fn new(words: Vec<String>, text_e: Entity) -> Self {
         Self {
-            text: text.into(),
+            words,
+            word_i: 0,
             typed_char_len: 0,
             text_e,
         }
     }
 
+    pub(crate) fn current_word(&self) -> &str {
+        &self.words[self.word_i]
+    }
+
     pub(crate) fn remaining(&self) -> String {
-        self.text.chars().skip(self.typed_char_len).collect()
+        self.current_word()
+            .chars()
+            .skip(self.typed_char_len)
+            .collect()
     }
 
     pub(crate) fn advance(&mut self, count: usize) {
         self.typed_char_len += count;
+        if self.word_i < (self.words.len() - 1)
+            && self.typed_char_len >= self.current_word().chars().count()
+        {
+            self.word_i = self.word_i + 1;
+            self.typed_char_len = 0;
+        }
     }
 
-    pub(crate) fn status(&self) -> WordStatus {
-        match self.typed_char_len {
-            0 => WordStatus::Pristine,
-            typed if typed >= self.text.len() => WordStatus::Finished,
-            _ => WordStatus::Damaged,
+    pub(crate) fn status(&self) -> WordTileStatus {
+        match (self.word_i, self.typed_char_len) {
+            (0, 0) => WordTileStatus::Pristine,
+            (word_i, typed) if word_i == (self.words.len() - 1) && typed >= self.words.len() => {
+                WordTileStatus::Finished
+            }
+            _ => WordTileStatus::Damaged,
         }
     }
 
@@ -88,17 +105,10 @@ impl TileWord {
         )
     }
 
-    pub(crate) fn done_section(
-        text: impl Into<String>,
-        alpha: f32,
-        font: Handle<Font>,
-    ) -> TextSection {
-        Self::section(text, tailwind::GRAY_700.with_alpha(alpha).into(), font)
-    }
-
     pub(crate) fn text_sections(&self, alpha: f32, font: Handle<Font>) -> Vec<TextSection> {
         tile_word_text_sections(
-            self.text.as_str(),
+            &self.words,
+            self.word_i,
             self.typed_char_len,
             self.status(),
             alpha,
@@ -140,38 +150,60 @@ fn update_word_list(
 }
 
 fn tile_word_text_sections<'a>(
-    text: impl Into<&'a str>,
+    words: &[String],
+    word_i: usize,
     typed_len: usize,
-    status: WordStatus,
+    status: WordTileStatus,
     alpha: f32,
     font: Handle<Font>,
 ) -> Vec<TextSection> {
-    let text = text.into();
-    let mut res = Vec::with_capacity(4);
-    if status != WordStatus::Pristine {
-        res.push(TileWord::done_section(
-            text[..typed_len].to_string(),
-            alpha,
-            font.clone_weak(),
-        ));
-    }
-    if status != WordStatus::Finished {
-        res.push(TileWord::section(
-            "|",
-            tailwind::GRAY_300.with_alpha(alpha).into(),
-            font.clone_weak(),
-        ));
-        let next_char_i = typed_len + 1;
-        res.push(TileWord::section(
-            text[typed_len..next_char_i].to_string(),
-            tailwind::GREEN_200.with_alpha(alpha).into(),
-            font.clone_weak(),
-        ));
-        res.push(TileWord::section(
-            text[next_char_i..].to_string(),
-            tailwind::GRAY_200.with_alpha(alpha).into(),
-            font.clone_weak(),
-        ));
+    let mut res = Vec::with_capacity(4 + words.len());
+    for (i, word) in words.iter().enumerate() {
+        if i == word_i {
+            if status != WordTileStatus::Pristine {
+                res.push(WordTile::section(
+                    word[..typed_len].to_string(),
+                    tailwind::GRAY_700.with_alpha(alpha).into(),
+                    font.clone_weak(),
+                ));
+            }
+            if status != WordTileStatus::Finished {
+                res.push(WordTile::section(
+                    "|",
+                    tailwind::GRAY_300.with_alpha(alpha).into(),
+                    font.clone_weak(),
+                ));
+                let next_char_i = typed_len + 1;
+                res.push(WordTile::section(
+                    word[typed_len..next_char_i].to_string(),
+                    tailwind::GREEN_200.with_alpha(alpha).into(),
+                    font.clone_weak(),
+                ));
+                res.push(WordTile::section(
+                    word[next_char_i..].to_string(),
+                    tailwind::GRAY_200.with_alpha(alpha).into(),
+                    font.clone_weak(),
+                ));
+            }
+        } else {
+            res.push(WordTile::section(
+                word.to_string(),
+                (if i < word_i {
+                    tailwind::GRAY_700
+                } else {
+                    tailwind::GRAY_200
+                })
+                .with_alpha(alpha)
+                .into(),
+                font.clone_weak(),
+            ));
+        }
+
+        if i < (words.len() - 1) {
+            res.last_mut()
+                .expect("At least 1 section has been added")
+                .value += "\n";
+        }
     }
 
     res
@@ -188,10 +220,11 @@ fn spawn_tile_words(
 ) {
     let mut rng = thread_rng();
     for e in &ground_q {
-        let word = &wordlist
+        let words: Vec<_> = wordlist
             .ground_words
-            .choose(&mut rng)
-            .expect("random word picked");
+            .choose_multiple(&mut rng, 3)
+            .cloned()
+            .collect();
         let mut text_e = None;
         let mut e_cmd = or_continue!(cmd.get_entity(e));
         e_cmd
@@ -200,9 +233,10 @@ fn spawn_tile_words(
                     b.spawn((
                         Text2dBundle {
                             text: Text::from_sections(tile_word_text_sections(
-                                word.as_str(),
+                                &words,
                                 0,
-                                WordStatus::Pristine,
+                                0,
+                                WordTileStatus::Pristine,
                                 0.0,
                                 fonts.tile.clone_weak(),
                             )),
@@ -215,7 +249,7 @@ fn spawn_tile_words(
                     .id(),
                 );
             })
-            .try_insert(TileWord::new(word.to_string(), text_e.unwrap()))
+            .try_insert(WordTile::new(words, text_e.unwrap()))
             .add_child(text_e.unwrap());
     }
 }
@@ -223,7 +257,7 @@ fn spawn_tile_words(
 fn update_ground_text_sections(
     mut word_advanced_evr: EventReader<WordAdvancedEvent>,
     mut word_finished_evr: EventReader<WordFinishedEvent>,
-    word_q: Query<&TileWord>,
+    word_q: Query<&WordTile>,
     mut text_q: Query<&mut Text>,
     fonts: Res<FontAssets>,
 ) {
@@ -238,7 +272,7 @@ fn update_ground_text_sections(
 
 fn tween_out_finished_words(
     mut word_finished_evr: EventReader<WordFinishedEvent>,
-    word_q: Query<&TileWord, Changed<TileWord>>,
+    word_q: Query<&WordTile, Changed<WordTile>>,
     mut cmd: Commands,
 ) {
     for ev in word_finished_evr.read() {
@@ -253,7 +287,7 @@ fn tween_out_finished_words(
 // tween text in/out as the player approaches/leaves
 fn tween_ground_texts(
     player_q: Query<&GridCoords, (With<Player>, Changed<GridCoords>)>,
-    word_q: Query<&TileWord>,
+    word_q: Query<&WordTile>,
     visible_word_q: Query<Entity, With<TileWordVisible>>,
     level_lookup: Res<LevelEntityLookup>,
     mut cmd: Commands,

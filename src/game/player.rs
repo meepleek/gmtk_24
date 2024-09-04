@@ -1,6 +1,6 @@
 use std::time::Duration;
 
-use super::word::TileWord;
+use super::word::WordTile;
 use crate::prelude::*;
 
 pub(super) fn plugin(app: &mut App) {
@@ -95,7 +95,7 @@ fn process_typed_input(
     mut player_q: Query<&mut GridCoords, With<Player>>,
     level_lookup: Res<LevelEntityLookup>,
     ground_q: Query<(), Or<(With<Ground>, With<UnbreakableGround>)>>,
-    mut word_q: Query<&mut TileWord>,
+    mut word_tile_q: Query<&mut WordTile>,
     mut word_advanced_evw: EventWriter<WordAdvancedEvent>,
     mut word_finished_evw: EventWriter<WordFinishedEvent>,
     bindings: Res<MovementBindings>,
@@ -111,10 +111,10 @@ fn process_typed_input(
         _ => {
             for neighbour_coords in coords.neighbours() {
                 let neighbour_e = or_continue_quiet!(level_lookup.get(&neighbour_coords));
-                let mut word = or_continue_quiet!(word_q.get_mut(*neighbour_e));
-                if word.remaining().starts_with(&typed.0) {
-                    word.advance(typed.len());
-                    if word.status() == WordStatus::Finished {
+                let mut word_tile = or_continue_quiet!(word_tile_q.get_mut(*neighbour_e));
+                if word_tile.remaining().starts_with(&typed.0) {
+                    word_tile.advance(typed.len());
+                    if word_tile.status() == WordTileStatus::Finished {
                         word_finished_evw.send(WordFinishedEvent(*neighbour_e));
                     } else {
                         word_advanced_evw.send(WordAdvancedEvent(*neighbour_e));

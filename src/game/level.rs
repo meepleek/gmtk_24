@@ -7,7 +7,6 @@ pub(super) fn plugin(app: &mut App) {
         .register_ldtk_int_cell::<UnbreakableGroundBundle>(1)
         .register_ldtk_int_cell::<GroundBundle>(2)
         .insert_resource(LevelSelection::index(0))
-        // .insert_resource(LevelSelection::index(1))
         .register_type::<LevelEntityLookup>()
         .add_systems(Update, (cache_level_entities,).run_if(in_game))
         .add_systems(OnEnter(Screen::Game), spawn_level)

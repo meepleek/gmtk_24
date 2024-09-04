@@ -13,7 +13,7 @@ pub(crate) use crate::{
     game::{
         level::{level_ready, Ground, LevelEntityLookup, UnbreakableGround, TILE_SIZE},
         player::Player,
-        word::{WordAdvancedEvent, WordFinishedEvent, WordStatus},
+        word::{WordAdvancedEvent, WordFinishedEvent, WordTileStatus},
     },
     input::{MovementBindings, TypedInput, UiAction, UiInput},
     math::*,

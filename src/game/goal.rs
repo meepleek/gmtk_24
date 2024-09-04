@@ -20,9 +20,16 @@ struct GoalBundle {
     grid_coords: GridCoords,
 }
 
-#[derive(Resource, Debug, Reflect, Default)]
+#[derive(Resource, Debug, Reflect)]
 #[reflect(Resource)]
 struct LevelIndex(usize);
+
+impl Default for LevelIndex {
+    fn default() -> Self {
+        // Self(0)
+        Self(1)
+    }
+}
 
 fn update_level_selection(lvl_index: Res<LevelIndex>, mut selected_lvl: ResMut<LevelSelection>) {
     *selected_lvl = LevelSelection::index(lvl_index.0);
