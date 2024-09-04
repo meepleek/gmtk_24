@@ -45,19 +45,35 @@ pub struct SpriteAssets {
     #[asset(texture_atlas_layout(
         tile_size_x = 32,
         tile_size_y = 32,
-        columns = 8,
+        columns = 3,
         rows = 1,
         offset_y = 32
     ))]
-    pub mine_anim_layout: Handle<TextureAtlasLayout>,
+    pub swing_anticipation_anim_layout: Handle<TextureAtlasLayout>,
+    #[asset(texture_atlas_layout(
+        tile_size_x = 32,
+        tile_size_y = 32,
+        columns = 4,
+        rows = 1,
+        offset_y = 64
+    ))]
+    pub swing_anticipation_idle_anim_layout: Handle<TextureAtlasLayout>,
+    #[asset(texture_atlas_layout(
+        tile_size_x = 32,
+        tile_size_y = 32,
+        columns = 5,
+        rows = 1,
+        offset_y = 96
+    ))]
+    pub swing_anim_layout: Handle<TextureAtlasLayout>,
     #[asset(texture_atlas_layout(
         tile_size_x = 32,
         tile_size_y = 32,
         columns = 3,
         rows = 1,
-        offset_y = 64
+        offset_y = 128
     ))]
-    pub mine_fast_anim_layout: Handle<TextureAtlasLayout>,
+    pub swing_fast_anim_layout: Handle<TextureAtlasLayout>,
     #[asset(path = "images/player.png")]
     pub player_sheet: Handle<Image>,
 }

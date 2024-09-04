@@ -3,8 +3,7 @@ use bevy::{color::palettes::tailwind, utils::HashSet};
 
 pub(super) fn plugin(app: &mut App) {
     app.register_type::<WordTile>()
-        .add_event::<WordAdvancedEvent>()
-        .add_event::<WordFinishedEvent>()
+        .add_event::<WordTileEvent>()
         .add_systems(OnExit(Screen::Loading), update_word_list)
         .add_systems(
             Update,
@@ -35,11 +34,19 @@ pub(crate) struct WordTile {
     text_e: Entity,
 }
 
-#[derive(Event, Debug, Reflect)]
-pub(crate) struct WordAdvancedEvent(pub Entity);
+#[derive(Debug, Reflect, PartialEq, Eq)]
+pub(crate) enum WordTileEventKind {
+    WordStarted,
+    WordAdvanced,
+    WordFinished,
+    TileFinished,
+}
 
 #[derive(Event, Debug, Reflect)]
-pub(crate) struct WordFinishedEvent(pub Entity);
+pub(crate) struct WordTileEvent {
+    pub e: Entity,
+    pub kind: WordTileEventKind,
+}
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub(crate) enum WordTileStatus {
@@ -69,13 +76,21 @@ impl WordTile {
             .collect()
     }
 
-    pub(crate) fn advance(&mut self, count: usize) {
+    pub(crate) fn advance(&mut self, count: usize) -> WordTileEventKind {
+        let typed_len_prev = self.typed_char_len;
         self.typed_char_len += count;
-        if self.word_i < (self.words.len() - 1)
-            && self.typed_char_len >= self.current_word().chars().count()
-        {
-            self.word_i += 1;
-            self.typed_char_len = 0;
+        if self.typed_char_len >= self.current_word().chars().count() {
+            if self.word_i < (self.words.len() - 1) {
+                self.word_i += 1;
+                self.typed_char_len = 0;
+                WordTileEventKind::WordFinished
+            } else {
+                WordTileEventKind::TileFinished
+            }
+        } else if typed_len_prev == 0 {
+            WordTileEventKind::WordStarted
+        } else {
+            WordTileEventKind::WordAdvanced
         }
     }
 
@@ -254,31 +269,31 @@ fn spawn_tile_words(
 }
 
 fn update_ground_text_sections(
-    mut word_advanced_evr: EventReader<WordAdvancedEvent>,
-    mut word_finished_evr: EventReader<WordFinishedEvent>,
+    mut word_tile_evr: EventReader<WordTileEvent>,
     word_q: Query<&WordTile>,
     mut text_q: Query<&mut Text>,
     fonts: Res<FontAssets>,
 ) {
-    let mut entities: Vec<_> = word_advanced_evr.read().map(|ev| ev.0).collect();
-    entities.extend(word_finished_evr.read().map(|ev| ev.0));
-    for word_e in entities {
-        let word = or_continue!(word_q.get(word_e));
+    for ev in word_tile_evr.read() {
+        let word = or_continue!(word_q.get(ev.e));
         let mut text = or_continue!(text_q.get_mut(word.text_e));
         text.sections = word.text_sections(1.0, fonts.tile.clone_weak());
     }
 }
 
 fn tween_out_finished_words(
-    mut word_finished_evr: EventReader<WordFinishedEvent>,
+    mut word_tile_evr: EventReader<WordTileEvent>,
     word_q: Query<&WordTile, Changed<WordTile>>,
     mut cmd: Commands,
 ) {
-    for ev in word_finished_evr.read() {
-        let word = or_continue!(word_q.get(ev.0));
-        let mut cmd_e = or_continue!(cmd.get_entity(ev.0));
+    for ev in word_tile_evr
+        .read()
+        .filter(|ev| ev.kind == WordTileEventKind::TileFinished)
+    {
+        let word = or_continue!(word_q.get(ev.e));
+        let mut cmd_e = or_continue!(cmd.get_entity(ev.e));
         cmd_e.try_insert(DespawnOnTweenCompleted::Itself);
-        cmd.tween_tile_color(ev.0, Color::NONE, 150, EaseFunction::QuadraticIn);
+        cmd.tween_tile_color(ev.e, Color::NONE, 150, EaseFunction::QuadraticIn);
         cmd.tween_text_alpha(word.text_e, 0.0, 110, EaseFunction::QuadraticIn);
     }
 }

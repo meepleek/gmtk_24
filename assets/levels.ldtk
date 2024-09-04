@@ -2221,14 +2221,14 @@
 		}
 	], "tilesets": [
 		{
-			"__cWid": 8,
-			"__cHei": 3,
+			"__cWid": 5,
+			"__cHei": 4,
 			"identifier": "Player",
 			"uid": 6,
 			"relPath": "images/player.png",
 			"embedAtlas": null,
-			"pxWid": 256,
-			"pxHei": 96,
+			"pxWid": 160,
+			"pxHei": 128,
 			"tileGridSize": 32,
 			"spacing": 0,
 			"padding": 0,
@@ -2238,8 +2238,8 @@
 			"customData": [],
 			"savedSelections": [],
 			"cachedPixelData": {
-				"opaqueTiles": "000000000000000000000000",
-				"averageColors": "6c966c966c966c966b960000000000006b966b966c968ba76c966b966c966b9689a89998a9a800000000000000000000"
+				"opaqueTiles": "00000000000000000000",
+				"averageColors": "6c966c966c966c966b966b966b966c96000000008ba76c966b966c966b9789a89998a9a800000000"
 			}
 		},
 		{

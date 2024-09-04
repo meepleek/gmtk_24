@@ -23,34 +23,44 @@ pub(super) fn plugin(app: &mut App) {
 #[reflect(Component)]
 pub struct Player;
 
-#[derive(Component, Debug, Default, Reflect)]
+#[derive(Component, Debug, Default, Reflect, PartialEq, Eq)]
 #[reflect(Component)]
 pub enum PlayerAnimation {
     #[default]
     Idle,
-    Mine,
-    MineFast,
+    SwingAnticipation,
+    SwingAnticipationIdle,
+    Swing,
+    SwingFast,
 }
 
 impl PlayerAnimation {
     fn len(&self) -> usize {
         match self {
             PlayerAnimation::Idle => 5,
-            PlayerAnimation::Mine => 8,
-            PlayerAnimation::MineFast => 3,
+            PlayerAnimation::SwingAnticipation => 3,
+            PlayerAnimation::SwingAnticipationIdle => 4,
+            PlayerAnimation::Swing => 5,
+            PlayerAnimation::SwingFast => 3,
         }
     }
 
     fn frame_base_duration_ms(&self, frame: usize) -> u64 {
         match self {
-            PlayerAnimation::Idle => 100,
-            PlayerAnimation::Mine => match frame {
-                0..=2 => 110,
-                3 => 90,
+            PlayerAnimation::Swing => match frame {
+                0 => 90,
                 _ => 60,
             },
-            PlayerAnimation::MineFast => 80,
+            PlayerAnimation::SwingFast => 80,
+            _ => 100,
         }
+    }
+
+    fn is_idle(&self) -> bool {
+        matches!(
+            self,
+            PlayerAnimation::Idle | PlayerAnimation::SwingAnticipationIdle
+        )
     }
 }
 
@@ -96,8 +106,7 @@ fn process_typed_input(
     level_lookup: Res<LevelEntityLookup>,
     ground_q: Query<(), Or<(With<Ground>, With<UnbreakableGround>)>>,
     mut word_tile_q: Query<&mut WordTile>,
-    mut word_advanced_evw: EventWriter<WordAdvancedEvent>,
-    mut word_finished_evw: EventWriter<WordFinishedEvent>,
+    mut word_tile_evw: EventWriter<WordTileEvent>,
     bindings: Res<MovementBindings>,
 ) {
     let mut coords = or_return!(player_q.get_single_mut());
@@ -113,13 +122,13 @@ fn process_typed_input(
                 let neighbour_e = or_continue_quiet!(level_lookup.get(&neighbour_coords));
                 let mut word_tile = or_continue_quiet!(word_tile_q.get_mut(*neighbour_e));
                 if word_tile.remaining().starts_with(&typed.0) {
-                    word_tile.advance(typed.len());
-                    if word_tile.status() == WordTileStatus::Finished {
-                        word_finished_evw.send(WordFinishedEvent(*neighbour_e));
-                    } else {
-                        word_advanced_evw.send(WordAdvancedEvent(*neighbour_e));
-                    }
+                    word_tile_evw.send(WordTileEvent {
+                        e: *neighbour_e,
+                        kind: word_tile.advance(typed.len()),
+                    });
                 }
+                // todo: invalid input feedback
+                // possibly reset the current word on error?
             }
 
             typed.clear();
@@ -150,20 +159,21 @@ fn tween_player_movement(
 }
 
 fn move_player_to_finished_word_cell(
-    mut word_finished_evr: EventReader<WordFinishedEvent>,
+    mut word_tile_evr: EventReader<WordTileEvent>,
     mut player_q: Query<&mut GridCoords, With<Player>>,
     coords_q: Query<&GridCoords, Without<Player>>,
 ) {
     // only move when there's an exactly ONE finished word
     // todo: instead of doing that, move only in the facing/last move direction when there's more than 1 finished word
     // or maybe move in that direction only when the word is followed by pressing space
-    if word_finished_evr.len() != 1 {
-        word_finished_evr.clear();
+    let Some(ev) = word_tile_evr
+        .read()
+        .find(|ev| ev.kind == WordTileEventKind::TileFinished)
+    else {
         return;
-    }
+    };
 
-    let ev = word_finished_evr.read().next().unwrap();
-    let tile_coords = or_return!(coords_q.get(ev.0));
+    let tile_coords = or_return!(coords_q.get(ev.e));
     let mut player_coords = or_return!(player_q.get_single_mut());
     *player_coords = *tile_coords;
 }
@@ -174,16 +184,40 @@ fn animate_player(
         (&mut AnimationTimer, &mut PlayerAnimation, &mut TextureAtlas),
         With<Player>,
     >,
-    mut word_advanced_evr: EventReader<WordAdvancedEvent>,
-    mut word_finished_evr: EventReader<WordFinishedEvent>,
+    mut word_tile_evr: EventReader<WordTileEvent>,
     sprites: Res<SpriteAssets>,
 ) {
     let (mut timer, mut player_anim, mut atlas) = or_return!(player_q.get_single_mut());
 
-    if word_advanced_evr.clear_any() || word_finished_evr.clear_any() {
-        atlas.layout = sprites.mine_anim_layout.clone_weak();
-        *player_anim = PlayerAnimation::Mine;
-        atlas.index = 3;
+    for ev in word_tile_evr.read() {
+        if match ev.kind {
+            WordTileEventKind::WordStarted => {
+                atlas.layout = sprites.swing_anticipation_anim_layout.clone_weak();
+                *player_anim = PlayerAnimation::SwingAnticipation;
+                true
+            }
+            WordTileEventKind::WordFinished | WordTileEventKind::TileFinished => {
+                atlas.layout = sprites.swing_anim_layout.clone_weak();
+                *player_anim = PlayerAnimation::Swing;
+                true
+            }
+            _ => false,
+        } {
+            atlas.index = 0;
+            timer.set_duration(Duration::from_millis(
+                player_anim.frame_base_duration_ms(atlas.index),
+            ));
+            timer.reset();
+            break;
+        }
+    }
+    if word_tile_evr
+        .read()
+        .any(|ev| ev.kind == WordTileEventKind::WordStarted)
+    {
+        atlas.layout = sprites.swing_anticipation_anim_layout.clone_weak();
+        *player_anim = PlayerAnimation::SwingAnticipation;
+        atlas.index = 0;
         timer.set_duration(Duration::from_millis(
             player_anim.frame_base_duration_ms(atlas.index),
         ));
@@ -193,9 +227,15 @@ fn animate_player(
     timer.tick(time.delta());
     if timer.just_finished() {
         atlas.index = (atlas.index + 1) % player_anim.len();
-        if atlas.index == 0 {
-            atlas.layout = sprites.idle_anim_layout.clone_weak();
-            *player_anim = PlayerAnimation::Idle;
+        if atlas.index == 0 && !player_anim.is_idle() {
+            // todo: busy anticipation when the current anim is swing anticipation
+            if *player_anim == PlayerAnimation::SwingAnticipation {
+                atlas.layout = sprites.swing_anticipation_idle_anim_layout.clone_weak();
+                *player_anim = PlayerAnimation::SwingAnticipationIdle;
+            } else {
+                atlas.layout = sprites.idle_anim_layout.clone_weak();
+                *player_anim = PlayerAnimation::Idle;
+            }
         }
         timer.set_duration(Duration::from_millis(
             player_anim.frame_base_duration_ms(atlas.index),
