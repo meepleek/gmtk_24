@@ -74,7 +74,7 @@ impl WordTile {
         if self.word_i < (self.words.len() - 1)
             && self.typed_char_len >= self.current_word().chars().count()
         {
-            self.word_i = self.word_i + 1;
+            self.word_i += 1;
             self.typed_char_len = 0;
         }
     }
@@ -100,7 +100,6 @@ impl WordTile {
                 color,
                 font_size: 36.0,
                 font,
-                ..default()
             },
         )
     }
@@ -149,7 +148,7 @@ fn update_word_list(
     });
 }
 
-fn tile_word_text_sections<'a>(
+fn tile_word_text_sections(
     words: &[String],
     word_i: usize,
     typed_len: usize,
