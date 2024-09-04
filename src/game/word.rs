@@ -1,5 +1,6 @@
 use crate::{assets::WordlistAssets, prelude::*};
 use bevy::{color::palettes::tailwind, utils::HashSet};
+use bevy_trauma_shake::Shakes;
 
 pub(super) fn plugin(app: &mut App) {
     app.register_type::<WordTile>()
@@ -18,6 +19,7 @@ pub(super) fn plugin(app: &mut App) {
             (
                 tween_ground_texts,
                 tween_out_finished_tiles,
+                shake_on_word_finished,
                 play_word_sfx,
                 spawn_cracks,
             )
@@ -387,6 +389,23 @@ fn spawn_cracks(
                 sprite_color_anim(Color::WHITE, 70, EaseFunction::QuadraticOut),
             ));
         });
+    }
+}
+
+// todo: directional shake? (shake in the direction of the swing instead of just random)
+fn shake_on_word_finished(mut word_tile_evr: EventReader<WordTileEvent>, mut shake: Shakes) {
+    if word_tile_evr
+        .read()
+        .filter(|ev| {
+            matches!(
+                ev.kind,
+                WordTileEventKind::WordFinished(_) | WordTileEventKind::TileFinished(_)
+            )
+        })
+        .next()
+        .is_some()
+    {
+        shake.add_trauma(0.175);
     }
 }
 

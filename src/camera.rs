@@ -8,6 +8,7 @@ use bevy::{
     },
     sprite::MaterialMesh2dBundle,
 };
+use bevy_trauma_shake::{Shake, TraumaPlugin};
 
 use crate::{game::fog_of_war::FogOfWarMaterial, prelude::*};
 
@@ -21,7 +22,8 @@ pub(crate) const BACKGROUND_COLOR: Color = Color::srgb(0.157, 0.157, 0.157);
 pub(super) fn plugin(app: &mut App) {
     app.insert_resource(Msaa::Off)
         .insert_resource(ClearColor(BACKGROUND_COLOR))
-        .add_systems(Startup, spawn_camera);
+        .add_systems(Startup, spawn_camera)
+        .add_plugins(TraumaPlugin);
 }
 
 /// Low-resolution texture that contains the pixel-perfect world.
@@ -115,6 +117,7 @@ fn spawn_camera(
         screen_camera,
         HighResCamera,
         HIGH_RES_RENDER_LAYER,
+        Shake::default(),
     ));
 }
 
