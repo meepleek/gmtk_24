@@ -14,12 +14,12 @@ pub(super) fn plugin(app: &mut App) {
         .add_plugins(DebugUiPlugin)
         .add_systems(
             Update,
-            draw_level_grid.run_if(input_toggle_active(false, MouseButton::Middle)),
+            draw_level_grid.run_if(input_toggle_active(false, MouseButton::Right)),
         );
 
     #[cfg(feature = "dev")]
     app.add_plugins(
-        WorldInspectorPlugin::new().run_if(input_toggle_active(false, MouseButton::Middle)),
+        WorldInspectorPlugin::new().run_if(input_toggle_active(false, MouseButton::Right)),
     );
 }
 
