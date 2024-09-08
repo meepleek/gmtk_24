@@ -100,6 +100,9 @@ fn on_player_spawned(
     }
 }
 
+// todo: rotate player towards typed word if the current char is not found it the currently faced tile and the player hasn't started the tile yet (ignore when tile is not pristine?)
+// todo: reset tiles when player moves away from a tile (or even rotates?)
+// todo: move to cleared tile when space/enter is pressed instead of auto-move
 fn process_typed_input(
     mut typed: ResMut<TypedInput>,
     mut player_q: Query<(&mut GridCoords, &mut Transform), With<Player>>,
