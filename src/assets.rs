@@ -73,6 +73,7 @@ pub struct SpriteAssets {
         rows = 1,
         offset_y = 128
     ))]
+    #[allow(dead_code)]
     pub swing_fast_anim_layout: Handle<TextureAtlasLayout>,
     #[asset(path = "images/player.png")]
     pub player_sheet: Handle<Image>,
