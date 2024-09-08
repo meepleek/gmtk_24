@@ -105,7 +105,9 @@ impl WordTile {
     pub(crate) fn status(&self) -> WordTileStatus {
         match (self.word_i, self.typed_char_len) {
             (0, 0) => WordTileStatus::Pristine,
-            (word_i, typed) if word_i == (self.words.len() - 1) && typed >= self.words.len() => {
+            (word_i, typed)
+                if word_i == (self.words.len() - 1) && typed >= self.words[word_i].len() =>
+            {
                 WordTileStatus::Finished
             }
             _ => WordTileStatus::Damaged,
