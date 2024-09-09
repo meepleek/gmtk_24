@@ -47,7 +47,10 @@ pub(crate) enum WordTileEventKind {
     WordStarted,
     WordAdvanced,
     WordFinished(usize),
-    TileFinished(usize),
+    TileFinished {
+        word_count: usize,
+        coords: GridCoords,
+    },
 }
 
 #[derive(Event, Debug, Reflect)]
@@ -84,7 +87,7 @@ impl WordTile {
             .collect()
     }
 
-    pub(crate) fn advance(&mut self, count: usize) -> WordTileEventKind {
+    pub(crate) fn advance(&mut self, count: usize, coords: GridCoords) -> WordTileEventKind {
         let typed_len_prev = self.typed_char_len;
         self.typed_char_len += count;
         if self.typed_char_len >= self.current_word().chars().count() {
@@ -93,7 +96,10 @@ impl WordTile {
                 self.typed_char_len = 0;
                 WordTileEventKind::WordFinished(self.word_i)
             } else {
-                WordTileEventKind::TileFinished(self.word_i)
+                WordTileEventKind::TileFinished {
+                    word_count: self.words.len(),
+                    coords,
+                }
             }
         } else if typed_len_prev == 0 {
             WordTileEventKind::WordStarted
@@ -298,7 +304,7 @@ fn tween_out_finished_tiles(
 ) {
     for ev in word_tile_evr
         .read()
-        .filter(|ev| matches!(ev.kind, WordTileEventKind::TileFinished(_)))
+        .filter(|ev| matches!(ev.kind, WordTileEventKind::TileFinished { .. }))
     {
         let word = or_continue!(word_q.get(ev.e));
         let mut cmd_e = or_continue!(cmd.get_entity(ev.e));
@@ -352,7 +358,7 @@ fn play_word_sfx(mut word_tile_evr: EventReader<WordTileEvent>, mut cmd: Command
         .read()
         .filter_map(|ev| match ev.kind {
             WordTileEventKind::WordFinished(i) => Some(i),
-            WordTileEventKind::TileFinished(i) => Some(i + 1),
+            WordTileEventKind::TileFinished { word_count, .. } => Some(word_count),
             _ => None,
         })
         .next()
@@ -369,7 +375,7 @@ fn spawn_cracks(
 ) {
     for (i, e) in word_tile_evr.read().filter_map(|ev| match ev.kind {
         WordTileEventKind::WordFinished(i) => Some((i - 1, ev.e)),
-        WordTileEventKind::TileFinished(i) => Some((i, ev.e)),
+        WordTileEventKind::TileFinished { word_count, .. } => Some((word_count - 1, ev.e)),
         _ => None,
     }) {
         let mut e_cmd = or_continue_quiet!(cmd.get_entity(e));
@@ -401,7 +407,7 @@ fn shake_on_word_finished(mut word_tile_evr: EventReader<WordTileEvent>, mut sha
         .filter(|ev| {
             matches!(
                 ev.kind,
-                WordTileEventKind::WordFinished(_) | WordTileEventKind::TileFinished(_)
+                WordTileEventKind::WordFinished(_) | WordTileEventKind::TileFinished { .. }
             )
         })
         .next()

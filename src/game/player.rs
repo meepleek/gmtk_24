@@ -10,7 +10,6 @@ pub(super) fn plugin(app: &mut App) {
             Update,
             (
                 process_typed_input,
-                tween_player_movement,
                 move_player_to_finished_word_cell,
                 on_player_spawned,
                 animate_player,
@@ -72,6 +71,7 @@ pub struct AnimationTimer(Timer);
 #[derive(Default, Bundle, LdtkEntity)]
 struct PlayerBundle {
     player: Player,
+    movable: Movable,
     #[grid_coords]
     grid_coords: GridCoords,
 }
@@ -127,7 +127,7 @@ fn process_typed_input(
                 if word_tile.remaining().starts_with(&typed.0) {
                     word_tile_evw.send(WordTileEvent {
                         e: *neighbour_e,
-                        kind: word_tile.advance(typed.len()),
+                        kind: word_tile.advance(typed.len(), neighbour_coords),
                     });
                 }
                 // todo: invalid input feedback
@@ -155,15 +155,6 @@ fn process_typed_input(
     }
 }
 
-fn tween_player_movement(
-    player_q: Query<(Entity, &GridCoords), (With<Player>, Changed<GridCoords>)>,
-    mut cmd: Commands,
-) {
-    for (e, coord) in &player_q {
-        cmd.tween_translation(e, coord.to_world(), 110, EaseFunction::QuadraticOut);
-    }
-}
-
 fn move_player_to_finished_word_cell(
     mut word_tile_evr: EventReader<WordTileEvent>,
     mut player_q: Query<&mut GridCoords, With<Player>>,
@@ -174,7 +165,7 @@ fn move_player_to_finished_word_cell(
     // or maybe move in that direction only when the word is followed by pressing space
     let Some(ev) = word_tile_evr
         .read()
-        .filter(|ev| matches!(ev.kind, WordTileEventKind::TileFinished(_)))
+        .filter(|ev| matches!(ev.kind, WordTileEventKind::TileFinished { .. }))
         .next()
     else {
         return;
@@ -203,7 +194,7 @@ fn animate_player(
                 *player_anim = PlayerAnimation::SwingAnticipation;
                 true
             }
-            WordTileEventKind::WordFinished(_) | WordTileEventKind::TileFinished(_) => {
+            WordTileEventKind::WordFinished(_) | WordTileEventKind::TileFinished { .. } => {
                 atlas.layout = sprites.swing_anim_layout.clone_weak();
                 *player_anim = PlayerAnimation::Swing;
                 true

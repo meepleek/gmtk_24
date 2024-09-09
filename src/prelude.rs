@@ -12,7 +12,9 @@ pub(crate) use crate::{
     camera::HIGH_RES_RENDER_LAYER,
     ext::*,
     game::{
-        level::{level_ready, Ground, LevelEntityLookup, UnbreakableGround, TILE_SIZE},
+        level::{
+            level_ready, Ground, LevelEntityLookup, Movable, Moving, UnbreakableGround, TILE_SIZE,
+        },
         player::Player,
         word::{WordTileEvent, WordTileEventKind, WordTileStatus},
     },

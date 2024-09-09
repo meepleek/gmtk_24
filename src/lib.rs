@@ -76,7 +76,6 @@ impl Plugin for AppPlugin {
             anim::plugin,
             camera::plugin,
             input::plugin,
-            time::plugin,
         ));
 
         // Enable dev tools for dev builds.

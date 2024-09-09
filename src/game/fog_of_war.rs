@@ -85,7 +85,7 @@ fn update_tile_visibility(
         }
         let dist = tile_coords.distance(player_coords).floor();
         let new_visibility = 1.0 - ((dist - 1.0) / radius as f32) * 0.8;
-        let mut tile_vis = or_continue!(visibility_q.get_mut(tile_e));
+        let mut tile_vis = or_continue_quiet!(visibility_q.get_mut(tile_e));
         let mut cmd_e = or_continue_quiet!(cmd.get_entity(tile_vis.sprite_e));
         if tile_vis.visibility <= new_visibility {
             tile_vis.visibility = new_visibility;
