@@ -56,6 +56,7 @@ fn apply_gravity(
     let new_coords = rock_coords.down();
 
     if *rock_coords == new_coords {
+        lookup.remove(&rock_coords.up());
         return;
     }
 

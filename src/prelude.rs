@@ -16,6 +16,7 @@ pub(crate) use crate::{
             level_ready, Ground, LevelEntityLookup, Movable, Moving, UnbreakableGround, TILE_SIZE,
         },
         player::Player,
+        rock::Rock,
         word::{WordTileEvent, WordTileEventKind, WordTileStatus},
     },
     input::{MovementBindings, TypedInput, UiAction, UiInput},

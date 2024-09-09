@@ -107,7 +107,7 @@ fn process_typed_input(
     mut typed: ResMut<TypedInput>,
     mut player_q: Query<(&mut GridCoords, &mut Transform), With<Player>>,
     level_lookup: Res<LevelEntityLookup>,
-    ground_q: Query<(), Or<(With<Ground>, With<UnbreakableGround>)>>,
+    obstacle_q: Query<(), Or<(With<Ground>, With<UnbreakableGround>, With<Rock>)>>,
     mut word_tile_q: Query<&mut WordTile>,
     mut word_tile_evw: EventWriter<WordTileEvent>,
     bindings: Res<MovementBindings>,
@@ -145,7 +145,7 @@ fn process_typed_input(
         }
         let new_coords = *player_coords + move_by;
         if let Some(e) = level_lookup.get(&new_coords) {
-            if ground_q.contains(*e) {
+            if obstacle_q.contains(*e) {
                 // todo: hit wall feedback
                 return;
             }
