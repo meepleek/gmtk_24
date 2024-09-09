@@ -60,14 +60,11 @@ fn apply_gravity(
         return;
     }
 
-    warn!(?new_coords, "applying gravity");
-
     if let Some(e) = lookup.get(&new_coords) {
         update = !collision_q.contains(*e);
     } else {
         update = true;
     }
-
     lookup.remove(&rock_coords.up());
     if update {
         *rock_coords = new_coords;
