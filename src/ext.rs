@@ -22,6 +22,19 @@ impl Vec2Ext for Vec2 {
     }
 }
 
+pub trait Vec3Ext {
+    fn to_grid_coords(&self) -> GridCoords;
+}
+
+impl Vec3Ext for Vec3 {
+    fn to_grid_coords(&self) -> GridCoords {
+        bevy_ecs_ldtk::utils::translation_to_grid_coords(
+            self.truncate(),
+            IVec2::splat(TILE_SIZE as i32),
+        )
+    }
+}
+
 pub trait QuatExt {
     fn to_rot2(self) -> Rot2;
     fn z_angle_rad(&self) -> f32;

@@ -8,6 +8,7 @@ use crate::prelude::*;
 pub mod fog_of_war;
 pub mod goal;
 pub mod level;
+pub mod physics;
 pub mod player;
 pub mod rock;
 pub mod word;
@@ -20,5 +21,6 @@ pub(super) fn plugin(app: &mut App) {
         goal::plugin,
         rock::plugin,
         fog_of_war::plugin,
+        physics::plugin,
     ));
 }

@@ -15,6 +15,7 @@ pub(crate) use crate::{
         level::{
             level_ready, Ground, LevelEntityLookup, Movable, Moving, UnbreakableGround, TILE_SIZE,
         },
+        physics::{Gravity, Grounded, Velocity},
         player::Player,
         rock::Rock,
         word::{WordTileEvent, WordTileEventKind, WordTileStatus},
