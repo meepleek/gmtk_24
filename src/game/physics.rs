@@ -5,6 +5,7 @@ use crate::prelude::*;
 pub(super) fn plugin(app: &mut App) {
     app.register_type::<Velocity>()
         .register_type::<Gravity>()
+        .add_systems(Update, process_cooldown::<Gravity>)
         .add_systems(
             FixedUpdate,
             (
@@ -24,10 +25,16 @@ pub(crate) struct Velocity(Vec2);
 
 #[derive(Component, Reflect)]
 #[reflect(Component)]
-pub(crate) struct Gravity(f32);
+pub(crate) struct Gravity {
+    y: f32,
+    delay_ms: Option<u64>,
+}
 impl Default for Gravity {
     fn default() -> Self {
-        Self(-7.)
+        Self {
+            y: -7.,
+            delay_ms: Some(350),
+        }
     }
 }
 
@@ -37,7 +44,7 @@ pub(crate) struct Grounded;
 fn reset_grounded_on_tile_removed(
     mut word_tile_evr: EventReader<WordTileEvent>,
     lookup: Res<LevelEntityLookup>,
-    rock_q: Query<(), With<Grounded>>,
+    grounded_q: Query<&Gravity, With<Grounded>>,
     mut cmd: Commands,
 ) {
     for finished_tile_coords in word_tile_evr.read().filter_map(|ev| match ev.kind {
@@ -45,8 +52,12 @@ fn reset_grounded_on_tile_removed(
         _ => None,
     }) {
         let e = or_continue_quiet!(lookup.get(&finished_tile_coords.up()));
-        or_continue_quiet!(rock_q.contains(*e));
-        cmd.entity(*e).remove::<Grounded>();
+        let gravity = or_continue_quiet!(grounded_q.get(*e));
+        let mut e_cmd = cmd.entity(*e);
+        e_cmd.remove::<Grounded>();
+        if let Some(delay) = gravity.delay_ms {
+            e_cmd.try_insert(Cooldown::<Gravity>::new(delay));
+        }
     }
 }
 
@@ -59,18 +70,23 @@ fn reset_velocity_on_grounded(
 }
 
 fn apply_gravity(
-    mut gravity_q: Query<(&Gravity, &mut Velocity), Without<Grounded>>,
+    mut gravity_q: Query<
+        (&Gravity, &mut Velocity),
+        (Without<Grounded>, Without<Cooldown<Gravity>>),
+    >,
     time: Res<Time>,
 ) {
     for (gravity, mut vel) in &mut gravity_q {
-        vel.y += gravity.0 * time.delta_seconds();
+        vel.y += gravity.y * time.delta_seconds();
     }
 }
 
 // todo: extrapolation
-// todo: set grounded when hitting lvl edge
 fn apply_velocity(
-    mut vel_q: Query<(Entity, &Velocity, &mut Transform, &mut GridCoords), Without<Grounded>>,
+    mut vel_q: Query<
+        (Entity, &Velocity, &mut Transform, &mut GridCoords),
+        (Without<Grounded>, Without<Cooldown<Gravity>>),
+    >,
     mut lookup: ResMut<LevelEntityLookup>,
     collision_q: Query<(), Or<(With<Ground>, With<UnbreakableGround>)>>,
     mut cmd: Commands,
