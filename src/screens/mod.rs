@@ -59,3 +59,10 @@ transition_system!(game, Game);
 transition_system!(tutorial, Tutorial);
 transition_system!(settings, Settings);
 transition_system!(credits, Credits);
+
+pub(crate) fn in_game(state: Option<Res<State<Screen>>>) -> bool {
+    match state {
+        Some(current_state) => *current_state == Screen::Game,
+        None => false,
+    }
+}

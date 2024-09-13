@@ -2,35 +2,36 @@
 
 use crate::prelude::*;
 use bevy::{
-    dev_tools::{
-        states::log_transitions,
-        ui_debug_overlay::{DebugUiPlugin, UiDebugOptions},
-    },
-    input::common_conditions::{input_just_pressed, input_toggle_active},
+    dev_tools::{states::log_transitions, ui_debug_overlay::DebugUiPlugin},
+    input::common_conditions::input_toggle_active,
 };
 
 #[cfg(feature = "dev")]
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
 
 pub(super) fn plugin(app: &mut App) {
-    // Log `Screen` state transitions.
-    app.add_systems(Update, log_transitions::<Screen>);
-
-    // Toggle the debug overlay for UI.
-    app.add_plugins(DebugUiPlugin);
-    app.add_systems(
-        Update,
-        toggle_debug_ui.run_if(input_just_pressed(TOGGLE_KEY)),
-    );
+    app.add_systems(Update, log_transitions::<Screen>)
+        .add_plugins(DebugUiPlugin)
+        .add_systems(
+            Update,
+            draw_level_grid.run_if(input_toggle_active(false, MouseButton::Right)),
+        );
 
     #[cfg(feature = "dev")]
     app.add_plugins(
-        WorldInspectorPlugin::new().run_if(input_toggle_active(false, MouseButton::Middle)),
+        WorldInspectorPlugin::new().run_if(input_toggle_active(false, MouseButton::Right)),
     );
 }
 
-const TOGGLE_KEY: KeyCode = KeyCode::Backquote;
-
-fn toggle_debug_ui(mut options: ResMut<UiDebugOptions>) {
-    options.toggle();
+fn draw_level_grid(mut gizmos: Gizmos) {
+    gizmos
+        .grid_2d(
+            Vec2::ZERO,
+            0.0,
+            UVec2::splat(64),
+            Vec2::splat(TILE_SIZE as f32),
+            // Dark gray
+            LinearRgba::gray(0.1),
+        )
+        .outer_edges();
 }

@@ -5,9 +5,22 @@
 
 use crate::prelude::*;
 
+pub mod fog_of_war;
+pub mod goal;
 pub mod level;
-mod player;
+pub mod physics;
+pub mod player;
+pub mod rock;
+pub mod word;
 
 pub(super) fn plugin(app: &mut App) {
-    app.add_plugins((player::plugin, level::plugin));
+    app.add_plugins((
+        player::plugin,
+        level::plugin,
+        word::plugin,
+        goal::plugin,
+        rock::plugin,
+        fog_of_war::plugin,
+        physics::plugin,
+    ));
 }

@@ -1,11 +1,10 @@
 //! The screen state for the main game loop.
 
-use crate::{game::level::SpawnLevel, prelude::*};
+use crate::prelude::*;
 use leafwing_input_manager::common_conditions::action_just_pressed;
 
 pub(super) fn plugin(app: &mut App) {
-    app.add_systems(OnEnter(Screen::Game), spawn_level)
-        .add_systems(OnExit(Screen::Game), stop_music)
+    app.add_systems(OnExit(Screen::Game), stop_music)
         .add_systems(OnEnter(Screen::RestartGame), enter_restart)
         .add_systems(
             Update,
@@ -16,11 +15,6 @@ pub(super) fn plugin(app: &mut App) {
                     .run_if(in_state(Screen::Game).and_then(action_just_pressed(UiAction::Reset))),
             ),
         );
-}
-
-fn spawn_level(mut commands: Commands) {
-    commands.add(SpawnLevel);
-    commands.play_music(MusicTrack::Game);
 }
 
 fn stop_music(mut commands: Commands) {

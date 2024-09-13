@@ -10,8 +10,10 @@ pub(super) fn plugin(app: &mut App) {
                 Screen::MainMenu
             })
             .load_collection::<SpriteAssets>()
+            .load_collection::<FontAssets>()
             .load_collection::<SfxAssets>()
-            .load_collection::<MusicAssets>(),
+            .load_collection::<MusicAssets>()
+            .load_collection::<WordlistAssets>(),
     );
     // app.add_systems(Startup, setup_particles);
 }
@@ -19,18 +21,78 @@ pub(super) fn plugin(app: &mut App) {
 #[allow(dead_code)]
 pub fn assets_exist(
     sprites: Option<Res<SpriteAssets>>,
+    fonts: Option<Res<WordlistAssets>>,
     sfx: Option<Res<SfxAssets>>,
     music: Option<Res<MusicAssets>>,
+    wordlists: Option<Res<FontAssets>>,
     // particles: Option<Res<ParticleAssets>>,
 ) -> bool {
-    sprites.is_some() && sfx.is_some() && music.is_some() /*&& particles.is_some()*/
+    sprites.is_some() && fonts.is_some() && sfx.is_some() && music.is_some() && wordlists.is_some()
+    /*&& particles.is_some()*/
+}
+
+#[derive(AssetCollection, Resource)]
+pub struct WordlistAssets {
+    #[asset(path = "en.words.txt")]
+    pub en: Handle<WordListSource>,
 }
 
 // https://github.com/NiklasEi/bevy_asset_loader?tab=readme-ov-file#supported-asset-fields
 #[derive(AssetCollection, Resource)]
 pub struct SpriteAssets {
-    // #[asset(path = "images/transition_circle.png")]
-    // pub transition_circle: Handle<Image>,
+    #[asset(texture_atlas_layout(tile_size_x = 32, tile_size_y = 32, columns = 5, rows = 1))]
+    pub idle_anim_layout: Handle<TextureAtlasLayout>,
+    #[asset(texture_atlas_layout(
+        tile_size_x = 32,
+        tile_size_y = 32,
+        columns = 3,
+        rows = 1,
+        offset_y = 32
+    ))]
+    pub swing_anticipation_anim_layout: Handle<TextureAtlasLayout>,
+    #[asset(texture_atlas_layout(
+        tile_size_x = 32,
+        tile_size_y = 32,
+        columns = 4,
+        rows = 1,
+        offset_y = 64
+    ))]
+    pub swing_anticipation_idle_anim_layout: Handle<TextureAtlasLayout>,
+    #[asset(texture_atlas_layout(
+        tile_size_x = 32,
+        tile_size_y = 32,
+        columns = 5,
+        rows = 1,
+        offset_y = 96
+    ))]
+    pub swing_anim_layout: Handle<TextureAtlasLayout>,
+    #[asset(texture_atlas_layout(
+        tile_size_x = 32,
+        tile_size_y = 32,
+        columns = 3,
+        rows = 1,
+        offset_y = 128
+    ))]
+    #[allow(dead_code)]
+    pub swing_fast_anim_layout: Handle<TextureAtlasLayout>,
+    #[asset(path = "images/player.png")]
+    pub player_sheet: Handle<Image>,
+    #[asset(texture_atlas_layout(
+        tile_size_x = 32,
+        tile_size_y = 32,
+        columns = 3,
+        rows = 1,
+        offset_y = 480
+    ))]
+    pub tilemap_cracks_layout: Handle<TextureAtlasLayout>,
+    #[asset(path = "images/tilemap.png")]
+    pub tilemap: Handle<Image>,
+}
+
+#[derive(AssetCollection, Resource)]
+pub struct FontAssets {
+    #[asset(path = "fonts/m5x7.ttf")]
+    pub tile: Handle<Font>,
 }
 
 #[derive(AssetCollection, Resource)]
@@ -39,9 +101,33 @@ pub struct SfxAssets {
     pub button_hover: Handle<AudioSource>,
     #[asset(path = "audio/sfx/button_press.ogg")]
     pub button_click: Handle<AudioSource>,
-    // collection example
-    // #[asset(paths("audio/sfx/click_1.ogg", "audio/sfx/click_2.ogg"), collection(typed))]
-    // files_typed: Vec<Handle<AudioSource>>,
+    #[asset(
+        paths(
+            "audio/sfx/hit_1_1.ogg",
+            "audio/sfx/hit_1_1.ogg",
+            "audio/sfx/hit_1_3.ogg"
+        ),
+        collection(typed)
+    )]
+    pub hit_1: Vec<Handle<AudioSource>>,
+    #[asset(
+        paths(
+            "audio/sfx/hit_2_1.ogg",
+            "audio/sfx/hit_2_1.ogg",
+            "audio/sfx/hit_2_3.ogg"
+        ),
+        collection(typed)
+    )]
+    pub hit_2: Vec<Handle<AudioSource>>,
+    #[asset(
+        paths(
+            "audio/sfx/hit_3_1.ogg",
+            "audio/sfx/hit_3_1.ogg",
+            "audio/sfx/hit_3_3.ogg"
+        ),
+        collection(typed)
+    )]
+    pub hit_3: Vec<Handle<AudioSource>>,
 }
 
 #[derive(AssetCollection, Resource)]

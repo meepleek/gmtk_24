@@ -1,6 +1,7 @@
 #![allow(dead_code)]
 
 use bevy::{ecs::system::EntityCommands, prelude::*};
+use bevy_ecs_tilemap::tiles::TileColor;
 use bevy_tweening::*;
 use std::{marker::PhantomData, time::Duration};
 
@@ -57,6 +58,7 @@ pub(super) fn plugin(app: &mut App) {
         Update,
         (
             component_animator_system::<BackgroundColor>,
+            component_animator_system::<TileColor>,
             despawn_after_tween,
         ),
     );
@@ -132,6 +134,15 @@ relative_tween_impl!(
 );
 
 relative_tween_impl!(
+    text_alpha,
+    Animator,
+    Text,
+    TextRelativeAlphaLens,
+    Vec<f32>,
+    f32
+);
+
+relative_tween_impl!(
     ui_bg_color,
     Animator,
     BackgroundColor,
@@ -157,6 +168,8 @@ relative_tween_impl!(
     Color,
     Color
 );
+
+relative_tween_impl!(tile_color, Animator, TileColor, TileColorLens, Color, Color);
 
 relative_lens!(Transform, Vec3, TransformRelativeScaleLens, scale);
 relative_lens!(Transform, Vec3, TransformRelativePositionLens, translation);
@@ -228,6 +241,46 @@ impl Lens<Text> for TextRelativeColorLens {
     }
 }
 
+#[derive(Default)]
+pub struct TextRelativeAlphaLens {
+    pub start: Option<Vec<f32>>,
+    pub end: f32,
+}
+
+impl TextRelativeAlphaLens {
+    pub fn relative(end: f32) -> Self {
+        Self { start: None, end }
+    }
+}
+
+impl Lens<Text> for TextRelativeAlphaLens {
+    fn lerp(&mut self, target: &mut dyn Targetable<Text>, ratio: f32) {
+        for i in 0..target.sections.len() {
+            if let Some(alpha) = self.start.as_ref().unwrap().get(i) {
+                target.sections[i]
+                    .style
+                    .color
+                    .set_alpha((*alpha).lerp(self.end, ratio));
+            }
+        }
+    }
+
+    fn update_on_tween_start(
+        &mut self,
+        target: &mut dyn Targetable<Text>,
+        _direction: TweeningDirection,
+        _times_completed: i32,
+    ) {
+        self.start.get_or_insert_with(|| {
+            target
+                .sections
+                .iter()
+                .map(|s| s.style.color.alpha())
+                .collect()
+        });
+    }
+}
+
 relative_lens_struct!(StyleRelativeSizeLens, Vec2);
 impl Lens<Style> for StyleRelativeSizeLens {
     fn lerp(&mut self, target: &mut dyn Targetable<Style>, ratio: f32) {
@@ -264,6 +317,7 @@ relative_tween_impl!(
 color_lens!(BackgroundColor, UiBackgroundColorLens, 0);
 color_lens!(UiImage, UiImageColorLens, color);
 color_lens!(ColorMaterial, ColorMaterialRelativeColorLens, color);
+color_lens!(TileColor, TileColorLens, 0);
 
 pub fn lerp_color(from: Color, to: Color, ratio: f32) -> Color {
     let start = from.to_linear().to_vec4();

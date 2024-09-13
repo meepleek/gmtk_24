@@ -1,3 +1,4 @@
+mod anim;
 mod assets;
 mod audio;
 mod camera;
@@ -12,6 +13,7 @@ mod screens;
 mod theme;
 mod time;
 mod tween;
+mod word_loader;
 
 use bevy::{
     asset::AssetMetaCheck,
@@ -44,6 +46,7 @@ impl Plugin for AppPlugin {
                 .set(WindowPlugin {
                     primary_window: Window {
                         title: GAME_NAME.to_string(),
+                        resolution: Vec2::splat(1024.).into(),
                         canvas: Some("#bevy".to_string()),
                         fit_canvas_to_parent: true,
                         prevent_default_event_handling: true,
@@ -57,20 +60,22 @@ impl Plugin for AppPlugin {
                         volume: Volume::new(0.3),
                     },
                     ..default()
-                }),
+                })
+                .set(ImagePlugin::default_nearest()),
         );
 
         // Add other plugins.
         app.add_plugins((
+            word_loader::plugin,
             game::plugin,
             screens::plugin,
             theme::plugin,
             assets::plugin,
             audio::plugin,
             tween::plugin,
+            anim::plugin,
             camera::plugin,
             input::plugin,
-            time::plugin,
         ));
 
         // Enable dev tools for dev builds.
