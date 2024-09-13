@@ -35,7 +35,7 @@ impl<T: Send + Sync> Cooldown<T> {
     }
 }
 
-pub fn process_cooldown<T: Send + Sync + Component>(
+pub fn tick_cooldown<T: Send + Sync + Component>(
     mut cmd: Commands,
     mut cooldown_q: Query<(Entity, &mut Cooldown<T>)>,
     time: Res<Time>,

@@ -5,7 +5,7 @@ use crate::prelude::*;
 pub(super) fn plugin(app: &mut App) {
     app.register_type::<Velocity>()
         .register_type::<Gravity>()
-        .add_systems(Update, process_cooldown::<Gravity>)
+        .add_systems(Update, tick_cooldown::<Gravity>)
         .add_systems(
             FixedUpdate,
             (

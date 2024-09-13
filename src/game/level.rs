@@ -13,7 +13,7 @@ pub(super) fn plugin(app: &mut App) {
             (cache_level_entities, tween_entity_movement).run_if(in_game),
         )
         .add_systems(Last, (remove_tile_from_cache,).run_if(level_ready))
-        .add_systems(Update, process_cooldown::<Moving>)
+        .add_systems(Update, tick_cooldown::<Moving>)
         .add_systems(OnEnter(Screen::Game), spawn_level)
         .add_systems(OnExit(Screen::Game), teardown_level);
 }
