@@ -110,7 +110,6 @@ fn remove_tile_from_cache(
         WordTileEventKind::TileFinished { coords, .. } => Some(coords),
         _ => None,
     }) {
-        warn!("rmv tile from cache");
         lookup.remove(&finished_tile_coords);
     }
 }

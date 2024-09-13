@@ -27,7 +27,7 @@ pub(crate) struct Velocity(Vec2);
 pub(crate) struct Gravity(f32);
 impl Default for Gravity {
     fn default() -> Self {
-        Self(-20.)
+        Self(-7.)
     }
 }
 
@@ -68,6 +68,7 @@ fn apply_gravity(
 }
 
 // todo: extrapolation
+// todo: set grounded when hitting lvl edge
 fn apply_velocity(
     mut vel_q: Query<(Entity, &Velocity, &mut Transform, &mut GridCoords), Without<Grounded>>,
     mut lookup: ResMut<LevelEntityLookup>,
@@ -75,29 +76,40 @@ fn apply_velocity(
     mut cmd: Commands,
 ) {
     for (e, vel, mut t, mut coords) in &mut vel_q {
-        let new_translation = t.translation + vel.0.extend(0.) - Vec3::Y * (TILE_SIZE as f32 / 2.);
-        let new_coords = new_translation.to_grid_coords();
-        if *coords != new_coords {
-            let update;
+        let new_translation = t.translation + vel.0.extend(0.);
+        let new_btm_translation = new_translation - Vec3::Y * (TILE_SIZE as f32 / 2.);
+        let new_coords = new_btm_translation.to_grid_coords();
+        let mut should_ground = false;
+        let mut update_coords = false;
+        if new_btm_translation.y < 0. {
+            // transition to grounded at bounds
+            should_ground = true;
+        } else if *coords != new_coords {
             if let Some(coll_e) = lookup.get(&new_coords) {
                 if collision_q.contains(*coll_e) {
-                    cmd.entity(e).try_insert(Grounded);
-                    t.translation = coords.to_world();
-                    continue;
+                    // transition to grounded on collision
+                    should_ground = true;
                 } else {
-                    update = true;
+                    // update coords on no collision
+                    update_coords = true;
                 }
             } else {
-                update = true;
-            }
-            if update {
-                lookup.remove(&*coords);
-                lookup.insert(new_coords, e);
-                *coords = new_coords;
-                t.translation += vel.0.extend(0.);
+                // update coords on no collision
+                update_coords = true;
             }
         } else {
-            t.translation += vel.0.extend(0.);
+            // no coords change, just update translation
+            t.translation = new_translation;
+        }
+
+        if should_ground {
+            cmd.entity(e).try_insert(Grounded);
+            t.translation = coords.to_world();
+        } else if update_coords {
+            lookup.remove(&*coords);
+            lookup.insert(new_coords, e);
+            *coords = new_coords;
+            t.translation = new_translation;
         }
     }
 }
