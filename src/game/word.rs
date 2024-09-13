@@ -153,12 +153,11 @@ fn update_word_list(
     bindings: Res<MovementBindings>,
     mut cmd: Commands,
 ) {
-    let blacklist = [
-        &bindings.up,
-        &bindings.down,
-        &bindings.left,
-        &bindings.right,
-    ];
+    let blacklist: Vec<_> = [keycode_char(bindings.left), keycode_char(bindings.right)]
+        .into_iter()
+        .flatten()
+        .map(|c| c.to_ascii_lowercase())
+        .collect();
     let source = or_return!(wordlists.get(&wordlist_assets.en));
     let mut words: Vec<_> = source
         .0
@@ -177,6 +176,15 @@ fn update_word_list(
     cmd.insert_resource(WordList {
         ground_words: words,
     });
+}
+
+fn keycode_char(keycode: KeyCode) -> Option<char> {
+    let formatted_keycode = format!("{:?}", keycode);
+    if formatted_keycode.starts_with("Key") {
+        formatted_keycode.chars().last()
+    } else {
+        None
+    }
 }
 
 fn tile_word_text_sections(

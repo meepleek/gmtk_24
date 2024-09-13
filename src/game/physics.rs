@@ -33,7 +33,8 @@ impl Default for Gravity {
     fn default() -> Self {
         Self {
             y: -7.,
-            delay_ms: Some(350),
+            // delay_ms: Some(350),
+            delay_ms: None,
         }
     }
 }

@@ -16,23 +16,17 @@ pub(super) fn plugin(app: &mut App) {
 
 #[derive(Resource, Reflect)]
 pub struct MovementBindings {
-    pub up: String,
-    pub down: String,
-    pub left: String,
-    pub right: String,
+    pub left: KeyCode,
+    pub right: KeyCode,
 }
 
 impl Default for MovementBindings {
     fn default() -> Self {
         Self {
-            // up: "w".to_string(),
-            // down: "s".to_string(),
             // left: "a".to_string(),
             // right: "d".to_string(),
-            up: "i".to_string(),
-            down: "e".to_string(),
-            left: "n".to_string(),
-            right: "o".to_string(),
+            left: KeyCode::KeyN,
+            right: KeyCode::KeyO,
         }
     }
 }

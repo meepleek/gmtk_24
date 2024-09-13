@@ -10,7 +10,7 @@ pub(super) fn plugin(app: &mut App) {
             Update,
             (
                 process_typed_input,
-                move_player_to_finished_word_cell,
+                process_movement_input,
                 on_player_spawned,
                 animate_player,
             )
@@ -71,20 +71,20 @@ pub struct AnimationTimer(Timer);
 #[derive(Default, Bundle, LdtkEntity)]
 struct PlayerBundle {
     player: Player,
-    movable: Movable,
     #[grid_coords]
     grid_coords: GridCoords,
 }
 
 fn on_player_spawned(
-    player_q: Query<Entity, Added<Player>>,
+    player_q: Query<(Entity, &GridCoords), Added<Player>>,
     mut cmd: Commands,
     sprites: Res<SpriteAssets>,
 ) {
-    for e in &player_q {
+    for (e, coords) in &player_q {
         cmd.entity(e).try_insert((
             SpriteBundle {
                 texture: sprites.player_sheet.clone_weak(),
+                transform: Transform::from_translation(coords.to_world()),
                 ..default()
             },
             TextureAtlas {
@@ -102,24 +102,16 @@ fn on_player_spawned(
 
 // todo: rotate player towards typed word if the current char is not found it the currently faced tile and the player hasn't started the tile yet (ignore when tile is not pristine?)
 // todo: reset tiles when player moves away from a tile (or even rotates?)
-// todo: move to cleared tile when space/enter is pressed instead of auto-move
 fn process_typed_input(
     mut typed: ResMut<TypedInput>,
-    mut player_q: Query<(&mut GridCoords, &mut Transform), With<Player>>,
+    player_q: Query<&GridCoords, With<Player>>,
     level_lookup: Res<LevelEntityLookup>,
-    obstacle_q: Query<(), Or<(With<Ground>, With<UnbreakableGround>, With<Rock>)>>,
     mut word_tile_q: Query<&mut WordTile>,
     mut word_tile_evw: EventWriter<WordTileEvent>,
-    bindings: Res<MovementBindings>,
 ) {
-    let (mut player_coords, mut player_t) = or_return!(player_q.get_single_mut());
-
-    if let Some(move_by) = match typed.as_str() {
+    let player_coords = or_return!(player_q.get_single());
+    match typed.as_str() {
         "" => return,
-        c if c == bindings.left => Some(GridCoords::neg_x()),
-        c if c == bindings.right => Some(GridCoords::x()),
-        c if c == bindings.up => Some(GridCoords::y()),
-        c if c == bindings.down => Some(GridCoords::neg_y()),
         _ => {
             for neighbour_coords in player_coords.neighbours() {
                 let neighbour_e = or_continue_quiet!(level_lookup.get(&neighbour_coords));
@@ -133,47 +125,45 @@ fn process_typed_input(
                 // todo: invalid input feedback
                 // possibly reset the current word on error?
             }
-
-            typed.clear();
-            None
         }
-    } {
-        typed.clear();
-
-        if move_by.x != 0 {
-            player_t.scale.x = move_by.x.signum() as f32;
-        }
-        let new_coords = *player_coords + move_by;
-        if let Some(e) = level_lookup.get(&new_coords) {
-            if obstacle_q.contains(*e) {
-                // todo: hit wall feedback
-                return;
-            }
-        }
-
-        *player_coords = new_coords;
     }
+
+    typed.clear();
 }
 
-fn move_player_to_finished_word_cell(
-    mut word_tile_evr: EventReader<WordTileEvent>,
-    mut player_q: Query<&mut GridCoords, With<Player>>,
-    coords_q: Query<&GridCoords, Without<Player>>,
+// todo: just store intent
+// but move in fixed time?
+// todo: migrate to avian to handle collisions
+// todo: track coords - possibly in a different general system that tracks by  transform
+// todo: fix initial position - incorrect no matter the initial grid coords
+fn process_movement_input(
+    mut player_q: Query<&mut Transform, With<Player>>,
+    // obstacle_q: Query<(), Or<(With<Ground>, With<UnbreakableGround>, With<Rock>)>>,
+    bindings: Res<MovementBindings>,
+    time: Res<Time>,
+    kb_input: Res<ButtonInput<KeyCode>>,
 ) {
-    // only move when there's an exactly ONE finished word
-    // todo: instead of doing that, move only in the facing/last move direction when there's more than 1 finished word
-    // or maybe move in that direction only when the word is followed by pressing space
-    let Some(ev) = word_tile_evr
-        .read()
-        .filter(|ev| matches!(ev.kind, WordTileEventKind::TileFinished { .. }))
-        .next()
-    else {
-        return;
-    };
+    let mut player_t = or_return!(player_q.get_single_mut());
+    let mut move_by = 0f32;
+    if kb_input.pressed(bindings.left) {
+        move_by += -1.0
+    }
+    if kb_input.pressed(bindings.right) {
+        move_by += 1.0
+    }
+    if move_by != 0.0 {
+        player_t.scale.x = move_by.signum();
+        player_t.translation.x += move_by * 300.0 * time.delta_seconds();
+        // let new_coords = *player_coords + move_by;
+        // if let Some(e) = level_lookup.get(&new_coords) {
+        //     if obstacle_q.contains(*e) {
+        //         // todo: hit wall feedback
+        //         return;
+        //     }
+        // }
 
-    let tile_coords = or_return!(coords_q.get(ev.e));
-    let mut player_coords = or_return!(player_q.get_single_mut());
-    *player_coords = *tile_coords;
+        // *player_coords = new_coords;
+    }
 }
 
 fn animate_player(

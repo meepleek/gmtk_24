@@ -24,9 +24,12 @@
 
 ### v0.3.0 platforming - initial pass
 
-- [ ] continuous/f32 movement/translation
+- [x] continuous/f32 movement/translation
+- [ ] add avian
+- [ ] track coords
 - [ ] player gravity
 - [ ] jump
+- [ ] horizontal easing
 - [ ] coyote time
 - [ ] input buffer
 - [ ] variable jump height
