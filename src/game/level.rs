@@ -51,6 +51,10 @@ pub(crate) struct Ground;
 #[derive(Default, Bundle, LdtkIntCell)]
 struct GroundBundle {
     ground: Ground,
+    // todo: add collider layers
+    collider: TileCollider,
+    #[with(collision_layers)]
+    collision_layers: CollisionLayers,
 }
 
 #[derive(Default, Component)]
@@ -59,6 +63,13 @@ pub(crate) struct UnbreakableGround;
 #[derive(Default, Bundle, LdtkIntCell)]
 struct UnbreakableGroundBundle {
     unbreakable_ground: UnbreakableGround,
+    collider: TileCollider,
+    #[with(collision_layers)]
+    collision_layers: CollisionLayers,
+}
+
+fn collision_layers(_: IntGridCell) -> CollisionLayers {
+    GamePhysicsLayer::obstacle_collision_layers()
 }
 
 fn spawn_level(ass: Res<AssetServer>, mut cmd: Commands) {

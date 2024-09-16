@@ -26,6 +26,7 @@ tiny_bail = "0.3.0"
 leafwing-input-manager = { git = "https://github.com/Leafwing-Studios/leafwing-input-manager", rev = "d32883661c72b4ff01be71ce65d9e9f2375d5f69" }
 bevy_ecs_ldtk = "0.10.0"
 bevy_ecs_tilemap = "0.14.0"
+avian2d = "0.1.2"
 
 [dev-dependencies]
 test-case = "3.3"

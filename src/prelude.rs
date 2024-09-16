@@ -15,7 +15,7 @@ pub(crate) use crate::{
         level::{
             level_ready, Ground, LevelEntityLookup, Movable, Moving, UnbreakableGround, TILE_SIZE,
         },
-        physics::{Gravity, Grounded, Velocity},
+        physics::{GamePhysicsLayer, Gravity, Grounded, TileCollider, Velocity},
         player::Player,
         rock::Rock,
         word::{WordTileEvent, WordTileEventKind, WordTileStatus},
@@ -28,6 +28,7 @@ pub(crate) use crate::{
     word_loader::WordListSource,
     AppSet,
 };
+pub(crate) use avian2d::prelude::{Collider, CollisionLayers};
 pub(crate) use bevy::{prelude::*, utils::HashMap};
 pub(crate) use bevy_ecs_ldtk::prelude::*;
 pub(crate) use bevy_tweening::{

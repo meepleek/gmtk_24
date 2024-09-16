@@ -10,7 +10,8 @@ pub(super) fn plugin(app: &mut App) {
             Update,
             (
                 process_typed_input,
-                process_movement_input,
+                horizontal_movement_input,
+                vertical_movement_input,
                 on_player_spawned,
                 animate_player,
             )
@@ -96,6 +97,9 @@ fn on_player_spawned(
                 Duration::from_millis(PlayerAnimation::Idle.frame_base_duration_ms(0)),
                 TimerMode::Repeating,
             )),
+            Gravity::default(),
+            Velocity::default(),
+            GamePhysicsLayer::membership(GamePhysicsLayer::Player),
         ));
     }
 }
@@ -136,33 +140,43 @@ fn process_typed_input(
 // todo: migrate to avian to handle collisions
 // todo: track coords - possibly in a different general system that tracks by  transform
 // todo: fix initial position - incorrect no matter the initial grid coords
-fn process_movement_input(
-    mut player_q: Query<&mut Transform, With<Player>>,
+fn horizontal_movement_input(
+    mut player_q: Query<&mut Velocity, With<Player>>,
     // obstacle_q: Query<(), Or<(With<Ground>, With<UnbreakableGround>, With<Rock>)>>,
     bindings: Res<MovementBindings>,
-    time: Res<Time>,
     kb_input: Res<ButtonInput<KeyCode>>,
 ) {
-    let mut player_t = or_return!(player_q.get_single_mut());
-    let mut move_by = 0f32;
+    let mut velocity = or_return!(player_q.get_single_mut());
+    let mut sign = 0f32;
     if kb_input.pressed(bindings.left) {
-        move_by += -1.0
+        sign += -1.0
     }
     if kb_input.pressed(bindings.right) {
-        move_by += 1.0
+        sign += 1.0
     }
-    if move_by != 0.0 {
-        player_t.scale.x = move_by.signum();
-        player_t.translation.x += move_by * 300.0 * time.delta_seconds();
-        // let new_coords = *player_coords + move_by;
-        // if let Some(e) = level_lookup.get(&new_coords) {
-        //     if obstacle_q.contains(*e) {
-        //         // todo: hit wall feedback
-        //         return;
-        //     }
-        // }
+    // player_t.scale.x = sign.signum();
+    velocity.x = 5.0 * sign;
+    // let new_coords = *player_coords + move_by;
+    // if let Some(e) = level_lookup.get(&new_coords) {
+    //     if obstacle_q.contains(*e) {
+    //         // todo: hit wall feedback
+    //         return;
+    //     }
+    // }
 
-        // *player_coords = new_coords;
+    // *player_coords = new_coords;
+}
+
+// todo: does this actually work?
+fn vertical_movement_input(
+    mut player_q: Query<(Entity, &mut Velocity), (With<Player>, With<Grounded>)>,
+    kb_input: Res<ButtonInput<KeyCode>>,
+    mut cmd: Commands,
+) {
+    let (e, mut vel) = or_return_quiet!(player_q.get_single_mut());
+    if kb_input.just_pressed(KeyCode::Space) {
+        vel.y = 3.;
+        cmd.entity(e).remove::<Grounded>();
     }
 }
 

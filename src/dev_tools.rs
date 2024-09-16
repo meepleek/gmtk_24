@@ -18,9 +18,10 @@ pub(super) fn plugin(app: &mut App) {
         );
 
     #[cfg(feature = "dev")]
-    app.add_plugins(
+    app.add_plugins((
         WorldInspectorPlugin::new().run_if(input_toggle_active(false, MouseButton::Right)),
-    );
+        avian2d::debug_render::PhysicsDebugPlugin::default(),
+    ));
 }
 
 fn draw_level_grid(mut gizmos: Gizmos) {
