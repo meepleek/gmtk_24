@@ -8,7 +8,7 @@ pub(super) fn plugin(app: &mut App) {
         .add_systems(OnExit(Screen::Loading), update_word_list)
         .add_systems(
             Update,
-            update_word_list.run_if(assets_exist.and_then(resource_changed::<MovementBindings>)),
+            update_word_list.run_if(assets_exist.and_then(resource_changed::<PlayerBindings>)),
         )
         .add_systems(
             Update,
@@ -150,12 +150,12 @@ impl WordTile {
 fn update_word_list(
     wordlists: Res<Assets<WordListSource>>,
     wordlist_assets: Res<WordlistAssets>,
-    bindings: Res<MovementBindings>,
+    bindings: Res<PlayerBindings>,
     mut cmd: Commands,
 ) {
-    let blacklist: Vec<_> = [keycode_char(bindings.left), keycode_char(bindings.right)]
+    let blacklist: Vec<_> = [bindings.left, bindings.right, bindings.jump]
         .into_iter()
-        .flatten()
+        .flat_map(keycode_char)
         .map(|c| c.to_ascii_lowercase())
         .collect();
     let source = or_return!(wordlists.get(&wordlist_assets.en));

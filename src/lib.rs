@@ -6,7 +6,6 @@ mod camera;
 mod dev_tools;
 mod ext;
 mod game;
-mod input;
 mod math;
 mod prelude;
 mod screens;
@@ -75,7 +74,6 @@ impl Plugin for AppPlugin {
             tween::plugin,
             anim::plugin,
             camera::plugin,
-            input::plugin,
         ));
 
         // Enable dev tools for dev builds.
