@@ -29,10 +29,12 @@
 - [ ] track coords
 - [ ] player gravity
 - [ ] jump
+- [ ] clamp fall-speed
 - [ ] horizontal easing
 - [ ] coyote time
 - [ ] input buffer
 - [ ] variable jump height
+- [ ] apex gravity
 - [ ] wall-jump
 - [ ] highlight neighbour/mine-able tiles
 
