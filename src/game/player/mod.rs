@@ -45,6 +45,10 @@ fn on_player_spawned(
                 TimerMode::Repeating,
             )),
             Gravity::default(),
+            GroundSensor {
+                width: 18.,
+                y: -(TILE_SIZE as f32 / 2.),
+            },
             Velocity::default(),
             MovementIntent::default(),
             GamePhysicsLayer::membership(GamePhysicsLayer::Player),
