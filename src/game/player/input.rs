@@ -14,10 +14,8 @@ pub(super) fn plugin(app: &mut App) {
             update_player_input_map.run_if(resource_changed::<PlayerBindings>),
         )
         .add_systems(
-            Update,
-            (process_text_input, collect_intent)
-                .run_if(level_ready)
-                .in_set(AppSet::RecordInput),
+            FixedUpdate,
+            (process_text_input, collect_intent).run_if(level_ready),
         );
 }
 
@@ -35,7 +33,7 @@ impl Default for PlayerBindings {
             // right: "d".to_string(),
             left: KeyCode::KeyN,
             right: KeyCode::KeyO,
-            jump: KeyCode::Space,
+            jump: KeyCode::KeyV,
         }
     }
 }

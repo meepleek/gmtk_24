@@ -3,7 +3,6 @@ use leafwing_input_manager::buttonlike::ButtonState;
 
 pub(super) fn plugin(app: &mut App) {
     app.register_type::<MovementIntent>()
-        .add_systems(Update, process_intent.run_if(level_ready))
         .add_systems(FixedUpdate, process_intent.run_if(level_ready));
 }
 
