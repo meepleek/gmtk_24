@@ -45,9 +45,9 @@ fn on_player_spawned(
                 TimerMode::Repeating,
             )),
             Gravity::default(),
-            GroundSensor {
-                width: 18.,
-                y: -(TILE_SIZE as f32 / 2.),
+            KinematicSensor {
+                size: Vec2::new(18., 20.),
+                ground_y_offset: 5.,
             },
             Velocity::default(),
             MovementIntent::default(),

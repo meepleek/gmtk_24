@@ -15,7 +15,7 @@ pub(crate) use crate::{
         level::{
             level_ready, Ground, LevelEntityLookup, Movable, Moving, UnbreakableGround, TILE_SIZE,
         },
-        physics::{GamePhysicsLayer, Gravity, GroundSensor, Grounded, TileCollider, Velocity},
+        physics::{GamePhysicsLayer, Gravity, Grounded, KinematicSensor, TileCollider, Velocity},
         player::{
             input::{PlayerBindings, UiAction},
             movement::MovementIntent,
