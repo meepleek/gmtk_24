@@ -175,12 +175,12 @@ fn apply_gravity(
 // todo: interpolation - possibly using one of the interpolation crates
 fn apply_vertical_velocity(
     mut vel_q: Query<
-        (Entity, &Velocity, &mut Transform, &KinematicSensor),
+        (Entity, &mut Velocity, &mut Transform, &KinematicSensor),
         (Without<Grounded>, Without<Cooldown<Gravity>>),
     >,
     cast: SpatialQuery,
 ) {
-    for (e, vel, mut t, sensor) in &mut vel_q {
+    for (e, mut vel, mut t, sensor) in &mut vel_q {
         if vel.y == 0. {
             continue;
         }
@@ -210,7 +210,14 @@ fn apply_vertical_velocity(
                     .partial_cmp(&hit2.time_of_impact)
                     .expect("Valid TOI")
             }) {
-            Some(hit) => (hit.time_of_impact - SKIN_WIDTH).max(0.) * vel.y.signum(),
+            Some(hit) => {
+                if vel.y > 0. && hit.normal1.y < 0. {
+                    // reset vertical velocity when hitting a ceiling
+                    vel.y = 0.;
+                }
+
+                (hit.time_of_impact - SKIN_WIDTH).max(0.) * vel.y.signum()
+            }
             None => vel.y,
         };
 
