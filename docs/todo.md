@@ -35,6 +35,7 @@
 - [ ] input buffer
 - [ ] variable jump height
 - [ ] apex gravity
+- [ ] verlet integration (instead of euler)
 - [ ] wall-jump
 - [ ] highlight neighbour/mine-able tiles
 

@@ -54,18 +54,28 @@ pub(crate) struct Velocity(Vec2);
 #[derive(Component, Reflect)]
 #[reflect(Component)]
 pub(crate) struct Gravity {
-    pub y: f32,
-    pub delay_ms: Option<u64>,
-    pub ground_width: f32,
+    gravity: f32,
+    jump_velocity: f32,
+    ground_width: f32,
 }
 impl Default for Gravity {
     fn default() -> Self {
+        Self::new(1.27, 0.3, TILE_SIZE as f32)
+    }
+}
+impl Gravity {
+    pub fn new(jump_height: f32, jump_to_apex_duration_sec: f32, ground_width: f32) -> Self {
+        let tile_unit_size = 0.525;
+        let accel = (2.0 * jump_height * tile_unit_size) / jump_to_apex_duration_sec.powi(2);
         Self {
-            y: -7.,
-            // delay_ms: Some(350),
-            delay_ms: None,
-            ground_width: TILE_SIZE as f32,
+            gravity: -accel,
+            jump_velocity: accel * jump_to_apex_duration_sec,
+            ground_width,
         }
+    }
+
+    pub fn jump_velocity(&self) -> f32 {
+        self.jump_velocity
     }
 }
 
@@ -167,7 +177,7 @@ fn apply_gravity(
     time: Res<Time>,
 ) {
     for (gravity, mut vel) in &mut gravity_q {
-        vel.y += gravity.y * time.delta_seconds();
+        vel.y += gravity.gravity * time.delta_seconds();
     }
 }
 
