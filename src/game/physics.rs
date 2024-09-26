@@ -21,6 +21,7 @@ pub(super) fn plugin(app: &mut App) {
         .observe(reset_velocity_on_grounded);
 }
 
+pub const FIXED_UPDATE_FPS: f32 = 64.0;
 pub const SKIN_WIDTH: f32 = 1.0;
 
 #[derive(PhysicsLayer)]
@@ -56,6 +57,7 @@ pub(crate) struct Velocity(Vec2);
 pub(crate) struct Gravity {
     gravity: f32,
     jump_velocity: f32,
+    max_fall_velocity: f32,
     ground_width: f32,
 }
 impl Default for Gravity {
@@ -65,11 +67,12 @@ impl Default for Gravity {
 }
 impl Gravity {
     pub fn new(jump_height: f32, jump_to_apex_duration_sec: f32, ground_width: f32) -> Self {
-        let tile_unit_size = 0.525;
+        let tile_unit_size = TILE_SIZE as f32 / FIXED_UPDATE_FPS;
         let accel = (2.0 * jump_height * tile_unit_size) / jump_to_apex_duration_sec.powi(2);
         Self {
             gravity: -accel,
             jump_velocity: accel * jump_to_apex_duration_sec,
+            max_fall_velocity: -(accel * TILE_SIZE as f32) / FIXED_UPDATE_FPS,
             ground_width,
         }
     }
@@ -177,7 +180,7 @@ fn apply_gravity(
     time: Res<Time>,
 ) {
     for (gravity, mut vel) in &mut gravity_q {
-        vel.y += gravity.gravity * time.delta_seconds();
+        vel.y = (vel.y + gravity.gravity * time.delta_seconds()).max(gravity.max_fall_velocity);
     }
 }
 

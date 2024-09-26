@@ -24,10 +24,11 @@ struct GoalBundle {
 #[reflect(Resource)]
 struct LevelIndex(usize);
 
+#[allow(clippy::derivable_impls)]
 impl Default for LevelIndex {
     fn default() -> Self {
-        // Self(0)
-        Self(1)
+        Self(0)
+        // Self(1)
     }
 }
 

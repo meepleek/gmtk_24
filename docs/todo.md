@@ -29,7 +29,7 @@
 - [ ] track coords
 - [x] player gravity
 - [x] jump
-- [ ] clamp fall-speed
+- [x] clamp fall-speed
 - [ ] horizontal easing
 - [ ] coyote time
 - [ ] input buffer
