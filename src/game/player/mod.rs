@@ -52,6 +52,7 @@ fn on_player_spawned(
             Grounded::airborne(0),
             Velocity::default(),
             MovementIntent::default(),
+            MovementEasing::new(0.08, 0.05),
             GamePhysicsLayer::membership(GamePhysicsLayer::Player),
         ));
     }

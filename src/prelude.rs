@@ -18,7 +18,7 @@ pub(crate) use crate::{
         physics::{GamePhysicsLayer, Gravity, Grounded, KinematicSensor, TileCollider, Velocity},
         player::{
             input::{PlayerBindings, TimedButtonInput, UiAction},
-            movement::MovementIntent,
+            movement::{MovementEasing, MovementIntent},
             Player,
         },
         rock::Rock,

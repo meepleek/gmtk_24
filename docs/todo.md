@@ -30,7 +30,7 @@
 - [x] player gravity
 - [x] jump
 - [x] clamp fall-speed
-- [ ] horizontal easing
+- [x] horizontal easing
 - [x] coyote time
 - [x] input buffer
 - [x] variable jump height

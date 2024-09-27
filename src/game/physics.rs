@@ -16,7 +16,6 @@ pub(super) fn plugin(app: &mut App) {
                 apply_horizontal_velocity,
                 apply_vertical_velocity,
             )
-                // todo: fix order ambiguities
                 .in_set(AppSet::Update)
                 .chain()
                 .run_if(level_ready),

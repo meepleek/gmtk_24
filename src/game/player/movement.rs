@@ -6,7 +6,8 @@ use crate::{
 pub(super) fn plugin(app: &mut App) {
     app.register_type::<MovementIntent>().add_systems(
         FixedUpdate,
-        process_intent
+        (horizontal_velocity_easing, process_intent)
+            .chain()
             .after(check_grounded)
             .before(apply_gravity)
             .run_if(level_ready),
@@ -19,19 +20,49 @@ pub const JUMP_INPUT_BUFFER_MS: usize = 80;
 #[derive(Component, Default, Reflect, Debug)]
 #[reflect(Component)]
 pub(crate) struct MovementIntent {
-    pub horizontal_direction: f32,
+    pub horizontal_movement: f32,
     pub jump: TimedButtonInput,
 }
 
+#[derive(Component, Default, Reflect, Debug)]
+#[reflect(Component)]
+pub(crate) struct MovementEasing {
+    ease_factor: f32,
+    last_direction: f32,
+    duration_in_s: f32,
+    duration_out_s: f32,
+}
+impl MovementEasing {
+    pub fn new(duration_in_s: f32, duration_out_s: f32) -> Self {
+        Self {
+            duration_in_s,
+            duration_out_s,
+            ease_factor: 0.,
+            last_direction: 0.,
+        }
+    }
+}
+
 fn process_intent(
-    mut player_q: Query<
-        (&mut Velocity, &Gravity, &mut MovementIntent, &mut Grounded),
+    mut movement_q: Query<
+        (
+            &mut Velocity,
+            &Gravity,
+            &mut MovementIntent,
+            &mut Grounded,
+            Option<&MovementEasing>,
+        ),
         With<Player>,
     >,
     time: Res<Time>,
 ) {
-    let (mut velocity, gravity, mut intent, mut grounded) = or_return!(player_q.get_single_mut());
-    velocity.x = 150.0 * intent.horizontal_direction * time.delta_seconds();
+    let (mut velocity, gravity, mut intent, mut grounded, easing) =
+        or_return!(movement_q.get_single_mut());
+    velocity.x = 150.0
+        * easing.map_or(intent.horizontal_movement, |easing| {
+            easing.last_direction * easing.ease_factor
+        })
+        * time.delta_seconds();
     match (intent.jump.state, intent.jump.last_pressed) {
         (_, Some(last_pressed))
             if last_pressed.as_millis() as usize <= JUMP_INPUT_BUFFER_MS
@@ -61,5 +92,24 @@ fn process_intent(
                      // ButtonState::JustReleased => todo!(),
                      // ButtonState::Released => todo!(),
                      // todo: variable jump height
+    }
+}
+
+// todo: handle gamepad analog sticks?
+fn horizontal_velocity_easing(
+    mut easing_q: Query<(&MovementIntent, &mut MovementEasing), With<Player>>,
+    time: Res<Time>,
+) {
+    for (intent, mut easing) in &mut easing_q {
+        if intent.horizontal_movement != 0. {
+            easing.last_direction = intent.horizontal_movement.signum();
+        }
+        easing.ease_factor = (easing.ease_factor
+            + if intent.horizontal_movement == 0. {
+                -time.delta_seconds() / easing.duration_out_s
+            } else {
+                time.delta_seconds() / easing.duration_in_s
+            })
+        .clamp(0., 1.);
     }
 }

@@ -126,11 +126,12 @@ fn collect_intent(
     time: Res<Time>,
 ) {
     let mut intent = or_return!(player_q.get_single_mut());
+    let horizontal_movement = input.clamped_value(&PlayerAction::Move);
     let jump_btn_data = input
         .button_data(&PlayerAction::Jump)
         .expect("Jump mapped properly");
     *intent = MovementIntent {
-        horizontal_direction: input.clamped_value(&PlayerAction::Move),
+        horizontal_movement,
         jump: TimedButtonInput {
             state: jump_btn_data.state,
             last_pressed: match jump_btn_data.state {
