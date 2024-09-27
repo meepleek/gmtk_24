@@ -33,7 +33,7 @@
 - [ ] horizontal easing
 - [x] coyote time
 - [x] input buffer
-- [ ] variable jump height
+- [x] variable jump height
 - [ ] apex gravity
 - [ ] verlet integration (instead of euler)
 - [ ] wall-jump

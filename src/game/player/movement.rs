@@ -50,6 +50,12 @@ fn process_intent(
                 }
             }
         }
+        // fixme: does not work very well and the min jump seems to be way too low for e.g. min jump of 1 tile height
+        (ButtonState::JustReleased | ButtonState::Released, _)
+            if velocity.y > gravity.min_jump_velocity() =>
+        {
+            velocity.y *= 0.65;
+        }
         // todo
         (_, _) => {} // ButtonState::Pressed => todo!(),
                      // ButtonState::JustReleased => todo!(),

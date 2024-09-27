@@ -1,6 +1,6 @@
 use crate::prelude::*;
 use avian2d::prelude::*;
-use std::time::Duration;
+use std::{ops::RangeInclusive, time::Duration};
 
 pub(super) fn plugin(app: &mut App) {
     app.add_plugins(avian2d::PhysicsPlugins::default())
@@ -65,21 +65,28 @@ impl Velocity {
 pub(crate) struct Gravity {
     gravity: f32,
     jump_velocity: f32,
+    min_jump_velocity: f32,
     max_fall_velocity: f32,
     ground_width: f32,
 }
 impl Default for Gravity {
     fn default() -> Self {
-        Self::new(1.27, 0.3, TILE_SIZE as f32)
+        Self::new(0.5..=1.27, 0.3, TILE_SIZE as f32)
     }
 }
 impl Gravity {
-    pub fn new(jump_height: f32, jump_to_apex_duration_sec: f32, ground_width: f32) -> Self {
+    pub fn new(
+        jump_height: RangeInclusive<f32>,
+        jump_to_apex_duration_sec: f32,
+        ground_width: f32,
+    ) -> Self {
         let tile_unit_size = TILE_SIZE as f32 / FIXED_UPDATE_FPS;
-        let accel = (2.0 * jump_height * tile_unit_size) / jump_to_apex_duration_sec.powi(2);
+        let accel = (2.0 * jump_height.end() * tile_unit_size) / jump_to_apex_duration_sec.powi(2);
+        let jump_velocity = accel * jump_to_apex_duration_sec;
         Self {
             gravity: -accel,
-            jump_velocity: accel * jump_to_apex_duration_sec,
+            jump_velocity,
+            min_jump_velocity: jump_velocity * (jump_height.start() / jump_height.end()).sqrt(),
             max_fall_velocity: -(accel * TILE_SIZE as f32) / FIXED_UPDATE_FPS,
             ground_width,
         }
@@ -87,6 +94,10 @@ impl Gravity {
 
     pub fn jump_velocity(&self) -> f32 {
         self.jump_velocity
+    }
+
+    pub fn min_jump_velocity(&self) -> f32 {
+        self.min_jump_velocity
     }
 }
 
