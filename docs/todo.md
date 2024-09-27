@@ -34,7 +34,7 @@
 - [x] coyote time
 - [x] input buffer
 - [x] variable jump height
-- [ ] apex gravity
+- [x] apex gravity
 - [ ] verlet integration (instead of euler)
 - [ ] wall-jump
 - [ ] highlight neighbour/mine-able tiles

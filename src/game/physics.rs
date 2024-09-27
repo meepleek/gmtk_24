@@ -208,14 +208,23 @@ pub(crate) fn check_grounded(
 }
 
 pub(crate) fn apply_gravity(
-    mut gravity_q: Query<(&Gravity, &mut Velocity, &Grounded)>,
+    mut gravity_q: Query<(&Gravity, &mut Velocity, &Grounded, &MovementIntent)>,
     time: Res<Time>,
 ) {
-    for (gravity, mut vel, grounded) in &mut gravity_q {
+    for (gravity, mut vel, grounded, movement_intent) in &mut gravity_q {
         vel.y = if grounded.is_grounded() {
             0.
         } else {
-            (vel.y + gravity.gravity * time.delta_seconds()).max(gravity.max_fall_velocity)
+            let gravity_factor = if movement_intent.jump.state.pressed()
+                && vel.y.abs() <= (gravity.jump_velocity() * 0.125)
+            {
+                // lower gravity at jump apex
+                0.5
+            } else {
+                1.
+            };
+            (vel.y + gravity.gravity * gravity_factor * time.delta_seconds())
+                .max(gravity.max_fall_velocity)
         };
     }
 }
