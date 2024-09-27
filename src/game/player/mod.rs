@@ -49,6 +49,7 @@ fn on_player_spawned(
                 size: Vec2::new(18., 20.),
                 ground_y_offset: 5.,
             },
+            Grounded::airborne(),
             Velocity::default(),
             MovementIntent::default(),
             GamePhysicsLayer::membership(GamePhysicsLayer::Player),

@@ -31,7 +31,7 @@
 - [x] jump
 - [x] clamp fall-speed
 - [ ] horizontal easing
-- [ ] coyote time
+- [x] coyote time
 - [ ] input buffer
 - [ ] variable jump height
 - [ ] apex gravity

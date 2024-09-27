@@ -42,15 +42,15 @@ fn draw_level_grid(mut gizmos: Gizmos) {
 }
 
 fn draw_kinematic_sensor_gizmos(
-    sensor_q: Query<(&KinematicSensor, &Transform, Has<Grounded>)>,
+    sensor_q: Query<(&KinematicSensor, &Transform, &Grounded)>,
     mut gizmos: Gizmos,
 ) {
-    for (sensor, t, is_grounded) in &sensor_q {
+    for (sensor, t, grounded) in &sensor_q {
         gizmos.rect_2d(
             sensor.translation(t.translation),
             0.,
             sensor.size,
-            if is_grounded {
+            if grounded.is_grounded() {
                 tailwind::BLUE_400
             } else {
                 tailwind::GREEN_400

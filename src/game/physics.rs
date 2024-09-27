@@ -6,7 +6,8 @@ pub(super) fn plugin(app: &mut App) {
     app.add_plugins(avian2d::PhysicsPlugins::default())
         .register_type::<Velocity>()
         .register_type::<Gravity>()
-        .add_systems(Update, (tick_cooldown::<Gravity>, add_tile_collider))
+        .register_type::<Grounded>()
+        .add_systems(Update, add_tile_collider)
         .add_systems(
             FixedUpdate,
             (
@@ -17,8 +18,7 @@ pub(super) fn plugin(app: &mut App) {
             )
                 .chain()
                 .run_if(level_ready),
-        )
-        .observe(reset_velocity_on_grounded);
+        );
 }
 
 pub const FIXED_UPDATE_FPS: f32 = 64.0;
@@ -51,6 +51,11 @@ pub(crate) struct TileCollider;
 #[derive(Component, Default, Deref, DerefMut, Reflect, Debug)]
 #[reflect(Component)]
 pub(crate) struct Velocity(Vec2);
+impl Velocity {
+    pub fn falling(&self) -> bool {
+        self.y < 0.
+    }
+}
 
 #[derive(Component, Reflect)]
 #[reflect(Component)]
@@ -102,9 +107,37 @@ impl KinematicSensor {
     }
 }
 
-#[derive(Component, Default)]
-pub(crate) struct Grounded {
-    duration: Duration,
+#[derive(Component, Default, Reflect)]
+#[reflect(Component)]
+pub(crate) enum Grounded {
+    #[default]
+    Grounded,
+    Airborne {
+        duration: Duration,
+        jump_count: u8,
+    },
+}
+impl Grounded {
+    pub fn airborne() -> Self {
+        Grounded::Airborne {
+            duration: Duration::default(),
+            jump_count: 0,
+        }
+    }
+
+    pub fn is_grounded(&self) -> bool {
+        matches!(self, Grounded::Grounded)
+    }
+
+    pub fn can_jump(&self, max_jump_count: u8, coyote_time_ms: usize) -> bool {
+        match self {
+            Grounded::Grounded => true,
+            Grounded::Airborne {
+                duration,
+                jump_count,
+            } => *jump_count < max_jump_count && duration.as_millis() as usize <= coyote_time_ms,
+        }
+    }
 }
 
 fn add_tile_collider(grounded_q: Query<Entity, Added<TileCollider>>, mut cmd: Commands) {
@@ -115,85 +148,77 @@ fn add_tile_collider(grounded_q: Query<Entity, Added<TileCollider>>, mut cmd: Co
 }
 
 fn check_grounded(
-    mut grounded_q: Query<(
-        Entity,
-        &Velocity,
-        &KinematicSensor,
-        &Transform,
-        Option<&mut Grounded>,
-    )>,
-    mut cmd: Commands,
+    mut grounded_q: Query<(Entity, &KinematicSensor, &Transform, &mut Grounded)>,
     cast: SpatialQuery,
     time: Res<Time>,
 ) {
-    for (e, vel, sensor, t, grounded) in &mut grounded_q {
+    for (e, sensor, t, mut grounded) in &mut grounded_q {
         let sensor_half_size = sensor.size / 2. - Vec2::splat(SKIN_WIDTH);
         let origin = Vec2::new(
             t.translation.x,
             t.translation.y - sensor_half_size.y - sensor.ground_y_offset,
         );
-        if vel.y <= 0.0
-            && cast
-                .shape_hits(
-                    &Collider::segment(
-                        Vec2::new(-sensor_half_size.x, 0.),
-                        Vec2::new(sensor_half_size.x, 0.),
-                    ),
-                    origin,
-                    0.,
-                    Dir2::new(Vec2::NEG_Y).unwrap(),
-                    SKIN_WIDTH,
-                    u32::MAX,
-                    false,
-                    SpatialQueryFilter {
-                        mask: GamePhysicsLayer::Obstacle.into(),
-                        excluded_entities: [e].into(),
-                    },
-                )
-                .into_iter()
-                .any(|hit| hit.normal1.y > 0.)
+        if cast
+            .shape_hits(
+                &Collider::segment(
+                    Vec2::new(-sensor_half_size.x, 0.),
+                    Vec2::new(sensor_half_size.x, 0.),
+                ),
+                origin,
+                0.,
+                Dir2::new(Vec2::NEG_Y).unwrap(),
+                SKIN_WIDTH,
+                u32::MAX,
+                false,
+                SpatialQueryFilter {
+                    mask: GamePhysicsLayer::Obstacle.into(),
+                    excluded_entities: [e].into(),
+                },
+            )
+            .into_iter()
+            // hit coming from below
+            .any(|hit| hit.normal1.y > 0.)
         {
-            if let Some(mut grounded) = grounded {
-                grounded.duration += time.delta();
-            } else {
-                cmd.entity(e).insert(Grounded::default());
+            *grounded = Grounded::Grounded;
+        } else {
+            match grounded.as_mut() {
+                Grounded::Grounded => {
+                    *grounded = Grounded::airborne();
+                }
+                Grounded::Airborne { duration, .. } => {
+                    *duration += time.delta();
+                }
             }
-        } else if grounded.is_some() {
-            cmd.entity(e).remove::<Grounded>();
         }
     }
 }
 
-fn reset_velocity_on_grounded(
-    trigger: Trigger<OnAdd, Grounded>,
-    mut velocity_q: Query<&mut Velocity>,
-) {
-    let mut vel = or_return!(velocity_q.get_mut(trigger.entity()));
-    vel.y = 0.0;
-}
-
-fn apply_gravity(
-    mut gravity_q: Query<
-        (&Gravity, &mut Velocity),
-        (Without<Grounded>, Without<Cooldown<Gravity>>),
-    >,
-    time: Res<Time>,
-) {
-    for (gravity, mut vel) in &mut gravity_q {
-        vel.y = (vel.y + gravity.gravity * time.delta_seconds()).max(gravity.max_fall_velocity);
+fn apply_gravity(mut gravity_q: Query<(&Gravity, &mut Velocity, &Grounded)>, time: Res<Time>) {
+    for (gravity, mut vel, grounded) in &mut gravity_q {
+        vel.y = if grounded.is_grounded() {
+            0.
+        } else {
+            (vel.y + gravity.gravity * time.delta_seconds()).max(gravity.max_fall_velocity)
+        };
     }
 }
 
 // todo: should I use verlet integration instead of euler even when using fixed schedule?
 // todo: interpolation - possibly using one of the interpolation crates
 fn apply_vertical_velocity(
-    mut vel_q: Query<
-        (Entity, &mut Velocity, &mut Transform, &KinematicSensor),
-        (Without<Grounded>, Without<Cooldown<Gravity>>),
-    >,
+    mut vel_q: Query<(
+        Entity,
+        &Grounded,
+        &mut Velocity,
+        &mut Transform,
+        &KinematicSensor,
+    )>,
     cast: SpatialQuery,
 ) {
-    for (e, mut vel, mut t, sensor) in &mut vel_q {
+    for (e, _, mut vel, mut t, sensor) in &mut vel_q
+        .iter_mut()
+        .filter(|(_, grounded, ..)| !grounded.is_grounded())
+    {
         if vel.y == 0. {
             continue;
         }
