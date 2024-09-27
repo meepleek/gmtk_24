@@ -16,6 +16,8 @@ pub(super) fn plugin(app: &mut App) {
                 apply_horizontal_velocity,
                 apply_vertical_velocity,
             )
+                // todo: fix order ambiguities
+                .in_set(AppSet::Update)
                 .chain()
                 .run_if(level_ready),
         );
@@ -52,6 +54,7 @@ pub(crate) struct TileCollider;
 #[reflect(Component)]
 pub(crate) struct Velocity(Vec2);
 impl Velocity {
+    #[expect(dead_code)]
     pub fn falling(&self) -> bool {
         self.y < 0.
     }
@@ -118,10 +121,10 @@ pub(crate) enum Grounded {
     },
 }
 impl Grounded {
-    pub fn airborne() -> Self {
+    pub fn airborne(jump_count: u8) -> Self {
         Grounded::Airborne {
             duration: Duration::default(),
-            jump_count: 0,
+            jump_count,
         }
     }
 
@@ -147,7 +150,7 @@ fn add_tile_collider(grounded_q: Query<Entity, Added<TileCollider>>, mut cmd: Co
     }
 }
 
-fn check_grounded(
+pub(crate) fn check_grounded(
     mut grounded_q: Query<(Entity, &KinematicSensor, &Transform, &mut Grounded)>,
     cast: SpatialQuery,
     time: Res<Time>,
@@ -183,7 +186,7 @@ fn check_grounded(
         } else {
             match grounded.as_mut() {
                 Grounded::Grounded => {
-                    *grounded = Grounded::airborne();
+                    *grounded = Grounded::airborne(0);
                 }
                 Grounded::Airborne { duration, .. } => {
                     *duration += time.delta();
@@ -193,7 +196,10 @@ fn check_grounded(
     }
 }
 
-fn apply_gravity(mut gravity_q: Query<(&Gravity, &mut Velocity, &Grounded)>, time: Res<Time>) {
+pub(crate) fn apply_gravity(
+    mut gravity_q: Query<(&Gravity, &mut Velocity, &Grounded)>,
+    time: Res<Time>,
+) {
     for (gravity, mut vel, grounded) in &mut gravity_q {
         vel.y = if grounded.is_grounded() {
             0.

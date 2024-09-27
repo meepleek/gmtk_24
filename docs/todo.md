@@ -32,7 +32,7 @@
 - [x] clamp fall-speed
 - [ ] horizontal easing
 - [x] coyote time
-- [ ] input buffer
+- [x] input buffer
 - [ ] variable jump height
 - [ ] apex gravity
 - [ ] verlet integration (instead of euler)

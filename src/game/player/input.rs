@@ -1,6 +1,7 @@
 use crate::prelude::*;
 use bevy::input::keyboard::{Key, KeyboardInput};
-use leafwing_input_manager::{buttonlike::ButtonState, prelude::*};
+use leafwing_input_manager::prelude::*;
+use std::time::Duration;
 
 pub(super) fn plugin(app: &mut App) {
     app.init_resource::<PlayerBindings>()
@@ -15,7 +16,11 @@ pub(super) fn plugin(app: &mut App) {
         )
         .add_systems(
             FixedUpdate,
-            (process_text_input, collect_intent).run_if(level_ready),
+            (
+                collect_intent.in_set(AppSet::CollectInput),
+                process_text_input.in_set(AppSet::Update),
+            )
+                .run_if(level_ready),
         );
 }
 
@@ -109,13 +114,30 @@ fn process_text_input(
     typed.clear();
 }
 
-fn collect_intent(mut player_q: Query<&mut MovementIntent, With<Player>>, input: PlayerInput) {
+#[derive(Default, Debug, Reflect)]
+pub struct TimedButtonInput {
+    pub state: ButtonState,
+    pub last_pressed: Option<Duration>,
+}
+
+fn collect_intent(
+    mut player_q: Query<&mut MovementIntent, With<Player>>,
+    input: PlayerInput,
+    time: Res<Time>,
+) {
     let mut intent = or_return!(player_q.get_single_mut());
+    let jump_btn_data = input
+        .button_data(&PlayerAction::Jump)
+        .expect("Jump mapped properly");
     *intent = MovementIntent {
         horizontal_direction: input.clamped_value(&PlayerAction::Move),
-        jump: input
-            .button_data(&PlayerAction::Jump)
-            .map_or(ButtonState::Released, |data| data.state),
+        jump: TimedButtonInput {
+            state: jump_btn_data.state,
+            last_pressed: match jump_btn_data.state {
+                ButtonState::JustPressed => Some(Duration::ZERO),
+                _ => intent.jump.last_pressed.map(|last| last + time.delta()),
+            },
+        },
     };
 }
 

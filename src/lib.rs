@@ -26,8 +26,14 @@ pub struct AppPlugin;
 
 impl Plugin for AppPlugin {
     fn build(&self, app: &mut App) {
-        // Order new `AppStep` variants by adding them here:
-        app.configure_sets(Update, (AppSet::TickTimers, AppSet::Update).chain());
+        app.configure_sets(
+            FixedUpdate,
+            (AppSet::TickTimers, AppSet::CollectInput, AppSet::Update).chain(),
+        )
+        .configure_sets(
+            Update,
+            (AppSet::TickTimers, AppSet::CollectInput, AppSet::Update).chain(),
+        );
 
         // Add Bevy plugins.
         app.add_plugins(
@@ -84,8 +90,7 @@ impl Plugin for AppPlugin {
 /// call above.
 #[derive(SystemSet, Debug, Clone, Copy, Eq, PartialEq, Hash, PartialOrd, Ord)]
 enum AppSet {
-    /// Tick timers.
     TickTimers,
-    /// Do everything else (consider splitting this into further variants).
+    CollectInput,
     Update,
 }
