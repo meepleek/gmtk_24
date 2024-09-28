@@ -287,30 +287,6 @@ fn apply_vertical_velocity(
         if move_by_y != 0. {
             t.translation.y += move_by_y;
         }
-
-        // if *coords != new_coords {
-        //     if let Some(coll_e) = lookup.get(&new_coords) {
-        //         if collision_q.contains(*coll_e) {
-        //             // snap to ground on collision
-        //             update_y = Some(coords.to_world().y);
-        //         } else {
-        //             update_y = Some(new_y);
-        //         }
-        //     } else {
-        //         // update coords on no collision
-        //         update_y = Some(new_y);
-        //     }
-        // } else {
-        //     // no coords change, just update translation
-        //     t.translation.y = new_y;
-        // }
-
-        // if let Some(y) = update_y {
-        //     lookup.remove(&*coords);
-        //     lookup.insert(new_coords, e);
-        //     *coords = new_coords;
-        //     t.translation.y = y;
-        // }
     }
 }
 

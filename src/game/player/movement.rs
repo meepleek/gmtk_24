@@ -4,14 +4,21 @@ use crate::{
 };
 
 pub(super) fn plugin(app: &mut App) {
-    app.register_type::<MovementIntent>().add_systems(
-        FixedUpdate,
-        (horizontal_velocity_easing, process_intent)
-            .chain()
-            .after(check_grounded)
-            .before(apply_gravity)
-            .run_if(level_ready),
-    );
+    app.register_type::<MovementIntent>()
+        .add_systems(
+            FixedUpdate,
+            (horizontal_velocity_easing, process_intent)
+                .chain()
+                .after(check_grounded)
+                .before(apply_gravity)
+                .run_if(level_ready),
+        )
+        .add_systems(
+            FixedUpdate,
+            update_grid_coords
+                .in_set(AppSet::UpdateCoords)
+                .run_if(level_ready),
+        );
 }
 
 pub const COYOTE_TIME_MS: usize = 90;
@@ -111,5 +118,21 @@ fn horizontal_velocity_easing(
                 time.delta_seconds() / easing.duration_in_s
             })
         .clamp(0., 1.);
+    }
+}
+
+fn update_grid_coords(
+    mut kinematic_q: Query<
+        (Entity, &mut Transform, &mut GridCoords),
+        (With<KinematicSensor>, Changed<Transform>),
+    >,
+    mut lookup: ResMut<LevelEntityLookup>,
+) {
+    for (e, t, mut coords) in &mut kinematic_q {
+        let new_coords = t.translation.to_grid_coords();
+        if *coords != new_coords {
+            lookup.upsert(e, &coords, new_coords);
+            *coords = new_coords;
+        }
     }
 }

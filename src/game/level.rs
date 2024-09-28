@@ -25,6 +25,12 @@ pub(crate) fn level_ready(lookup: Option<Res<LevelEntityLookup>>) -> bool {
 #[derive(Resource, Deref, DerefMut, Reflect)]
 #[reflect(Resource)]
 pub(crate) struct LevelEntityLookup(pub HashMap<GridCoords, Entity>);
+impl LevelEntityLookup {
+    pub fn upsert(&mut self, entity: Entity, old: &GridCoords, new: GridCoords) {
+        self.remove(old);
+        self.insert(new, entity);
+    }
+}
 
 #[derive(Component, Debug)]
 pub struct Movable {

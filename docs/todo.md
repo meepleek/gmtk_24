@@ -26,7 +26,7 @@
 
 - [x] continuous/f32 movement/translation
 - [x] add avian
-- [ ] track coords
+- [x] track coords
 - [x] player gravity
 - [x] jump
 - [x] clamp fall-speed

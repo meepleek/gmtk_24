@@ -28,11 +28,23 @@ impl Plugin for AppPlugin {
     fn build(&self, app: &mut App) {
         app.configure_sets(
             FixedUpdate,
-            (AppSet::TickTimers, AppSet::CollectInput, AppSet::Update).chain(),
+            (
+                AppSet::TickTimers,
+                AppSet::CollectInput,
+                AppSet::Update,
+                AppSet::UpdateCoords,
+            )
+                .chain(),
         )
         .configure_sets(
             Update,
-            (AppSet::TickTimers, AppSet::CollectInput, AppSet::Update).chain(),
+            (
+                AppSet::TickTimers,
+                AppSet::CollectInput,
+                AppSet::Update,
+                AppSet::UpdateCoords,
+            )
+                .chain(),
         );
 
         // Add Bevy plugins.
@@ -93,4 +105,5 @@ enum AppSet {
     TickTimers,
     CollectInput,
     Update,
+    UpdateCoords,
 }
