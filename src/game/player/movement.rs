@@ -51,16 +51,13 @@ impl MovementEasing {
 }
 
 fn process_intent(
-    mut movement_q: Query<
-        (
-            &mut Velocity,
-            &Gravity,
-            &mut MovementIntent,
-            &mut Grounded,
-            Option<&MovementEasing>,
-        ),
-        With<Player>,
-    >,
+    mut movement_q: Query<(
+        &mut Velocity,
+        &Gravity,
+        &mut MovementIntent,
+        &mut Grounded,
+        Option<&MovementEasing>,
+    )>,
     time: Res<Time>,
 ) {
     let (mut velocity, gravity, mut intent, mut grounded, easing) =
@@ -94,17 +91,13 @@ fn process_intent(
         {
             velocity.y *= 0.65;
         }
-        // todo
-        (_, _) => {} // ButtonState::Pressed => todo!(),
-                     // ButtonState::JustReleased => todo!(),
-                     // ButtonState::Released => todo!(),
-                     // todo: variable jump height
+        (_, _) => {}
     }
 }
 
 // todo: handle gamepad analog sticks?
 fn horizontal_velocity_easing(
-    mut easing_q: Query<(&MovementIntent, &mut MovementEasing), With<Player>>,
+    mut easing_q: Query<(&MovementIntent, &mut MovementEasing)>,
     time: Res<Time>,
 ) {
     for (intent, mut easing) in &mut easing_q {

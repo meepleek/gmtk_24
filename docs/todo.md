@@ -37,13 +37,12 @@
 - [x] apex gravity
 - [ ] verlet integration (instead of euler)
 - [ ] wall-jump
-- [ ] highlight neighbour/mine-able tiles
 
 ### v0.4.0 obstacles
 
 - [x] gravity enabled rocks 
   - [ ] rocks can crush the player
-- [ ] spickes
+- [ ] spikes
 - [ ] crush blocks
 - [ ] bomb/mine
 
@@ -69,7 +68,10 @@
 - [ ] wall hop
 - [ ] wall jump leeway/correction (change to jump from hop etc.)
 
+
 ### better feedback
+
+- [ ] highlight neighbour/mine-able tiles
 
 ### fog of war
 
