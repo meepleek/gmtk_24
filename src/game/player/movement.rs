@@ -1,6 +1,6 @@
 use crate::{
     anim::StableInterpolate,
-    game::physics::{apply_gravity, check_horizontal_collisions},
+    game::physics::{apply_gravity, check_horizontal_collisions, SKIN_WIDTH},
     prelude::*,
 };
 
@@ -30,6 +30,15 @@ pub const JUMP_INPUT_BUFFER_MS: usize = 80;
 pub(crate) struct MovementIntent {
     pub horizontal_movement: f32,
     pub jump: TimedButtonInput,
+}
+impl MovementIntent {
+    pub fn horizontal_sign(&self) -> f32 {
+        if self.horizontal_movement == 0. {
+            0.
+        } else {
+            self.horizontal_movement.signum()
+        }
+    }
 }
 
 #[derive(Component, Reflect, Debug)]
@@ -77,23 +86,36 @@ fn process_intent(
         ),
         None => velocity.x = target,
     };
+    // reset sliding
+    if let Grounded::Airborne { sliding, .. } = grounded.as_mut()
+        && *sliding
+    {
+        *sliding = false;
+    }
+
     // wall-jump
     // todo: add leeway - store last collision time to treat it as coyote_time when there's no side collision
     if let (ButtonState::JustPressed, Some(horizontal)) = (intent.jump.state, horizontal_obstacles)
         && grounded.is_airborne()
         && horizontal.closest_sign().is_some()
     {
-        // todo: store when the horizontal collision has changed or similar to prevent further jupming until the player re-enters the collision os is grounded (or smt similar?)
-        if intent.horizontal_movement != 0.
-            && intent.horizontal_movement.signum() == horizontal.closest_sign().unwrap()
-        {
+        // todo: store when the horizontal collision has changed or similar to prevent further jumping until the player re-enters the collision os is grounded (or smt similar?)
+        if intent.horizontal_sign() == horizontal.closest_sign().unwrap() {
             velocity.0 = Vec2::new(speed * 1.5 * -horizontal.closest_sign().unwrap(), 4.5);
         } else {
             velocity.0 = Vec2::new(speed * 1.8 * -horizontal.closest_sign().unwrap(), 4.);
         }
     }
-    // todo: wall-sliding (when holding horizontal direction towards wall without jumping)
-
+    // wall sliding
+    else if let (
+        Grounded::Airborne { sliding, .. },
+        Some(HorizontalObstacleDetection(Some(closest))),
+    ) = (grounded.as_mut(), horizontal_obstacles)
+        && velocity.falling()
+        && closest.distance() <= SKIN_WIDTH * 2.
+    {
+        *sliding = true;
+    }
     // jump
     else if let Some(last_pressed) = intent.jump.last_pressed
         && last_pressed.as_millis() as usize <= JUMP_INPUT_BUFFER_MS
@@ -106,9 +128,11 @@ fn process_intent(
             Grounded::Airborne {
                 duration,
                 jump_count,
+                sliding,
             } => {
                 *duration += time.delta();
                 *jump_count += 1;
+                *sliding = false;
             }
         }
     }

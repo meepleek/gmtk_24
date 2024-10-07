@@ -54,7 +54,6 @@ pub(crate) struct TileCollider;
 #[reflect(Component)]
 pub(crate) struct Velocity(pub Vec2);
 impl Velocity {
-    #[expect(dead_code)]
     pub fn falling(&self) -> bool {
         self.y < 0.
     }
@@ -67,6 +66,7 @@ pub(crate) struct Gravity {
     jump_velocity: f32,
     min_jump_velocity: f32,
     max_fall_velocity: f32,
+    max_slide_velocity: f32,
     ground_width: f32,
 }
 impl Default for Gravity {
@@ -83,11 +83,13 @@ impl Gravity {
         let tile_unit_size = TILE_SIZE as f32 / FIXED_UPDATE_FPS;
         let accel = (2.0 * jump_height.end() * tile_unit_size) / jump_to_apex_duration_sec.powi(2);
         let jump_velocity = accel * jump_to_apex_duration_sec;
+        let max_fall_velocity = -(accel * TILE_SIZE as f32) / FIXED_UPDATE_FPS;
         Self {
             gravity: -accel,
             jump_velocity,
             min_jump_velocity: jump_velocity * (jump_height.start() / jump_height.end()).sqrt(),
-            max_fall_velocity: -(accel * TILE_SIZE as f32) / FIXED_UPDATE_FPS,
+            max_fall_velocity,
+            max_slide_velocity: max_fall_velocity * 0.15,
             ground_width,
         }
     }
@@ -129,12 +131,14 @@ pub(crate) enum Grounded {
     Airborne {
         duration: Duration,
         jump_count: u8,
+        sliding: bool,
     },
 }
 impl Grounded {
     pub fn airborne(jump_count: u8) -> Self {
         Grounded::Airborne {
             duration: Duration::default(),
+            sliding: false,
             jump_count,
         }
     }
@@ -147,12 +151,17 @@ impl Grounded {
         matches!(self, Grounded::Airborne { .. })
     }
 
+    pub fn is_sliding(&self) -> bool {
+        matches!(self, Grounded::Airborne { sliding: true, .. })
+    }
+
     pub fn can_jump(&self, max_jump_count: u8, coyote_time_ms: usize) -> bool {
         match self {
             Grounded::Grounded => true,
             Grounded::Airborne {
                 duration,
                 jump_count,
+                ..
             } => *jump_count < max_jump_count && duration.as_millis() as usize <= coyote_time_ms,
         }
     }
@@ -163,10 +172,25 @@ pub(crate) enum ClosestHorizontalCollision {
     Left(f32),
     Right(f32),
 }
+impl ClosestHorizontalCollision {
+    pub fn sign(&self) -> f32 {
+        match self {
+            ClosestHorizontalCollision::Left(_) => -1.,
+            ClosestHorizontalCollision::Right(_) => 1.,
+        }
+    }
+
+    pub fn distance(&self) -> f32 {
+        match self {
+            ClosestHorizontalCollision::Left(dist) => *dist,
+            ClosestHorizontalCollision::Right(dist) => *dist,
+        }
+    }
+}
 
 #[derive(Component, Default, Reflect, Debug, Deref, DerefMut)]
 #[reflect(Component)]
-pub(crate) struct HorizontalObstacleDetection(Option<ClosestHorizontalCollision>);
+pub(crate) struct HorizontalObstacleDetection(pub Option<ClosestHorizontalCollision>);
 impl HorizontalObstacleDetection {
     pub fn new(distance_left: Option<f32>, distance_right: Option<f32>) -> Self {
         use ClosestHorizontalCollision::{Left, Right};
@@ -185,11 +209,7 @@ impl HorizontalObstacleDetection {
     }
 
     pub fn closest_sign(&self) -> Option<f32> {
-        match self.0 {
-            Some(ClosestHorizontalCollision::Left(_)) => Some(-1.),
-            Some(ClosestHorizontalCollision::Right(_)) => Some(1.),
-            _ => None,
-        }
+        self.as_ref().map(|closest| closest.sign())
     }
 }
 
@@ -305,8 +325,13 @@ pub(crate) fn apply_gravity(
             } else {
                 1.
             };
-            (vel.y + gravity.gravity * gravity_factor * time.delta_seconds())
-                .max(gravity.max_fall_velocity)
+            (vel.y + gravity.gravity * gravity_factor * time.delta_seconds()).max(
+                if grounded.is_sliding() {
+                    gravity.max_slide_velocity
+                } else {
+                    gravity.max_fall_velocity
+                },
+            )
         };
     }
 }
