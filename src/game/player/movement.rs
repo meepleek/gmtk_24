@@ -56,7 +56,6 @@ impl Default for MovementEasing {
     }
 }
 
-// todo: need (horizontal) collisions here
 fn process_intent(
     mut movement_q: Query<(
         &mut Velocity,
@@ -70,7 +69,6 @@ fn process_intent(
 ) {
     let (mut velocity, gravity, mut intent, mut grounded, easing, horizontal_obstacles) =
         or_return!(movement_q.get_single_mut());
-    // todo: need to lerp/interpolate to target velocity instead of directly snapping to it (or just using the ease timing as a factor)
     // todo: component/add to controller component?
     let speed = 150.;
     let target = speed * intent.horizontal_movement;
