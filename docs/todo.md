@@ -36,7 +36,7 @@
 - [x] variable jump height
 - [x] apex gravity
 - [ ] verlet integration (instead of euler)
-- [ ] wall-jump
+- [x] wall-jump
 
 ### v0.4.0 obstacles
 
@@ -64,8 +64,7 @@
 
 - [ ] jump nudge/vertical correction
 - [ ] movement horizontal correction (when leaving the edge)
-- [ ] wall slide
-- [ ] wall hop
+- [x] wall slide
 - [ ] wall jump leeway/correction (change to jump from hop etc.)
 
 
