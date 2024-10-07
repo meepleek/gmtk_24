@@ -50,9 +50,10 @@ fn on_player_spawned(
                 ground_y_offset: 5.,
             },
             Grounded::airborne(0),
+            HorizontalObstacleDetection::default(),
             Velocity::default(),
             MovementIntent::default(),
-            MovementEasing::new(0.08, 0.05),
+            MovementEasing::default(),
             GamePhysicsLayer::membership(GamePhysicsLayer::Player),
         ));
     }

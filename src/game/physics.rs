@@ -12,6 +12,7 @@ pub(super) fn plugin(app: &mut App) {
             FixedUpdate,
             (
                 check_grounded,
+                check_horizontal_collisions,
                 apply_gravity,
                 apply_horizontal_velocity,
                 apply_vertical_velocity,
@@ -51,7 +52,7 @@ pub(crate) struct TileCollider;
 
 #[derive(Component, Default, Deref, DerefMut, Reflect, Debug)]
 #[reflect(Component)]
-pub(crate) struct Velocity(Vec2);
+pub(crate) struct Velocity(pub Vec2);
 impl Velocity {
     #[expect(dead_code)]
     pub fn falling(&self) -> bool {
@@ -142,6 +143,10 @@ impl Grounded {
         matches!(self, Grounded::Grounded)
     }
 
+    pub fn is_airborne(&self) -> bool {
+        matches!(self, Grounded::Airborne { .. })
+    }
+
     pub fn can_jump(&self, max_jump_count: u8, coyote_time_ms: usize) -> bool {
         match self {
             Grounded::Grounded => true,
@@ -149,6 +154,41 @@ impl Grounded {
                 duration,
                 jump_count,
             } => *jump_count < max_jump_count && duration.as_millis() as usize <= coyote_time_ms,
+        }
+    }
+}
+
+#[derive(Reflect, Debug)]
+pub(crate) enum ClosestHorizontalCollision {
+    Left(f32),
+    Right(f32),
+}
+
+#[derive(Component, Default, Reflect, Debug, Deref, DerefMut)]
+#[reflect(Component)]
+pub(crate) struct HorizontalObstacleDetection(Option<ClosestHorizontalCollision>);
+impl HorizontalObstacleDetection {
+    pub fn new(distance_left: Option<f32>, distance_right: Option<f32>) -> Self {
+        use ClosestHorizontalCollision::{Left, Right};
+        match (distance_left, distance_right) {
+            (Some(left), None) => Self(Some(Left(left))),
+            (None, Some(right)) => Self(Some(Right(right))),
+            (Some(left), Some(right)) => {
+                if left < right {
+                    Self(Some(Left(left)))
+                } else {
+                    Self(Some(Right(right)))
+                }
+            }
+            (None, None) => Self(None),
+        }
+    }
+
+    pub fn closest_sign(&self) -> Option<f32> {
+        match self.0 {
+            Some(ClosestHorizontalCollision::Left(_)) => Some(-1.),
+            Some(ClosestHorizontalCollision::Right(_)) => Some(1.),
+            _ => None,
         }
     }
 }
@@ -203,6 +243,49 @@ pub(crate) fn check_grounded(
                 }
             }
         }
+    }
+}
+
+pub(crate) fn check_horizontal_collisions(
+    mut grounded_q: Query<(
+        Entity,
+        &KinematicSensor,
+        &Transform,
+        &mut HorizontalObstacleDetection,
+    )>,
+    cast: SpatialQuery,
+) {
+    for (e, sensor, t, mut coll) in &mut grounded_q {
+        let distance = |sign: f32| {
+            let sensor_half_size = sensor.size / 2. - Vec2::splat(SKIN_WIDTH);
+            let origin = Vec2::new(t.translation.x + sensor_half_size.x * sign, t.translation.y);
+            cast.shape_hits(
+                &Collider::segment(
+                    Vec2::new(0., -sensor_half_size.y),
+                    Vec2::new(0., sensor_half_size.y),
+                ),
+                origin,
+                0.,
+                Dir2::new(Vec2::X * sign).expect("Valid direction"),
+                TILE_SIZE as f32 * 0.25 + SKIN_WIDTH,
+                u32::MAX,
+                false,
+                SpatialQueryFilter {
+                    mask: GamePhysicsLayer::Obstacle.into(),
+                    excluded_entities: [e].into(),
+                },
+            )
+            .into_iter()
+            // horizontal hit
+            .filter(|hit| hit.normal1.x != 0.)
+            .min_by(|hit1, hit2| {
+                hit1.time_of_impact
+                    .partial_cmp(&hit2.time_of_impact)
+                    .expect("Valid TOI")
+            })
+            .map(|h| h.time_of_impact - SKIN_WIDTH)
+        };
+        *coll = HorizontalObstacleDetection::new(distance(-1.), distance(1.));
     }
 }
 
@@ -293,10 +376,12 @@ fn apply_vertical_velocity(
 fn apply_horizontal_velocity(
     mut vel_q: Query<(Entity, &Velocity, &KinematicSensor, &mut Transform)>,
     cast: SpatialQuery,
+    time: Res<Time>,
 ) {
     for (e, vel, sensor, mut t) in &mut vel_q {
-        if vel.x != 0.0 {
-            t.scale.x = vel.x.signum();
+        let x = vel.x * time.delta_seconds();
+        if x != 0.0 {
+            t.scale.x = x.signum();
         } else {
             continue;
         }
@@ -310,8 +395,8 @@ fn apply_horizontal_velocity(
                 ),
                 sensor.translation(t.translation),
                 0.,
-                Dir2::new(Vec2::X * vel.x.signum()).expect("Non-zero y velocity"),
-                vel.x.abs() + SKIN_WIDTH,
+                Dir2::new(Vec2::X * x.signum()).expect("Non-zero y velocity"),
+                x.abs() + SKIN_WIDTH,
                 u32::MAX,
                 false,
                 SpatialQueryFilter {
@@ -326,8 +411,8 @@ fn apply_horizontal_velocity(
                     .partial_cmp(&hit2.time_of_impact)
                     .expect("Valid TOI")
             }) {
-            Some(hit) => (hit.time_of_impact - SKIN_WIDTH).max(0.) * vel.x.signum(),
-            None => vel.x,
+            Some(hit) => (hit.time_of_impact - SKIN_WIDTH).max(0.) * x.signum(),
+            None => x,
         };
 
         if move_by_x != 0. {
