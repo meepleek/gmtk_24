@@ -319,7 +319,7 @@ pub enum Screen {
 ```
 
 Constrain entities that should only be present in a certain screen to that screen by adding a
-[`StateScoped`](https://docs.rs/bevy/latest/bevy/prelude/struct.StateScoped.html) component to them.
+[`DespawnOnExit`](https://docs.rs/bevy/latest/bevy/prelude/struct.DespawnOnExit.html) component to them.
 Transition between screens by setting the [`NextState<Screen>`](https://docs.rs/bevy/latest/bevy/prelude/enum.NextState.html) resource.
 
 For each screen, create a plugin that handles the setup and teardown of the screen with `OnEnter` and `OnExit`:
@@ -334,7 +334,7 @@ pub(super) fn plugin(app: &mut App) {
 fn show_game_over_screen(mut commands: Commands) {
     commands.
         .ui_root()
-        .insert(StateScoped(Screen::GameOver))
+        .insert(DespawnOnExit(Screen::GameOver))
         .with_children(|parent| {
             // Add UI elements
         });

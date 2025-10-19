@@ -11,7 +11,7 @@ pub(super) fn plugin(app: &mut App) {
 fn show_screen(mut commands: Commands) {
     commands
         .ui_root()
-        .insert(StateScoped(Screen::Tutorial))
+        .insert(DespawnOnExit(Screen::Tutorial))
         .with_children(|children| {
             children.header("How to play");
             children.label("TODO");

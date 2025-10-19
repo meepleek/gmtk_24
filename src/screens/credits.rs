@@ -11,7 +11,7 @@ pub(super) fn plugin(app: &mut App) {
 fn show_credits_screen(mut commands: Commands) {
     commands
         .ui_root()
-        .insert(StateScoped(Screen::Credits))
+        .insert(DespawnOnExit(Screen::Credits))
         .with_children(|children| {
             children.header("Made by");
             children.label("Joe Shmoe - Implemented aligator wrestling AI");

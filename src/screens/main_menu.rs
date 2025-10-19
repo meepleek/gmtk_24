@@ -11,7 +11,7 @@ pub(super) fn plugin(app: &mut App) {
 
 fn show_title_screen(mut cmd: Commands) {
     cmd.ui_root()
-        .insert(StateScoped(Screen::MainMenu))
+        .insert(DespawnOnExit(Screen::MainMenu))
         .with_children(|children| {
             children.button("Play").observe(trigger_transition_to_game);
             children

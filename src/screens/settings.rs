@@ -12,7 +12,7 @@ fn show_screen(mut commands: Commands) {
     commands
         .ui_root()
         // todo: replace by ScreenTransition scoped instead?
-        .insert(StateScoped(Screen::Settings))
+        .insert(DespawnOnExit(Screen::Settings))
         .with_children(|children| {
             children.header("Settings");
             children.label("TODO");

@@ -85,7 +85,7 @@ fn spawn_level(ass: Res<AssetServer>, mut cmd: Commands) {
             ldtk_handle: ass.load("levels.ldtk"),
             ..Default::default()
         },
-        StateScoped(Screen::Game),
+        DespawnOnExit(Screen::Game),
     ));
 }
 
