@@ -36,9 +36,9 @@ impl Default for PlayerBindings {
         Self {
             // left: "a".to_string(),
             // right: "d".to_string(),
-            left: KeyCode::KeyN,
-            right: KeyCode::KeyO,
-            jump: KeyCode::KeyV,
+            left: KeyCode::KeyA,
+            right: KeyCode::KeyT,
+            jump: KeyCode::KeyN,
         }
     }
 }
