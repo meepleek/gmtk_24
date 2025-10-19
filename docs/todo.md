@@ -24,20 +24,25 @@
 
 ### v0.3.0 platforming - initial pass
 
-- [ ] continuous/f32 movement/translation
-- [ ] player gravity
-- [ ] jump
-- [ ] coyote time
-- [ ] input buffer
-- [ ] variable jump height
-- [ ] wall-jump
-- [ ] highlight neighbour/mine-able tiles
+- [x] continuous/f32 movement/translation
+- [x] add avian
+- [x] track coords
+- [x] player gravity
+- [x] jump
+- [x] clamp fall-speed
+- [x] horizontal easing
+- [x] coyote time
+- [x] input buffer
+- [x] variable jump height
+- [x] apex gravity
+- [ ] verlet integration (instead of euler)
+- [x] wall-jump
 
 ### v0.4.0 obstacles
 
 - [x] gravity enabled rocks 
   - [ ] rocks can crush the player
-- [ ] spickes
+- [ ] spikes
 - [ ] crush blocks
 - [ ] bomb/mine
 
@@ -59,11 +64,13 @@
 
 - [ ] jump nudge/vertical correction
 - [ ] movement horizontal correction (when leaving the edge)
-- [ ] wall slide
-- [ ] wall hop
+- [x] wall slide
 - [ ] wall jump leeway/correction (change to jump from hop etc.)
 
+
 ### better feedback
+
+- [ ] highlight neighbour/mine-able tiles
 
 ### fog of war
 

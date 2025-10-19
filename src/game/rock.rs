@@ -1,5 +1,7 @@
 use crate::prelude::*;
 
+// todo: try to make rocks pushable to squish enemies?
+// todo: also allow (some) enemies to push rocks too
 pub(super) fn plugin(app: &mut App) {
     app.register_ldtk_entity::<RockBundle>("Rock");
 }

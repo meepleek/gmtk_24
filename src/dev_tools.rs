@@ -2,6 +2,7 @@
 
 use crate::prelude::*;
 use bevy::{
+    color::palettes::tailwind,
     dev_tools::{states::log_transitions, ui_debug_overlay::DebugUiPlugin},
     input::common_conditions::input_toggle_active,
 };
@@ -18,9 +19,13 @@ pub(super) fn plugin(app: &mut App) {
         );
 
     #[cfg(feature = "dev")]
-    app.add_plugins(
-        WorldInspectorPlugin::new().run_if(input_toggle_active(false, MouseButton::Right)),
-    );
+    {
+        app.add_plugins((
+            WorldInspectorPlugin::new().run_if(input_toggle_active(false, MouseButton::Right)),
+            avian2d::debug_render::PhysicsDebugPlugin::default(),
+        ));
+        app.add_systems(FixedUpdate, draw_kinematic_sensor_gizmos);
+    }
 }
 
 fn draw_level_grid(mut gizmos: Gizmos) {
@@ -34,4 +39,22 @@ fn draw_level_grid(mut gizmos: Gizmos) {
             LinearRgba::gray(0.1),
         )
         .outer_edges();
+}
+
+fn draw_kinematic_sensor_gizmos(
+    sensor_q: Query<(&KinematicSensor, &Transform, &Grounded)>,
+    mut gizmos: Gizmos,
+) {
+    for (sensor, t, grounded) in &sensor_q {
+        gizmos.rect_2d(
+            sensor.translation(t.translation),
+            0.,
+            sensor.size,
+            if grounded.is_grounded() {
+                tailwind::BLUE_400
+            } else {
+                tailwind::GREEN_400
+            },
+        );
+    }
 }

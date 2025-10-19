@@ -1,3 +1,5 @@
+#![feature(let_chains)]
+
 mod anim;
 mod assets;
 mod audio;
@@ -6,7 +8,6 @@ mod camera;
 mod dev_tools;
 mod ext;
 mod game;
-mod input;
 mod math;
 mod prelude;
 mod screens;
@@ -27,10 +28,25 @@ pub struct AppPlugin;
 
 impl Plugin for AppPlugin {
     fn build(&self, app: &mut App) {
-        // Order new `AppStep` variants by adding them here:
         app.configure_sets(
+            FixedUpdate,
+            (
+                AppSet::TickTimers,
+                AppSet::CollectInput,
+                AppSet::Update,
+                AppSet::UpdateCoords,
+            )
+                .chain(),
+        )
+        .configure_sets(
             Update,
-            (AppSet::TickTimers, AppSet::RecordInput, AppSet::Update).chain(),
+            (
+                AppSet::TickTimers,
+                AppSet::CollectInput,
+                AppSet::Update,
+                AppSet::UpdateCoords,
+            )
+                .chain(),
         );
 
         // Add Bevy plugins.
@@ -75,7 +91,6 @@ impl Plugin for AppPlugin {
             tween::plugin,
             anim::plugin,
             camera::plugin,
-            input::plugin,
         ));
 
         // Enable dev tools for dev builds.
@@ -89,10 +104,8 @@ impl Plugin for AppPlugin {
 /// call above.
 #[derive(SystemSet, Debug, Clone, Copy, Eq, PartialEq, Hash, PartialOrd, Ord)]
 enum AppSet {
-    /// Tick timers.
     TickTimers,
-    /// Record player input.
-    RecordInput,
-    /// Do everything else (consider splitting this into further variants).
+    CollectInput,
     Update,
+    UpdateCoords,
 }

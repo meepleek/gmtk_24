@@ -1,131 +1,447 @@
 use crate::prelude::*;
+use avian2d::prelude::*;
+use std::{ops::RangeInclusive, time::Duration};
 
-// todo: try to make rocks pushable to squish enemies?
-// todo: also allow (some) enemies to push rocks too
 pub(super) fn plugin(app: &mut App) {
-    app.register_type::<Velocity>()
+    app.add_plugins(avian2d::PhysicsPlugins::default())
+        .register_type::<Velocity>()
         .register_type::<Gravity>()
-        .add_systems(Update, tick_cooldown::<Gravity>)
+        .register_type::<Grounded>()
+        .add_systems(Update, add_tile_collider)
         .add_systems(
             FixedUpdate,
             (
-                reset_grounded_on_tile_removed,
+                check_grounded,
+                check_horizontal_collisions,
                 apply_gravity,
-                apply_velocity,
+                apply_horizontal_velocity,
+                apply_vertical_velocity,
             )
+                .in_set(AppSet::Update)
                 .chain()
                 .run_if(level_ready),
-        )
-        .observe(reset_velocity_on_grounded);
+        );
 }
 
-#[derive(Component, Default, Deref, DerefMut, Reflect)]
+pub const FIXED_UPDATE_FPS: f32 = 64.0;
+pub const SKIN_WIDTH: f32 = 1.0;
+
+#[derive(PhysicsLayer)]
+pub(crate) enum GamePhysicsLayer {
+    Player,
+    Obstacle,
+}
+
+impl GamePhysicsLayer {
+    pub fn membership(member: GamePhysicsLayer) -> CollisionLayers {
+        Self::memberships([member])
+    }
+
+    pub fn memberships<const N: usize>(members: [GamePhysicsLayer; N]) -> CollisionLayers {
+        CollisionLayers::new(members, LayerMask::ALL)
+    }
+
+    pub fn obstacle_collision_layers() -> CollisionLayers {
+        Self::membership(Self::Obstacle)
+    }
+}
+
+#[derive(Component, Default, Reflect, Debug)]
 #[reflect(Component)]
-pub(crate) struct Velocity(Vec2);
+pub(crate) struct TileCollider;
+
+#[derive(Component, Default, Deref, DerefMut, Reflect, Debug)]
+#[reflect(Component)]
+pub(crate) struct Velocity(pub Vec2);
+impl Velocity {
+    pub fn falling(&self) -> bool {
+        self.y < 0.
+    }
+}
 
 #[derive(Component, Reflect)]
 #[reflect(Component)]
 pub(crate) struct Gravity {
-    y: f32,
-    delay_ms: Option<u64>,
+    gravity: f32,
+    jump_velocity: f32,
+    min_jump_velocity: f32,
+    max_fall_velocity: f32,
+    max_slide_velocity: f32,
+    ground_width: f32,
 }
 impl Default for Gravity {
     fn default() -> Self {
+        Self::new(0.5..=1.27, 0.3, TILE_SIZE as f32)
+    }
+}
+impl Gravity {
+    pub fn new(
+        jump_height: RangeInclusive<f32>,
+        jump_to_apex_duration_sec: f32,
+        ground_width: f32,
+    ) -> Self {
+        let tile_unit_size = TILE_SIZE as f32 / FIXED_UPDATE_FPS;
+        let accel = (2.0 * jump_height.end() * tile_unit_size) / jump_to_apex_duration_sec.powi(2);
+        let jump_velocity = accel * jump_to_apex_duration_sec;
+        let max_fall_velocity = -(accel * TILE_SIZE as f32) / FIXED_UPDATE_FPS;
         Self {
-            y: -7.,
-            delay_ms: Some(350),
+            gravity: -accel,
+            jump_velocity,
+            min_jump_velocity: jump_velocity * (jump_height.start() / jump_height.end()).sqrt(),
+            max_fall_velocity,
+            max_slide_velocity: max_fall_velocity * 0.15,
+            ground_width,
+        }
+    }
+
+    pub fn jump_velocity(&self) -> f32 {
+        self.jump_velocity
+    }
+
+    pub fn min_jump_velocity(&self) -> f32 {
+        self.min_jump_velocity
+    }
+}
+
+#[derive(Component, Reflect)]
+#[reflect(Component)]
+pub(crate) struct KinematicSensor {
+    pub size: Vec2,
+    pub ground_y_offset: f32,
+}
+impl Default for KinematicSensor {
+    fn default() -> Self {
+        Self {
+            size: Vec2::splat(TILE_SIZE as f32 / 2.),
+            ground_y_offset: 0.,
+        }
+    }
+}
+impl KinematicSensor {
+    pub fn translation(&self, transform_translation: Vec3) -> Vec2 {
+        transform_translation.truncate() - Vec2::Y * self.ground_y_offset
+    }
+}
+
+#[derive(Component, Default, Reflect)]
+#[reflect(Component)]
+pub(crate) enum Grounded {
+    #[default]
+    Grounded,
+    Airborne {
+        duration: Duration,
+        jump_count: u8,
+        sliding: bool,
+    },
+}
+impl Grounded {
+    pub fn airborne(jump_count: u8) -> Self {
+        Grounded::Airborne {
+            duration: Duration::default(),
+            sliding: false,
+            jump_count,
+        }
+    }
+
+    pub fn is_grounded(&self) -> bool {
+        matches!(self, Grounded::Grounded)
+    }
+
+    pub fn is_airborne(&self) -> bool {
+        matches!(self, Grounded::Airborne { .. })
+    }
+
+    pub fn is_sliding(&self) -> bool {
+        matches!(self, Grounded::Airborne { sliding: true, .. })
+    }
+
+    pub fn can_jump(&self, max_jump_count: u8, coyote_time_ms: usize) -> bool {
+        match self {
+            Grounded::Grounded => true,
+            Grounded::Airborne {
+                duration,
+                jump_count,
+                ..
+            } => *jump_count < max_jump_count && duration.as_millis() as usize <= coyote_time_ms,
         }
     }
 }
 
-#[derive(Component, Default)]
-pub(crate) struct Grounded;
+#[derive(Reflect, Debug)]
+pub(crate) enum ClosestHorizontalCollision {
+    Left(f32),
+    Right(f32),
+}
+impl ClosestHorizontalCollision {
+    pub fn sign(&self) -> f32 {
+        match self {
+            ClosestHorizontalCollision::Left(_) => -1.,
+            ClosestHorizontalCollision::Right(_) => 1.,
+        }
+    }
 
-fn reset_grounded_on_tile_removed(
-    mut word_tile_evr: EventReader<WordTileEvent>,
-    lookup: Res<LevelEntityLookup>,
-    grounded_q: Query<&Gravity, With<Grounded>>,
-    mut cmd: Commands,
-) {
-    for finished_tile_coords in word_tile_evr.read().filter_map(|ev| match ev.kind {
-        WordTileEventKind::TileFinished { coords, .. } => Some(coords),
-        _ => None,
-    }) {
-        let e = or_continue_quiet!(lookup.get(&finished_tile_coords.up()));
-        let gravity = or_continue_quiet!(grounded_q.get(*e));
-        let mut e_cmd = cmd.entity(*e);
-        e_cmd.remove::<Grounded>();
-        if let Some(delay) = gravity.delay_ms {
-            e_cmd.try_insert(Cooldown::<Gravity>::new(delay));
+    pub fn distance(&self) -> f32 {
+        match self {
+            ClosestHorizontalCollision::Left(dist) => *dist,
+            ClosestHorizontalCollision::Right(dist) => *dist,
         }
     }
 }
 
-fn reset_velocity_on_grounded(
-    trigger: Trigger<OnRemove, Grounded>,
-    mut velocity_q: Query<&mut Velocity>,
-) {
-    let mut vel = or_return!(velocity_q.get_mut(trigger.entity()));
-    vel.y = 0.0;
+#[derive(Component, Default, Reflect, Debug, Deref, DerefMut)]
+#[reflect(Component)]
+pub(crate) struct HorizontalObstacleDetection(pub Option<ClosestHorizontalCollision>);
+impl HorizontalObstacleDetection {
+    pub fn new(distance_left: Option<f32>, distance_right: Option<f32>) -> Self {
+        use ClosestHorizontalCollision::{Left, Right};
+        match (distance_left, distance_right) {
+            (Some(left), None) => Self(Some(Left(left))),
+            (None, Some(right)) => Self(Some(Right(right))),
+            (Some(left), Some(right)) => {
+                if left < right {
+                    Self(Some(Left(left)))
+                } else {
+                    Self(Some(Right(right)))
+                }
+            }
+            (None, None) => Self(None),
+        }
+    }
+
+    pub fn closest_sign(&self) -> Option<f32> {
+        self.as_ref().map(|closest| closest.sign())
+    }
 }
 
-fn apply_gravity(
-    mut gravity_q: Query<
-        (&Gravity, &mut Velocity),
-        (Without<Grounded>, Without<Cooldown<Gravity>>),
-    >,
+fn add_tile_collider(grounded_q: Query<Entity, Added<TileCollider>>, mut cmd: Commands) {
+    for e in &grounded_q {
+        cmd.entity(e)
+            .try_insert(Collider::rectangle(TILE_SIZE as f32, TILE_SIZE as f32));
+    }
+}
+
+pub(crate) fn check_grounded(
+    mut grounded_q: Query<(Entity, &KinematicSensor, &Transform, &mut Grounded)>,
+    cast: SpatialQuery,
     time: Res<Time>,
 ) {
-    for (gravity, mut vel) in &mut gravity_q {
-        vel.y += gravity.y * time.delta_seconds();
+    for (e, sensor, t, mut grounded) in &mut grounded_q {
+        let sensor_half_size = sensor.size / 2. - Vec2::splat(SKIN_WIDTH);
+        let origin = Vec2::new(
+            t.translation.x,
+            t.translation.y - sensor_half_size.y - sensor.ground_y_offset,
+        );
+        if cast
+            .shape_hits(
+                &Collider::segment(
+                    Vec2::new(-sensor_half_size.x, 0.),
+                    Vec2::new(sensor_half_size.x, 0.),
+                ),
+                origin,
+                0.,
+                Dir2::new(Vec2::NEG_Y).unwrap(),
+                SKIN_WIDTH,
+                u32::MAX,
+                false,
+                SpatialQueryFilter {
+                    mask: GamePhysicsLayer::Obstacle.into(),
+                    excluded_entities: [e].into(),
+                },
+            )
+            .into_iter()
+            // hit coming from below
+            .any(|hit| hit.normal1.y > 0.)
+        {
+            *grounded = Grounded::Grounded;
+        } else {
+            match grounded.as_mut() {
+                Grounded::Grounded => {
+                    *grounded = Grounded::airborne(0);
+                }
+                Grounded::Airborne { duration, .. } => {
+                    *duration += time.delta();
+                }
+            }
+        }
     }
 }
 
-// todo: extrapolation
-fn apply_velocity(
-    mut vel_q: Query<
-        (Entity, &Velocity, &mut Transform, &mut GridCoords),
-        (Without<Grounded>, Without<Cooldown<Gravity>>),
-    >,
-    mut lookup: ResMut<LevelEntityLookup>,
-    collision_q: Query<(), Or<(With<Ground>, With<UnbreakableGround>)>>,
-    mut cmd: Commands,
+pub(crate) fn check_horizontal_collisions(
+    mut grounded_q: Query<(
+        Entity,
+        &KinematicSensor,
+        &Transform,
+        &mut HorizontalObstacleDetection,
+    )>,
+    cast: SpatialQuery,
 ) {
-    for (e, vel, mut t, mut coords) in &mut vel_q {
-        let new_translation = t.translation + vel.0.extend(0.);
-        let new_btm_translation = new_translation - Vec3::Y * (TILE_SIZE as f32 / 2.);
-        let new_coords = new_btm_translation.to_grid_coords();
-        let mut should_ground = false;
-        let mut update_coords = false;
-        if new_btm_translation.y < 0. {
-            // transition to grounded at bounds
-            should_ground = true;
-        } else if *coords != new_coords {
-            if let Some(coll_e) = lookup.get(&new_coords) {
-                if collision_q.contains(*coll_e) {
-                    // transition to grounded on collision
-                    should_ground = true;
-                } else {
-                    // update coords on no collision
-                    update_coords = true;
-                }
-            } else {
-                // update coords on no collision
-                update_coords = true;
-            }
+    for (e, sensor, t, mut coll) in &mut grounded_q {
+        let distance = |sign: f32| {
+            let sensor_half_size = sensor.size / 2. - Vec2::splat(SKIN_WIDTH);
+            let origin = Vec2::new(t.translation.x + sensor_half_size.x * sign, t.translation.y);
+            cast.shape_hits(
+                &Collider::segment(
+                    Vec2::new(0., -sensor_half_size.y),
+                    Vec2::new(0., sensor_half_size.y),
+                ),
+                origin,
+                0.,
+                Dir2::new(Vec2::X * sign).expect("Valid direction"),
+                TILE_SIZE as f32 * 0.25 + SKIN_WIDTH,
+                u32::MAX,
+                false,
+                SpatialQueryFilter {
+                    mask: GamePhysicsLayer::Obstacle.into(),
+                    excluded_entities: [e].into(),
+                },
+            )
+            .into_iter()
+            // horizontal hit
+            .filter(|hit| hit.normal1.x != 0.)
+            .min_by(|hit1, hit2| {
+                hit1.time_of_impact
+                    .partial_cmp(&hit2.time_of_impact)
+                    .expect("Valid TOI")
+            })
+            .map(|h| h.time_of_impact - SKIN_WIDTH)
+        };
+        *coll = HorizontalObstacleDetection::new(distance(-1.), distance(1.));
+    }
+}
+
+pub(crate) fn apply_gravity(
+    mut gravity_q: Query<(&Gravity, &mut Velocity, &Grounded, &MovementIntent)>,
+    time: Res<Time>,
+) {
+    for (gravity, mut vel, grounded, movement_intent) in &mut gravity_q {
+        vel.y = if grounded.is_grounded() {
+            0.
         } else {
-            // no coords change, just update translation
-            t.translation = new_translation;
+            let gravity_factor = if movement_intent.jump.state.pressed()
+                && vel.y.abs() <= (gravity.jump_velocity() * 0.125)
+            {
+                // lower gravity at jump apex
+                0.5
+            } else {
+                1.
+            };
+            (vel.y + gravity.gravity * gravity_factor * time.delta_seconds()).max(
+                if grounded.is_sliding() {
+                    gravity.max_slide_velocity
+                } else {
+                    gravity.max_fall_velocity
+                },
+            )
+        };
+    }
+}
+
+// todo: should I use verlet integration instead of euler even when using fixed schedule?
+// todo: interpolation - possibly using one of the interpolation crates
+fn apply_vertical_velocity(
+    mut vel_q: Query<(
+        Entity,
+        &Grounded,
+        &mut Velocity,
+        &mut Transform,
+        &KinematicSensor,
+    )>,
+    cast: SpatialQuery,
+) {
+    for (e, _, mut vel, mut t, sensor) in &mut vel_q
+        .iter_mut()
+        .filter(|(_, grounded, ..)| !grounded.is_grounded())
+    {
+        if vel.y == 0. {
+            continue;
         }
 
-        if should_ground {
-            cmd.entity(e).try_insert(Grounded);
-            t.translation = coords.to_world();
-        } else if update_coords {
-            lookup.remove(&*coords);
-            lookup.insert(new_coords, e);
-            *coords = new_coords;
-            t.translation = new_translation;
+        let move_by_y = match cast
+            .shape_hits(
+                // todo: get shape from caster? or just use a custom components with dimentions for ground checks etc.
+                &Collider::rectangle(
+                    sensor.size.x - SKIN_WIDTH * 2.,
+                    sensor.size.y - SKIN_WIDTH * 2.,
+                ),
+                sensor.translation(t.translation),
+                0.,
+                Dir2::new(Vec2::Y * vel.y).expect("Non-zero y velocity"),
+                vel.y.abs() + SKIN_WIDTH,
+                u32::MAX,
+                false,
+                SpatialQueryFilter {
+                    mask: GamePhysicsLayer::Obstacle.into(),
+                    excluded_entities: [e].into(),
+                },
+            )
+            .into_iter()
+            .filter(|hit| hit.normal1.y != 0.)
+            .min_by(|hit1, hit2| {
+                hit1.time_of_impact
+                    .partial_cmp(&hit2.time_of_impact)
+                    .expect("Valid TOI")
+            }) {
+            Some(hit) => {
+                if vel.y > 0. && hit.normal1.y < 0. {
+                    // reset vertical velocity when hitting a ceiling
+                    vel.y = 0.;
+                }
+
+                (hit.time_of_impact - SKIN_WIDTH).max(0.) * vel.y.signum()
+            }
+            None => vel.y,
+        };
+
+        if move_by_y != 0. {
+            t.translation.y += move_by_y;
+        }
+    }
+}
+
+fn apply_horizontal_velocity(
+    mut vel_q: Query<(Entity, &Velocity, &KinematicSensor, &mut Transform)>,
+    cast: SpatialQuery,
+    time: Res<Time>,
+) {
+    for (e, vel, sensor, mut t) in &mut vel_q {
+        let x = vel.x * time.delta_seconds();
+        if x != 0.0 {
+            t.scale.x = x.signum();
+        } else {
+            continue;
+        }
+
+        let move_by_x = match cast
+            .shape_hits(
+                // todo: get shape from caster? or just use a custom components with dimentions for ground checks etc.
+                &Collider::rectangle(
+                    sensor.size.x - SKIN_WIDTH * 2.,
+                    sensor.size.y - SKIN_WIDTH * 2.,
+                ),
+                sensor.translation(t.translation),
+                0.,
+                Dir2::new(Vec2::X * x.signum()).expect("Non-zero y velocity"),
+                x.abs() + SKIN_WIDTH,
+                u32::MAX,
+                false,
+                SpatialQueryFilter {
+                    mask: GamePhysicsLayer::Obstacle.into(),
+                    excluded_entities: [e].into(),
+                },
+            )
+            .into_iter()
+            .filter(|hit| hit.normal1.x != 0.)
+            .min_by(|hit1, hit2| {
+                hit1.time_of_impact
+                    .partial_cmp(&hit2.time_of_impact)
+                    .expect("Valid TOI")
+            }) {
+            Some(hit) => (hit.time_of_impact - SKIN_WIDTH).max(0.) * x.signum(),
+            None => x,
+        };
+
+        if move_by_x != 0. {
+            t.translation.x += move_by_x;
         }
     }
 }

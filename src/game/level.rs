@@ -25,6 +25,12 @@ pub(crate) fn level_ready(lookup: Option<Res<LevelEntityLookup>>) -> bool {
 #[derive(Resource, Deref, DerefMut, Reflect)]
 #[reflect(Resource)]
 pub(crate) struct LevelEntityLookup(pub HashMap<GridCoords, Entity>);
+impl LevelEntityLookup {
+    pub fn upsert(&mut self, entity: Entity, old: &GridCoords, new: GridCoords) {
+        self.remove(old);
+        self.insert(new, entity);
+    }
+}
 
 #[derive(Component, Debug)]
 pub struct Movable {
@@ -51,6 +57,10 @@ pub(crate) struct Ground;
 #[derive(Default, Bundle, LdtkIntCell)]
 struct GroundBundle {
     ground: Ground,
+    // todo: add collider layers
+    collider: TileCollider,
+    #[with(collision_layers)]
+    collision_layers: CollisionLayers,
 }
 
 #[derive(Default, Component)]
@@ -59,6 +69,13 @@ pub(crate) struct UnbreakableGround;
 #[derive(Default, Bundle, LdtkIntCell)]
 struct UnbreakableGroundBundle {
     unbreakable_ground: UnbreakableGround,
+    collider: TileCollider,
+    #[with(collision_layers)]
+    collision_layers: CollisionLayers,
+}
+
+fn collision_layers(_: IntGridCell) -> CollisionLayers {
+    GamePhysicsLayer::obstacle_collision_layers()
 }
 
 fn spawn_level(ass: Res<AssetServer>, mut cmd: Commands) {
