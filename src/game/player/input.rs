@@ -67,7 +67,7 @@ fn update_player_input_map(bindings: Res<PlayerBindings>, mut cmd: Commands) {
     input_map
         .insert_axis(
             PlayerAction::Move,
-            KeyboardVirtualAxis::new(bindings.left, bindings.right),
+            VirtualAxis::new(bindings.left, bindings.right),
         )
         .insert(PlayerAction::Jump, bindings.jump);
     cmd.insert_resource(input_map);
@@ -76,15 +76,15 @@ fn update_player_input_map(bindings: Res<PlayerBindings>, mut cmd: Commands) {
 // todo: rotate player towards typed word if the current char is not found it the currently faced tile and the player hasn't started the tile yet (ignore when tile is not pristine?)
 // todo: reset tiles when player moves away from a tile (or even rotates?)
 fn process_text_input(
-    mut evr_kbd: EventReader<KeyboardInput>,
+    mut msg_r_kbd: MessageReader<KeyboardInput>,
     player_q: Query<&GridCoords, With<Player>>,
     level_lookup: Res<LevelEntityLookup>,
     mut word_tile_q: Query<&mut WordTile>,
-    mut word_tile_evw: EventWriter<WordTileEvent>,
+    mut word_tile_msg_w: MessageWriter<WordTileEvent>,
 ) {
     let player_coords = or_return!(player_q.get_single());
     let mut typed = String::new();
-    for ev in evr_kbd.read() {
+    for ev in msg_r_kbd.read() {
         if let Key::Character(input) = &ev.logical_key {
             or_continue_quiet!(
                 ev.state == bevy::input::ButtonState::Released
@@ -100,7 +100,7 @@ fn process_text_input(
                 let neighbour_e = or_continue_quiet!(level_lookup.get(&neighbour_coords));
                 let mut word_tile = or_continue_quiet!(word_tile_q.get_mut(*neighbour_e));
                 if word_tile.remaining().starts_with(&typed) {
-                    word_tile_evw.send(WordTileEvent {
+                    word_tile_msg_w.send(WordTileEvent {
                         e: *neighbour_e,
                         kind: word_tile.advance(typed.len(), neighbour_coords),
                     });
@@ -167,8 +167,8 @@ impl UiAction {
 
         // MKB
         input_map
-            .insert_axis(Self::Move, KeyboardVirtualAxis::WS)
-            .insert_axis(Self::Move, KeyboardVirtualAxis::VERTICAL_ARROW_KEYS)
+            .insert_axis(Self::Move, VirtualAxis::WS)
+            .insert_axis(Self::Move, VirtualAxis::VERTICAL_ARROW_KEYS)
             .insert(Self::Select, KeyCode::Space)
             .insert(Self::Select, KeyCode::Enter)
             .insert(Self::Back, KeyCode::Escape)
