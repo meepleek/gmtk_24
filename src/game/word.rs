@@ -27,6 +27,8 @@ pub(super) fn plugin(app: &mut App) {
         );
 }
 
+pub(crate) type WordSectionBundle = (TextSpan, TextColor, TextFont);
+
 #[derive(Resource, Reflect, Debug, Deref, DerefMut)]
 pub struct WordList {
     ground_words: Vec<String>,
@@ -53,7 +55,7 @@ pub(crate) enum WordTileEventKind {
     },
 }
 
-#[derive(Event, Debug, Reflect)]
+#[derive(Message, Debug, Reflect)]
 pub(crate) struct WordTileEvent {
     pub e: Entity,
     pub kind: WordTileEventKind,
@@ -124,18 +126,15 @@ impl WordTile {
         text: impl Into<String>,
         color: Color,
         font: Handle<Font>,
-    ) -> TextSection {
-        TextSection::new(
-            text.into(),
-            TextStyle {
-                color,
-                font_size: 36.0,
-                font,
-            },
+    ) -> WordSectionBundle {
+        (
+            TextSpan::new(text.into()),
+            TextColor(color),
+            TextFont::from_font_size(36.0).with_font(font),
         )
     }
 
-    pub(crate) fn text_sections(&self, alpha: f32, font: Handle<Font>) -> Vec<TextSection> {
+    pub(crate) fn text_sections(&self, alpha: f32, font: Handle<Font>) -> Vec<WordSectionBundle> {
         tile_word_text_sections(
             &self.words,
             self.word_i,
@@ -194,7 +193,7 @@ fn tile_word_text_sections(
     status: WordTileStatus,
     alpha: f32,
     font: Handle<Font>,
-) -> Vec<TextSection> {
+) -> Vec<WordSectionBundle> {
     let mut res = Vec::with_capacity(4 + words.len());
     for (i, word) in words.iter().enumerate() {
         if i == word_i {
@@ -269,20 +268,18 @@ fn spawn_tile_words(
             .with_children(|b| {
                 text_e = Some(
                     b.spawn((
-                        Text2dBundle {
-                            text: Text::from_sections(tile_word_text_sections(
-                                &words,
-                                0,
-                                0,
-                                WordTileStatus::Pristine,
-                                0.0,
-                                fonts.tile.clone_weak(),
-                            )),
-                            transform: Transform::from_translation(Vec2::ZERO.extend(0.1))
-                                .with_scale(Vec2::splat(0.25).extend(1.)),
-                            ..default()
-                        },
+                        Text2d::new(""),
+                        Transform::from_translation(Vec2::ZERO.extend(0.1))
+                            .with_scale(Vec2::splat(0.25).extend(1.)),
                         HIGH_RES_RENDER_LAYER,
+                        children![tile_word_text_sections(
+                            &words,
+                            0,
+                            0,
+                            WordTileStatus::Pristine,
+                            0.0,
+                            fonts.tile.clone_weak(),
+                        )],
                     ))
                     .id(),
                 );

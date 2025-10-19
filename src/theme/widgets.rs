@@ -43,7 +43,7 @@ impl<T: Spawn> Widgets for T {
         entity.with_children(|children| {
             children.spawn((
                 Name::new("Button Text"),
-                TextBundle::from_section(
+                Text::from_section(
                     text,
                     TextStyle {
                         font_size: 40.0,
@@ -75,7 +75,7 @@ impl<T: Spawn> Widgets for T {
         entity.with_children(|children| {
             children.spawn((
                 Name::new("Header Text"),
-                TextBundle::from_section(
+                Text::from_section(
                     text,
                     TextStyle {
                         font_size: 40.0,
@@ -104,7 +104,7 @@ impl<T: Spawn> Widgets for T {
         entity.with_children(|children| {
             children.spawn((
                 Name::new("Label Text"),
-                TextBundle::from_section(
+                Text::from_section(
                     text,
                     TextStyle {
                         font_size: 24.0,
