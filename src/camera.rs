@@ -109,7 +109,7 @@ fn spawn_camera(
         HIGH_RES_RENDER_LAYER,
     ));
 
-    let mut screen_camera = Camera2dBundle::default();
+    let mut screen_camera = Camera2d::default();
     screen_camera.projection.scale = 0.25;
     screen_camera.transform.translation = Vec2::splat(1024.0 / 8.0).extend(0.0);
     cmd.spawn((
