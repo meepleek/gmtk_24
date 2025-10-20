@@ -53,7 +53,7 @@ pub fn tick_cooldown<T: Send + Sync + Component>(
                         e_cmd.remove::<T>();
                     }
                     CooldownAction::DespawnRecursive => {
-                        e_cmd.despawn_recursive();
+                        e_cmd.despawn();
                     }
                 }
             }

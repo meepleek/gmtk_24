@@ -43,7 +43,7 @@ fn play_music(
     music: Res<MusicAssets>,
 ) {
     for entity in music_query.iter() {
-        commands.entity(entity).despawn_recursive();
+        commands.entity(entity).despawn();
     }
 
     let track = match config {
