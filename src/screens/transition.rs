@@ -66,16 +66,14 @@ struct TransitionImage;
 fn setup_transition_overlay(mut cmd: Commands, speed_factor: Res<TransitionSpeedFactor>) {
     cmd.spawn((
         Name::new("transition"),
-        ImageBundle {
-            style: Style {
-                position_type: PositionType::Absolute,
-                width: Val::Vw(100.),
-                height: Val::Vw(100.),
-                ..default()
-            },
-            background_color: BACKGROUND_COLOR.into(),
+        // ImageNode::new(),
+        Node {
+            position_type: PositionType::Absolute,
+            width: Val::Vw(100.),
+            height: Val::Vw(100.),
             ..default()
         },
+        BackgroundColor(BACKGROUND_COLOR.into()),
         TransitionImage,
     ))
     // .insert(Animator::new(delay_tween(
