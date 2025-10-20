@@ -7,7 +7,7 @@ mod widgets;
 #[allow(dead_code, unused_imports)]
 pub mod prelude {
     pub use super::{
-        interaction::{InteractionPalette, Press},
+        interaction::{InteractionPalette, Pressed},
         palette as ui_palette,
         widgets::*,
     };

@@ -27,6 +27,6 @@ fn show_title_screen(mut cmd: Commands) {
 }
 
 #[cfg(not(target_family = "wasm"))]
-fn exit_app(_trigger: On<Press>, mut app_exit: MessageWriter<AppExit>) {
+fn exit_app(_trigger: On<Pressed>, mut app_exit: MessageWriter<AppExit>) {
     app_exit.write(AppExit::Success);
 }
