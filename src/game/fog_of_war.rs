@@ -40,12 +40,9 @@ fn add_visibility_to_tile(visibility_q: Query<Entity, Added<GridCoords>>, mut cm
     for e in &visibility_q {
         let sprite_e = cmd
             .spawn((
-                SpriteBundle {
-                    sprite: Sprite {
-                        color: Color::BLACK,
-                        custom_size: Some(Vec2::splat(TILE_SIZE as f32)),
-                        ..default()
-                    },
+                Sprite {
+                    color: Color::BLACK,
+                    custom_size: Some(Vec2::splat(TILE_SIZE as f32)),
                     ..default()
                 },
                 FOG_OF_WAR_RENDER_LAYER,

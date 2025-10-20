@@ -17,6 +17,6 @@ struct RockBundle {
     velocity: Velocity,
     #[grid_coords]
     grid_coords: GridCoords,
-    #[sprite_sheet_bundle]
-    sprite_sheet_bundle: LdtkSpriteSheetBundle,
+    #[sprite_sheet]
+    sprite: Sprite,
 }

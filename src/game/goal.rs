@@ -14,8 +14,8 @@ pub struct Goal;
 #[derive(Default, Bundle, LdtkEntity)]
 struct GoalBundle {
     goal: Goal,
-    #[sprite_sheet_bundle]
-    sprite_sheet_bundle: LdtkSpriteSheetBundle,
+    #[sprite_sheet]
+    sprite: Sprite,
     #[grid_coords]
     grid_coords: GridCoords,
 }

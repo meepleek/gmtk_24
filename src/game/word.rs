@@ -386,15 +386,13 @@ fn spawn_cracks(
         let mut e_cmd = or_continue_quiet!(cmd.get_entity(e));
         e_cmd.with_children(|b| {
             b.spawn((
-                SpriteBundle {
-                    transform: Transform::from_translation(Vec3::Z),
-                    texture: sprites.tilemap.clone_weak(),
-                    sprite: Sprite {
-                        color: Color::NONE,
-                        ..default()
-                    },
+                Sprite {
+                    image: sprites.tilemap.clone(),
+                    // todo: tween
+                    // color: Color::NONE,
                     ..default()
                 },
+                Transform::from_translation(Vec3::Z),
                 TextureAtlas {
                     layout: sprites.tilemap_cracks_layout.clone_weak(),
                     index: i,

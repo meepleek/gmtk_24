@@ -30,11 +30,8 @@ fn on_player_spawned(
 ) {
     for (e, coords) in &player_q {
         cmd.entity(e).try_insert((
-            SpriteBundle {
-                texture: sprites.player_sheet.clone_weak(),
-                transform: Transform::from_translation(coords.to_world()),
-                ..default()
-            },
+            Sprite::from_image(sprites.player_sheet.clone()),
+            Transform::from_translation(coords.to_world()),
             TextureAtlas {
                 layout: sprites.idle_anim_layout.clone_weak(),
                 index: 0,
