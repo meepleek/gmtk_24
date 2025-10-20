@@ -245,7 +245,7 @@ fn spawn_button(mut commands: Commands) {
     commands.button("Pay up!").observe(pay_money);
 }
 
-fn pay_money(_trigger: Trigger<OnPress>, mut money: ResMut<Money>) {
+fn pay_money(_trigger: On<OnPress>, mut money: ResMut<Money>) {
     money.0 -= 10.0;
 }
 ```
@@ -262,7 +262,7 @@ fn spawn_button(mut commands: Commands) {
 
 fn enter_state<S: FreelyMutableState>(
     new_state: S,
-) -> impl Fn(Trigger<OnPress>, ResMut<NextState<S>>) {
+) -> impl Fn(On<OnPress>, ResMut<NextState<S>>) {
     move |_trigger, mut next_state| next_state.set(new_state.clone())
 }
 ```

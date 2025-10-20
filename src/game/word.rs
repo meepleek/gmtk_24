@@ -290,12 +290,12 @@ fn spawn_tile_words(
 }
 
 fn update_ground_text_sections(
-    mut word_tile_evr: EventReader<WordTileEvent>,
+    mut word_tile_msg_r: MessageReader<WordTileEvent>,
     word_q: Query<&WordTile>,
     mut text_q: Query<&mut Text>,
     fonts: Res<FontAssets>,
 ) {
-    for ev in word_tile_evr.read() {
+    for ev in word_tile_msg_r.read() {
         let word = or_continue!(word_q.get(ev.e));
         let mut text = or_continue!(text_q.get_mut(word.text_e));
         text.sections = word.text_sections(1.0, fonts.tile.clone_weak());
@@ -303,11 +303,11 @@ fn update_ground_text_sections(
 }
 
 fn tween_out_finished_tiles(
-    mut word_tile_evr: EventReader<WordTileEvent>,
+    mut word_tile_msg_r: MessageReader<WordTileEvent>,
     word_q: Query<&WordTile, Changed<WordTile>>,
     mut cmd: Commands,
 ) {
-    for ev in word_tile_evr
+    for ev in word_tile_msg_r
         .read()
         .filter(|ev| matches!(ev.kind, WordTileEventKind::TileFinished { .. }))
     {
@@ -358,8 +358,8 @@ fn tween_ground_texts(
     }
 }
 
-fn play_word_sfx(mut word_tile_evr: EventReader<WordTileEvent>, mut cmd: Commands) {
-    if let Some(i) = word_tile_evr
+fn play_word_sfx(mut word_tile_msg_r: MessageReader<WordTileEvent>, mut cmd: Commands) {
+    if let Some(i) = word_tile_msg_r
         .read()
         .filter_map(|ev| match ev.kind {
             WordTileEventKind::WordFinished(i) => Some(i),
@@ -368,17 +368,17 @@ fn play_word_sfx(mut word_tile_evr: EventReader<WordTileEvent>, mut cmd: Command
         })
         .next()
     {
-        word_tile_evr.clear();
+        word_tile_msg_r.clear();
         cmd.play_sfx(Sfx::FinishWord(i));
     };
 }
 
 fn spawn_cracks(
-    mut word_tile_evr: EventReader<WordTileEvent>,
+    mut word_tile_msg_r: MessageReader<WordTileEvent>,
     mut cmd: Commands,
     sprites: Res<SpriteAssets>,
 ) {
-    for (i, e) in word_tile_evr.read().filter_map(|ev| match ev.kind {
+    for (i, e) in word_tile_msg_r.read().filter_map(|ev| match ev.kind {
         WordTileEventKind::WordFinished(i) => Some((i - 1, ev.e)),
         WordTileEventKind::TileFinished { word_count, .. } => Some((word_count - 1, ev.e)),
         _ => None,
@@ -406,8 +406,8 @@ fn spawn_cracks(
 }
 
 // todo: directional shake? (shake in the direction of the swing instead of just random)
-fn shake_on_word_finished(mut word_tile_evr: EventReader<WordTileEvent>, mut shake: Shakes) {
-    if word_tile_evr
+fn shake_on_word_finished(mut word_tile_msg_r: MessageReader<WordTileEvent>, mut shake: Shakes) {
+    if word_tile_msg_r
         .read()
         .filter(|ev| {
             matches!(
@@ -424,11 +424,11 @@ fn shake_on_word_finished(mut word_tile_evr: EventReader<WordTileEvent>, mut sha
 
 // // todo:
 // fn flash_on_word_finished(
-//     mut word_tile_evr: EventReader<WordTileEvent>,
+//     mut word_tile_msg_r: MessageReader<WordTileEvent>,
 //     word_q: Query<&WordTile, Changed<WordTile>>,
 //     mut cmd: Commands,
 // ) {
-//     for ev in word_tile_evr
+//     for ev in word_tile_msg_r
 //         .read()
 //         .filter(|ev| matches!(ev.kind, WordTileEventKind::WordFinished(_)))
 //     {

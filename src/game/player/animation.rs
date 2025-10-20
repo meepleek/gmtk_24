@@ -53,12 +53,12 @@ pub struct AnimationTimer(pub Timer);
 fn animate(
     time: Res<Time>,
     mut player_q: Query<(&mut AnimationTimer, &mut PlayerAnimation, &mut Sprite), With<Player>>,
-    mut word_tile_evr: EventReader<WordTileEvent>,
+    mut word_tile_msg_r: MessageReader<WordTileEvent>,
     sprites: Res<SpriteAssets>,
 ) {
     let (mut timer, mut player_anim, mut sprite) = or_return!(player_q.get_single_mut());
 
-    for ev in word_tile_evr.read() {
+    for ev in word_tile_msg_r.read() {
         let mut atlas = or_continue!(sprite.texture_atlas);
         if match ev.kind {
             WordTileEventKind::WordStarted => {
@@ -81,7 +81,7 @@ fn animate(
             break;
         }
     }
-    if word_tile_evr
+    if word_tile_msg_r
         .read()
         .any(|ev| ev.kind == WordTileEventKind::WordStarted)
     {

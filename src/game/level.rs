@@ -95,13 +95,13 @@ fn teardown_level(mut cmd: Commands) {
 
 fn cache_level_entities(
     // mut level_entities: Option<ResMut<LevelEntityLookup>>,
-    mut level_evr: EventReader<LevelEvent>,
+    mut level_msg_r: MessageReader<LevelEvent>,
     // ldtk_project_entities: Query<&Handle<LdtkProject>>,
     // ldtk_project_assets: Res<Assets<LdtkProject>>,
     tilemap_id_q: Query<(&GridCoords, Entity)>,
     mut cmd: Commands,
 ) {
-    for level_event in level_evr.read() {
+    for level_event in level_msg_r.read() {
         if let LevelEvent::Transformed(_level_iid) = level_event {
             // let ldtk_project = ldtk_project_assets
             //     .get(ldtk_project_entities.single())
@@ -120,10 +120,10 @@ fn cache_level_entities(
 }
 
 fn remove_tile_from_cache(
-    mut word_tile_evr: EventReader<WordTileEvent>,
+    mut word_tile_msg_r: MessageReader<WordTileEvent>,
     mut lookup: ResMut<LevelEntityLookup>,
 ) {
-    for finished_tile_coords in word_tile_evr.read().filter_map(|ev| match ev.kind {
+    for finished_tile_coords in word_tile_msg_r.read().filter_map(|ev| match ev.kind {
         WordTileEventKind::TileFinished { coords, .. } => Some(coords),
         _ => None,
     }) {

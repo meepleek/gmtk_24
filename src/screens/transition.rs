@@ -116,13 +116,13 @@ fn start_transition_in(
     mut next_screen_trans: ResMut<NextState<ScreenTransition>>,
     mut next_screen: ResMut<NextState<Screen>>,
     mut cmd: Commands,
-    // mut tween_evr: EventReader<TweenCompleted>,
+    // mut tween_msg_r: MessageReader<TweenCompleted>,
     transition_img_q: Query<Entity, With<TransitionImage>>,
     speed_factor: Res<TransitionSpeedFactor>,
 ) {
     // if let ScreenTransition::TransitioningOut(screen) = screen_trans.get() {
     //     let e = or_return_quiet!(
-    //         tween_evr
+    //         tween_msg_r
     //             .read()
     //             .find(|ev| transition_img_q.contains(ev.entity))
     //     )

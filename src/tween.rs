@@ -66,7 +66,7 @@
 
 // fn despawn_after_tween(
 //     mut cmd: Commands,
-//     mut ev_r: EventReader<TweenCompleted>,
+//     mut ev_r: MessageReader<TweenCompleted>,
 //     despawn_q: Query<&DespawnOnTweenCompleted>,
 // ) {
 //     for ev in ev_r.read() {

@@ -47,7 +47,7 @@ pub enum Screen {
 macro_rules! transition_system {
     ($name: ident, $screen:tt) => {
         paste::paste! {
-            pub(crate) fn [<trigger_transition_to_ $name>](_trigger: Trigger<OnPress>, mut cmd: Commands) {
+            pub(crate) fn [<trigger_transition_to_ $name>](_trigger: On<OnPress>, mut cmd: Commands) {
                 cmd.transition_to_screen(Screen::$screen);
             }
         }
