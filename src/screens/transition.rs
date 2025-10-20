@@ -78,14 +78,15 @@ fn setup_transition_overlay(mut cmd: Commands, speed_factor: Res<TransitionSpeed
         },
         TransitionImage,
     ))
-    .insert(Animator::new(delay_tween(
-        ui_bg_color_tween(
-            BACKGROUND_COLOR.with_alpha(0.0),
-            speed_factor.duration(800),
-            EaseFunction::QuadraticInOut,
-        ),
-        speed_factor.duration(300),
-    )));
+    // .insert(Animator::new(delay_tween(
+    //     ui_bg_color_tween(
+    //         BACKGROUND_COLOR.with_alpha(0.0),
+    //         speed_factor.duration(800),
+    //         EaseFunction::QuadraticInOut,
+    //     ),
+    //     speed_factor.duration(300),
+    // )))
+    ;
 }
 
 fn start_transition_out(
@@ -115,23 +116,25 @@ fn start_transition_in(
     mut next_screen_trans: ResMut<NextState<ScreenTransition>>,
     mut next_screen: ResMut<NextState<Screen>>,
     mut cmd: Commands,
-    mut tween_evr: EventReader<TweenCompleted>,
+    // mut tween_evr: EventReader<TweenCompleted>,
     transition_img_q: Query<Entity, With<TransitionImage>>,
     speed_factor: Res<TransitionSpeedFactor>,
 ) {
-    if let ScreenTransition::TransitioningOut(screen) = screen_trans.get() {
-        let e = or_return_quiet!(tween_evr
-            .read()
-            .find(|ev| transition_img_q.contains(ev.entity)))
-        .entity;
+    // if let ScreenTransition::TransitioningOut(screen) = screen_trans.get() {
+    //     let e = or_return_quiet!(
+    //         tween_evr
+    //             .read()
+    //             .find(|ev| transition_img_q.contains(ev.entity))
+    //     )
+    //     .entity;
 
-        next_screen_trans.set(ScreenTransition::TransitioningIn);
-        next_screen.set(screen.clone());
-        cmd.tween_ui_bg_color(
-            e,
-            BACKGROUND_COLOR.with_alpha(0.0),
-            speed_factor.duration(600),
-            EaseFunction::QuadraticInOut,
-        );
-    }
+    //     next_screen_trans.set(ScreenTransition::TransitioningIn);
+    //     next_screen.set(screen.clone());
+    //     cmd.tween_ui_bg_color(
+    //         e,
+    //         BACKGROUND_COLOR.with_alpha(0.0),
+    //         speed_factor.duration(600),
+    //         EaseFunction::QuadraticInOut,
+    //     );
+    // }
 }

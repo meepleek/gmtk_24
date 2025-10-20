@@ -22,11 +22,11 @@ fn fade_out_sprite_hiearchy(
     for (e, fade) in &fade_q {
         for child_e in child_q.iter_descendants(e) {
             if sprite_q.contains(child_e) {
-                cmd.entity(child_e).try_insert(sprite_color_anim(
-                    Color::NONE,
-                    fade.duration_ms,
-                    EaseFunction::QuadraticIn,
-                ));
+                // cmd.entity(child_e).try_insert(sprite_color_anim(
+                //     Color::NONE,
+                //     fade.duration_ms,
+                //     EaseFunction::QuadraticIn,
+                // ));
             }
         }
     }

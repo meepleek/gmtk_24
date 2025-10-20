@@ -314,7 +314,7 @@ fn tween_out_finished_tiles(
         let word = or_continue!(word_q.get(ev.e));
         let mut cmd_e = or_continue!(cmd.get_entity(ev.e));
         cmd_e.try_insert((
-            DespawnOnTweenCompleted::Itself,
+            // DespawnOnTweenCompleted::Itself,
             FadeOutSpriteHiearchy { duration_ms: 150 },
         ));
         cmd.tween_tile_color(ev.e, Color::NONE, 150, EaseFunction::QuadraticIn);
@@ -399,7 +399,7 @@ fn spawn_cracks(
                     layout: sprites.tilemap_cracks_layout.clone_weak(),
                     index: i,
                 },
-                sprite_color_anim(Color::WHITE, 70, EaseFunction::QuadraticOut),
+                // sprite_color_anim(Color::WHITE, 70, EaseFunction::QuadraticOut),
             ));
         });
     }
