@@ -82,7 +82,7 @@ fn spawn_level(ass: Res<AssetServer>, mut cmd: Commands) {
     cmd.spawn((
         Name::new("ldtk_world"),
         LdtkWorldBundle {
-            ldtk_handle: ass.load("levels.ldtk"),
+            ldtk_handle: ass.load("levels.ldtk").into(),
             ..Default::default()
         },
         DespawnOnExit(Screen::Game),
