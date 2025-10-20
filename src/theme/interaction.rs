@@ -28,8 +28,8 @@ pub struct InteractionPalette {
 
 /// Event triggered on a UI entity when the [`Interaction`] component on the same entity changes to
 /// [`Interaction::Pressed`]. Observe this event to detect e.g. button presses.
-#[derive(Event)]
-pub struct OnPress;
+#[derive(EntityEvent)]
+pub struct Press(Entity);
 
 fn trigger_on_press(
     interaction_query: Query<(Entity, &Interaction), Changed<Interaction>>,
@@ -37,7 +37,7 @@ fn trigger_on_press(
 ) {
     for (entity, interaction) in &interaction_query {
         if matches!(interaction, Interaction::Pressed) {
-            commands.trigger_targets(OnPress, entity);
+            commands.trigger(Press(entity));
         }
     }
 }
@@ -52,7 +52,7 @@ fn apply_interaction_palette(
             Interaction::Hovered => palette.hovered,
             Interaction::Pressed => palette.pressed,
         };
-        cmd.tween_ui_bg_color(e, color, 200, EaseFunction::QuadraticInOut);
+        // cmd.tween_ui_bg_color(e, color, 200, EaseFunction::QuadraticInOut);
     }
 }
 
@@ -66,12 +66,12 @@ fn apply_button_interaction_size(
             Interaction::Hovered => 1.1,
             Interaction::Pressed => 1.25,
         };
-        cmd.tween_style_size(
-            e,
-            Vec2::new(BUTTON_WIDTH, BUTTON_HEIGHT) * scale,
-            350,
-            EaseFunction::BackOut,
-        );
+        // cmd.tween_style_size(
+        //     e,
+        //     Vec2::new(BUTTON_WIDTH, BUTTON_HEIGHT) * scale,
+        //     350,
+        //     EaseFunction::BackOut,
+        // );
     }
 }
 
