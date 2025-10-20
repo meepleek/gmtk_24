@@ -8,7 +8,7 @@ pub(super) fn plugin(app: &mut App) {
         .add_systems(OnExit(Screen::Loading), update_word_list)
         .add_systems(
             Update,
-            update_word_list.run_if(assets_exist.and_then(resource_changed::<PlayerBindings>)),
+            update_word_list.run_if(assets_exist.and(resource_changed::<PlayerBindings>)),
         )
         .add_systems(
             Update,

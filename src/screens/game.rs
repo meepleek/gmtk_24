@@ -10,9 +10,9 @@ pub(super) fn plugin(app: &mut App) {
             Update,
             (
                 return_to_main_menu
-                    .run_if(in_state(Screen::Game).and_then(action_just_pressed(UiAction::Back))),
+                    .run_if(in_state(Screen::Game).and(action_just_pressed(UiAction::Back))),
                 restart_game
-                    .run_if(in_state(Screen::Game).and_then(action_just_pressed(UiAction::Reset))),
+                    .run_if(in_state(Screen::Game).and(action_just_pressed(UiAction::Reset))),
             ),
         );
 }
