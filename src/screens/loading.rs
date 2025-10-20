@@ -8,10 +8,9 @@ pub(super) fn plugin(app: &mut App) {
 }
 
 fn show_loading_screen(mut commands: Commands) {
-    commands
-        .ui_root()
-        .insert(DespawnOnExit(Screen::Loading))
-        .with_children(|children| {
-            children.label("Loading...");
-        });
+    commands.spawn((
+        ui_root("loading"),
+        DespawnOnExit(Screen::Loading),
+        children![label("Loading...")],
+    ));
 }

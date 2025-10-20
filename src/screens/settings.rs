@@ -9,15 +9,13 @@ pub(super) fn plugin(app: &mut App) {
 }
 
 fn show_screen(mut commands: Commands) {
-    commands
-        .ui_root()
-        // todo: replace by ScreenTransition scoped instead?
-        .insert(DespawnOnExit(Screen::Settings))
-        .with_children(|children| {
-            children.header("Settings");
-            children.label("TODO");
-            children
-                .button("Back")
-                .observe(trigger_transition_to_main_menu);
-        });
+    commands.spawn((
+        ui_root("settings"),
+        DespawnOnExit(Screen::Settings),
+        children![
+            header("Settings"),
+            label("TODO"),
+            button("Back", trigger_transition_to_main_menu)
+        ],
+    ));
 }

@@ -25,29 +25,28 @@ pub(super) fn plugin(app: &mut App) {
 const SPLASH_DURATION_SECS: f32 = 1.8;
 
 fn spawn_splash(mut commands: Commands, asset_server: Res<AssetServer>) {
-    commands
-        .ui_root()
-        .insert((Name::new("Splash screen"), DespawnOnExit(Screen::Splash)))
-        .with_children(|children| {
-            children.spawn((
-                Name::new("Splash image"),
-                Node {
-                    margin: UiRect::all(Val::Auto),
-                    width: Val::Percent(70.0),
-                    ..default()
+    commands.spawn((
+        ui_root("splash"),
+        DespawnOnExit(Screen::Splash),
+        children![
+            Name::new("Splash image"),
+            Node {
+                margin: UiRect::all(Val::Auto),
+                width: Val::Percent(70.0),
+                ..default()
+            },
+            ImageNode::new(asset_server.load_with_settings(
+                // This should be an embedded asset for instant loading, but that is
+                // currently [broken on Windows Wasm builds](https://github.com/bevyengine/bevy/issues/14246).
+                "images/splash.png",
+                |settings: &mut ImageLoaderSettings| {
+                    // Make an exception for the splash image in case
+                    // `ImagePlugin::default_nearest()` is used for pixel art.
+                    settings.sampler = ImageSampler::linear();
                 },
-                ImageNode::new(asset_server.load_with_settings(
-                    // This should be an embedded asset for instant loading, but that is
-                    // currently [broken on Windows Wasm builds](https://github.com/bevyengine/bevy/issues/14246).
-                    "images/splash.png",
-                    |settings: &mut ImageLoaderSettings| {
-                        // Make an exception for the splash image in case
-                        // `ImagePlugin::default_nearest()` is used for pixel art.
-                        settings.sampler = ImageSampler::linear();
-                    },
-                )),
-            ));
-        });
+            ))
+        ],
+    ));
 }
 
 #[derive(Resource, Debug, Clone, PartialEq, Reflect)]

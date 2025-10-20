@@ -9,12 +9,13 @@ pub(super) fn plugin(app: &mut App) {
 }
 
 fn show_screen(mut commands: Commands) {
-    commands
-        .ui_root()
-        .insert(DespawnOnExit(Screen::Tutorial))
-        .with_children(|children| {
-            children.header("How to play");
-            children.label("TODO");
-            children.button("Play").observe(trigger_transition_to_game);
-        });
+    commands.spawn((
+        ui_root("tutorial"),
+        DespawnOnExit(Screen::Tutorial),
+        children![
+            header("How to play"),
+            label("TODO"),
+            button("Play", trigger_transition_to_game),
+        ],
+    ));
 }

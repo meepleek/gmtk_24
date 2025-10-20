@@ -10,28 +10,23 @@ pub(super) fn plugin(app: &mut App) {
 }
 
 fn show_title_screen(mut cmd: Commands) {
-    cmd.ui_root()
-        .insert(DespawnOnExit(Screen::MainMenu))
-        .with_children(|children| {
-            children.button("Play").observe(trigger_transition_to_game);
-            children
-                .button("Tutorial")
-                .observe(trigger_transition_to_tutorial);
-            children
-                .button("Settings")
-                .observe(trigger_transition_to_settings);
-            children
-                .button("Credits")
-                .observe(trigger_transition_to_credits);
-
+    cmd.spawn((
+        ui_root("title"),
+        DespawnOnExit(Screen::MainMenu),
+        children![
+            button("Play", trigger_transition_to_game),
+            button("Tutorial", trigger_transition_to_tutorial),
+            button("Settings", trigger_transition_to_settings),
+            button("Credits", trigger_transition_to_credits),
             #[cfg(not(target_family = "wasm"))]
-            children.button("Exit").observe(exit_app);
-        });
+            button("Exit", exit_app),
+        ],
+    ));
 
     cmd.play_music(MusicTrack::MainMenu);
 }
 
 #[cfg(not(target_family = "wasm"))]
 fn exit_app(_trigger: On<OnPress>, mut app_exit: MessageWriter<AppExit>) {
-    app_exit.send(AppExit::Success);
+    app_exit.write(AppExit::Success);
 }

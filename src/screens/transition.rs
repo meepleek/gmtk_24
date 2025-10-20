@@ -100,13 +100,13 @@ fn start_transition_out(
         return;
     }
 
-    let e = or_return!(transition_img_q.get_single());
-    cmd.tween_ui_bg_color(
-        e,
-        BACKGROUND_COLOR,
-        speed_factor.duration(600),
-        EaseFunction::QuadraticInOut,
-    );
+    let e = or_return!(transition_img_q.single());
+    // cmd.tween_ui_bg_color(
+    //     e,
+    //     BACKGROUND_COLOR,
+    //     speed_factor.duration(600),
+    //     EaseFunction::QuadraticInOut,
+    // );
 }
 
 fn start_transition_in(
