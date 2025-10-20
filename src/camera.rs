@@ -49,12 +49,10 @@ fn spawn_camera(
     let fog_of_war_mask_handle = images.add(render_texture_image(DOWNSCALE_RES, DOWNSCALE_RES));
     cmd.spawn((
         Name::new("fog_of_war_cam"),
-        Camera2dBundle {
-            camera: Camera {
-                order: -2,
-                target: RenderTarget::Image(fog_of_war_mask_handle.clone()),
-                ..default()
-            },
+        Camera2d,
+        Camera {
+            order: -2,
+            target: RenderTarget::Image(fog_of_war_mask_handle.clone()),
             ..default()
         },
         FOG_OF_WAR_RENDER_LAYER,
@@ -79,13 +77,11 @@ fn spawn_camera(
         images.add(render_texture_image(DOWNSCALE_RES, DOWNSCALE_RES));
     cmd.spawn((
         Name::new("pixel_perfect_cam"),
-        Camera2dBundle {
-            camera: Camera {
-                // render before the "main pass" camera
-                order: -1,
-                target: RenderTarget::Image(pixel_perfect_canvas_handle.clone()),
-                ..default()
-            },
+        Camera2d,
+        Camera {
+            // render before the "main pass" camera
+            order: -1,
+            target: RenderTarget::Image(pixel_perfect_canvas_handle.clone()),
             ..default()
         },
         PixelPerfectCamera,
