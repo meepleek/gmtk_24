@@ -136,12 +136,12 @@ fn tween_entity_movement(
     mut cmd: Commands,
 ) {
     for (e, coord, movable) in &player_q {
-        cmd.tween_translation(
-            e,
-            coord.to_world(),
-            movable.tween_duration_ms,
-            movable.easing.unwrap_or(EaseFunction::QuadraticInOut),
-        );
+        // cmd.tween_translation(
+        //     e,
+        //     coord.to_world(),
+        //     movable.tween_duration_ms,
+        //     movable.easing.unwrap_or(EaseFunction::QuadraticInOut),
+        // );
         cmd.entity(e).try_insert((
             Moving,
             Cooldown::<Moving>::new(movable.tween_duration_ms).remove_component(),

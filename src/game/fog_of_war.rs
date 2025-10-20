@@ -66,7 +66,7 @@ fn update_tile_visibility(
     mut cmd: Commands,
 ) {
     let radius = 3;
-    let player_coords = or_return_quiet!(player_q.get_single());
+    let player_coords = or_return_quiet!(player_q.single());
     let radius_tile_pairs: Vec<_> = player_coords
         .radius(radius, false)
         .iter()
@@ -87,11 +87,11 @@ fn update_tile_visibility(
         let mut cmd_e = or_continue_quiet!(cmd.get_entity(tile_vis.sprite_e));
         if tile_vis.visibility <= new_visibility {
             tile_vis.visibility = new_visibility;
-            cmd_e.tween_sprite_color(
-                Color::linear_rgb(new_visibility, new_visibility, new_visibility),
-                350,
-                EaseFunction::QuadraticInOut,
-            );
+            // cmd_e.tween_sprite_color(
+            //     Color::linear_rgb(new_visibility, new_visibility, new_visibility),
+            //     350,
+            //     EaseFunction::QuadraticInOut,
+            // );
         }
     }
 }

@@ -317,8 +317,8 @@ fn tween_out_finished_tiles(
             // DespawnOnTweenCompleted::Itself,
             FadeOutSpriteHiearchy { duration_ms: 150 },
         ));
-        cmd.tween_tile_color(ev.e, Color::NONE, 150, EaseFunction::QuadraticIn);
-        cmd.tween_text_alpha(word.text_e, 0.0, 110, EaseFunction::QuadraticIn);
+        // cmd.tween_tile_color(ev.e, Color::NONE, 150, EaseFunction::QuadraticIn);
+        // cmd.tween_text_alpha(word.text_e, 0.0, 110, EaseFunction::QuadraticIn);
     }
 }
 
@@ -330,7 +330,7 @@ fn tween_ground_texts(
     level_lookup: Res<LevelEntityLookup>,
     mut cmd: Commands,
 ) {
-    let player_coords = or_return_quiet!(player_q.get_single());
+    let player_coords = or_return_quiet!(player_q.single());
     let visible_tile_ids: HashSet<_> = visible_word_q.iter().collect();
     let radius_tile_ids: HashSet<_> = player_coords
         .neighbours()
@@ -342,18 +342,18 @@ fn tween_ground_texts(
     // tween out when player has moved away
     for out_tile_e in visible_tile_ids.difference(&radius_tile_ids) {
         let word = or_continue_quiet!(word_q.get(*out_tile_e));
-        if let Some(mut cmd_e) = cmd.get_entity(*out_tile_e) {
+        if let Ok(mut cmd_e) = cmd.get_entity(*out_tile_e) {
             cmd_e.remove::<TileWordVisible>();
-            cmd.tween_text_alpha(word.text_e, 0.0, 110, EaseFunction::QuadraticOut);
+            // cmd.tween_text_alpha(word.text_e, 0.0, 110, EaseFunction::QuadraticOut);
         }
     }
 
     // tween in when player has moved in
     for tile_e in radius_tile_ids {
         let word = or_continue_quiet!(word_q.get(tile_e));
-        if let Some(mut cmd_e) = cmd.get_entity(tile_e) {
+        if let Ok(mut cmd_e) = cmd.get_entity(tile_e) {
             cmd_e.try_insert(TileWordVisible);
-            cmd.tween_text_alpha(word.text_e, 1.0, 110, EaseFunction::QuadraticOut);
+            // cmd.tween_text_alpha(word.text_e, 1.0, 110, EaseFunction::QuadraticOut);
         }
     }
 }
