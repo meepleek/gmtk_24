@@ -1,5 +1,3 @@
-#![feature(let_chains)]
-
 mod anim;
 mod assets;
 mod audio;
