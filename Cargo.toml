@@ -2,7 +2,7 @@
 name = "gmtk_2024"
 authors = ["Jiří H. <jiri@bacehub.de>"]
 version = "0.1.0"
-edition = "2021"
+edition = "2024"
 
 [dependencies]
 bevy = { version = "0.17", features = ["wayland"] }
