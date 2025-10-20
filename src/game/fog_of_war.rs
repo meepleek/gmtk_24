@@ -1,7 +1,8 @@
 use crate::{camera::FOG_OF_WAR_RENDER_LAYER, prelude::*};
 use bevy::{
-    render::render_resource::{AsBindGroup, ShaderRef},
-    sprite::{Material2d, Material2dPlugin},
+    render::render_resource::AsBindGroup,
+    shader::ShaderRef,
+    sprite_render::{Material2d, Material2dPlugin},
 };
 
 pub(super) fn plugin(app: &mut App) {

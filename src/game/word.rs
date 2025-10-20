@@ -1,5 +1,5 @@
 use crate::{assets::WordlistAssets, prelude::*};
-use bevy::{color::palettes::tailwind, utils::HashSet};
+use bevy::color::palettes::tailwind;
 use bevy_trauma_shake::Shakes;
 
 pub(super) fn plugin(app: &mut App) {

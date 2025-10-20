@@ -28,6 +28,7 @@ leafwing-input-manager = "0.18"
 bevy_ecs_ldtk = { git = "https://github.com/Trouv/bevy_ecs_ldtk", branch = "lenchog/0.17-collab" }
 bevy_ecs_tilemap = "0.17.0-rc.1"
 avian2d = "0.4"
+bevy_platform = "0.17.2"
 
 [dev-dependencies]
 test-case = "3.3"

@@ -3,8 +3,9 @@
 
 // pub(crate) use crate::tween::*;
 pub(crate) use crate::{
+    AppSet,
     anim::FadeOutSpriteHiearchy,
-    assets::{assets_exist, FontAssets, MusicAssets, SfxAssets, SpriteAssets},
+    assets::{FontAssets, MusicAssets, SfxAssets, SpriteAssets, assets_exist},
     audio::{
         music::{MusicCommands, MusicTrack},
         sfx::{Sfx, SfxCommands},
@@ -13,29 +14,30 @@ pub(crate) use crate::{
     ext::*,
     game::{
         level::{
-            level_ready, Ground, LevelEntityLookup, Movable, Moving, UnbreakableGround, TILE_SIZE,
+            Ground, LevelEntityLookup, Movable, Moving, TILE_SIZE, UnbreakableGround, level_ready,
         },
         physics::{
             GamePhysicsLayer, Gravity, Grounded, HorizontalObstacleDetection, KinematicSensor,
             TileCollider, Velocity,
         },
         player::{
+            Player,
             input::{PlayerBindings, TimedButtonInput, UiAction},
             movement::{MovementEasing, MovementIntent},
-            Player,
         },
         rock::Rock,
         word::{WordTile, WordTileEvent, WordTileEventKind, WordTileStatus},
     },
     math::*,
-    screens::{in_game, transition::TransitionScreenCommandExt, Screen},
+    screens::{Screen, in_game, transition::TransitionScreenCommandExt},
     theme::prelude::*,
     time::*,
     word_loader::WordListSource,
-    AppSet,
 };
 pub(crate) use avian2d::prelude::{Collider, CollisionLayers};
-pub(crate) use bevy::{prelude::*, utils::HashMap};
+pub(crate) use bevy::prelude::*;
+pub(crate) use bevy_platform::collections::{HashMap, HashSet};
+
 pub(crate) use bevy_ecs_ldtk::prelude::*;
 // pub(crate) use bevy_tweening::{
 //     asset_animator_system, component_animator_system, Animator, AssetAnimator, Ease, TweenCompleted,

@@ -3138,6 +3138,7 @@ dependencies = [
  "bevy_asset_loader",
  "bevy_ecs_ldtk",
  "bevy_ecs_tilemap",
+ "bevy_platform",
  "bevy_trauma_shake",
  "leafwing-input-manager",
  "log",

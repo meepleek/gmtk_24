@@ -1,8 +1,8 @@
 //! A splash screen that plays briefly at startup.
 
 use bevy::{
+    image::{ImageLoaderSettings, ImageSampler},
     prelude::*,
-    render::texture::{ImageLoaderSettings, ImageSampler},
 };
 
 use super::Screen;
