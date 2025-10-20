@@ -52,16 +52,14 @@ pub struct AnimationTimer(pub Timer);
 
 fn animate(
     time: Res<Time>,
-    mut player_q: Query<
-        (&mut AnimationTimer, &mut PlayerAnimation, &mut TextureAtlas),
-        With<Player>,
-    >,
+    mut player_q: Query<(&mut AnimationTimer, &mut PlayerAnimation, &mut Sprite), With<Player>>,
     mut word_tile_evr: EventReader<WordTileEvent>,
     sprites: Res<SpriteAssets>,
 ) {
-    let (mut timer, mut player_anim, mut atlas) = or_return!(player_q.get_single_mut());
+    let (mut timer, mut player_anim, mut sprite) = or_return!(player_q.get_single_mut());
 
     for ev in word_tile_evr.read() {
+        let mut atlas = or_continue!(sprite.texture_atlas);
         if match ev.kind {
             WordTileEventKind::WordStarted => {
                 atlas.layout = sprites.swing_anticipation_anim_layout.clone_weak();
@@ -77,7 +75,7 @@ fn animate(
         } {
             atlas.index = 0;
             timer.set_duration(Duration::from_millis(
-                player_anim.frame_base_duration_ms(atlas.index),
+                player_anim.frame_base_duration_ms(sprite.index),
             ));
             timer.reset();
             break;
@@ -87,30 +85,30 @@ fn animate(
         .read()
         .any(|ev| ev.kind == WordTileEventKind::WordStarted)
     {
-        atlas.layout = sprites.swing_anticipation_anim_layout.clone_weak();
+        sprite.layout = sprites.swing_anticipation_anim_layout.clone_weak();
         *player_anim = PlayerAnimation::SwingAnticipation;
-        atlas.index = 0;
+        sprite.index = 0;
         timer.set_duration(Duration::from_millis(
-            player_anim.frame_base_duration_ms(atlas.index),
+            player_anim.frame_base_duration_ms(sprite.index),
         ));
         timer.reset();
     }
 
     timer.tick(time.delta());
     if timer.just_finished() {
-        atlas.index = (atlas.index + 1) % player_anim.len();
-        if atlas.index == 0 && !player_anim.is_idle() {
+        sprite.index = (sprite.index + 1) % player_anim.len();
+        if sprite.index == 0 && !player_anim.is_idle() {
             // todo: busy anticipation when the current anim is swing anticipation
             if *player_anim == PlayerAnimation::SwingAnticipation {
-                atlas.layout = sprites.swing_anticipation_idle_anim_layout.clone_weak();
+                sprite.layout = sprites.swing_anticipation_idle_anim_layout.clone_weak();
                 *player_anim = PlayerAnimation::SwingAnticipationIdle;
             } else {
-                atlas.layout = sprites.idle_anim_layout.clone_weak();
+                sprite.layout = sprites.idle_anim_layout.clone_weak();
                 *player_anim = PlayerAnimation::Idle;
             }
         }
         timer.set_duration(Duration::from_millis(
-            player_anim.frame_base_duration_ms(atlas.index),
+            player_anim.frame_base_duration_ms(sprite.index),
         ));
     }
 }
