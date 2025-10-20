@@ -82,7 +82,7 @@ fn process_text_input(
     mut word_tile_q: Query<&mut WordTile>,
     mut word_tile_msg_w: MessageWriter<WordTileEvent>,
 ) {
-    let player_coords = or_return!(player_q.get_single());
+    let player_coords = or_return!(player_q.single());
     let mut typed = String::new();
     for ev in msg_r_kbd.read() {
         if let Key::Character(input) = &ev.logical_key {
@@ -100,7 +100,7 @@ fn process_text_input(
                 let neighbour_e = or_continue_quiet!(level_lookup.get(&neighbour_coords));
                 let mut word_tile = or_continue_quiet!(word_tile_q.get_mut(*neighbour_e));
                 if word_tile.remaining().starts_with(&typed) {
-                    word_tile_msg_w.send(WordTileEvent {
+                    word_tile_msg_w.write(WordTileEvent {
                         e: *neighbour_e,
                         kind: word_tile.advance(typed.len(), neighbour_coords),
                     });

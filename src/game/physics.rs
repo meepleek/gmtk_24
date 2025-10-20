@@ -325,7 +325,7 @@ pub(crate) fn apply_gravity(
             } else {
                 1.
             };
-            (vel.y + gravity.gravity * gravity_factor * time.delta_seconds()).max(
+            (vel.y + gravity.gravity * gravity_factor * time.delta_secs()).max(
                 if grounded.is_sliding() {
                     gravity.max_slide_velocity
                 } else {
@@ -404,7 +404,7 @@ fn apply_horizontal_velocity(
     time: Res<Time>,
 ) {
     for (e, vel, sensor, mut t) in &mut vel_q {
-        let x = vel.x * time.delta_seconds();
+        let x = vel.x * time.delta_secs();
         if x != 0.0 {
             t.scale.x = x.signum();
         } else {

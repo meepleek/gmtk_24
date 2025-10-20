@@ -56,7 +56,7 @@ fn animate(
     mut word_tile_msg_r: MessageReader<WordTileEvent>,
     sprites: Res<SpriteAssets>,
 ) {
-    let (mut timer, mut player_anim, mut sprite) = or_return!(player_q.get_single_mut());
+    let (mut timer, mut player_anim, mut sprite) = or_return!(player_q.single_mut());
 
     for ev in word_tile_msg_r.read() {
         let mut atlas = or_continue!(sprite.texture_atlas);

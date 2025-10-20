@@ -1,6 +1,6 @@
 use crate::{
     anim::StableInterpolate,
-    game::physics::{apply_gravity, check_horizontal_collisions, SKIN_WIDTH},
+    game::physics::{SKIN_WIDTH, apply_gravity, check_horizontal_collisions},
     prelude::*,
 };
 
@@ -68,7 +68,7 @@ fn process_intent(
     time: Res<Time>,
 ) {
     let (mut velocity, gravity, mut intent, mut grounded, easing, horizontal_obstacles) =
-        or_return!(movement_q.get_single_mut());
+        or_return!(movement_q.single_mut());
     // todo: component/add to controller component?
     let speed = 150.;
     let target = speed * intent.horizontal_movement;
@@ -80,7 +80,7 @@ fn process_intent(
             } else {
                 easing.decay_airborn
             },
-            time.delta_seconds(),
+            time.delta_secs(),
         ),
         None => velocity.x = target,
     };
