@@ -52,15 +52,13 @@ fn play_music(
     };
 
     commands.spawn((
-        AudioSourceBundle {
-            source: match track {
-                MusicTrack::MainMenu => music.main_menu.clone_weak(),
-                MusicTrack::Game => music.game.clone_weak(),
-            },
-            settings: PlaybackSettings {
-                mode: PlaybackMode::Loop,
-                ..default()
-            },
+        AudioPlayer::new(match track {
+            MusicTrack::MainMenu => music.main_menu.clone(),
+            MusicTrack::Game => music.game.clone(),
+        }),
+        PlaybackSettings {
+            mode: PlaybackMode::Loop,
+            ..default()
         },
         MusicSource,
     ));
