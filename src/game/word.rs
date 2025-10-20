@@ -201,25 +201,25 @@ fn tile_word_text_sections(
                 res.push(WordTile::section(
                     word[..typed_len].to_string(),
                     tailwind::GRAY_700.with_alpha(alpha).into(),
-                    font.clone_weak(),
+                    font.clone(),
                 ));
             }
             if status != WordTileStatus::Finished {
                 res.push(WordTile::section(
                     "|",
                     tailwind::GRAY_300.with_alpha(alpha).into(),
-                    font.clone_weak(),
+                    font.clone(),
                 ));
                 let next_char_i = typed_len + 1;
                 res.push(WordTile::section(
                     word[typed_len..next_char_i].to_string(),
                     tailwind::GREEN_200.with_alpha(alpha).into(),
-                    font.clone_weak(),
+                    font.clone(),
                 ));
                 res.push(WordTile::section(
                     word[next_char_i..].to_string(),
                     tailwind::GRAY_200.with_alpha(alpha).into(),
-                    font.clone_weak(),
+                    font.clone(),
                 ));
             }
         } else {
@@ -232,7 +232,7 @@ fn tile_word_text_sections(
                 })
                 .with_alpha(alpha)
                 .into(),
-                font.clone_weak(),
+                font.clone(),
             ));
         }
 
@@ -278,7 +278,7 @@ fn spawn_tile_words(
                             0,
                             WordTileStatus::Pristine,
                             0.0,
-                            fonts.tile.clone_weak(),
+                            fonts.tile.clone(),
                         )],
                     ))
                     .id(),
@@ -298,7 +298,7 @@ fn update_ground_text_sections(
     for ev in word_tile_msg_r.read() {
         let word = or_continue!(word_q.get(ev.e));
         let mut text = or_continue!(text_q.get_mut(word.text_e));
-        text.sections = word.text_sections(1.0, fonts.tile.clone_weak());
+        text.sections = word.text_sections(1.0, fonts.tile.clone());
     }
 }
 
@@ -394,7 +394,7 @@ fn spawn_cracks(
                 },
                 Transform::from_translation(Vec3::Z),
                 TextureAtlas {
-                    layout: sprites.tilemap_cracks_layout.clone_weak(),
+                    layout: sprites.tilemap_cracks_layout.clone(),
                     index: i,
                 },
                 // sprite_color_anim(Color::WHITE, 70, EaseFunction::QuadraticOut),

@@ -33,7 +33,7 @@ fn on_player_spawned(
             Sprite::from_image(sprites.player_sheet.clone()),
             Transform::from_translation(coords.to_world()),
             TextureAtlas {
-                layout: sprites.idle_anim_layout.clone_weak(),
+                layout: sprites.idle_anim_layout.clone(),
                 index: 0,
             },
             animation::PlayerAnimation::default(),

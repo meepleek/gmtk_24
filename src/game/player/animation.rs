@@ -62,12 +62,12 @@ fn animate(
         let mut atlas = or_continue!(sprite.texture_atlas);
         if match ev.kind {
             WordTileEventKind::WordStarted => {
-                atlas.layout = sprites.swing_anticipation_anim_layout.clone_weak();
+                atlas.layout = sprites.swing_anticipation_anim_layout.clone();
                 *player_anim = PlayerAnimation::SwingAnticipation;
                 true
             }
             WordTileEventKind::WordFinished(_) | WordTileEventKind::TileFinished { .. } => {
-                atlas.layout = sprites.swing_anim_layout.clone_weak();
+                atlas.layout = sprites.swing_anim_layout.clone();
                 *player_anim = PlayerAnimation::Swing;
                 true
             }
@@ -85,7 +85,7 @@ fn animate(
         .read()
         .any(|ev| ev.kind == WordTileEventKind::WordStarted)
     {
-        sprite.layout = sprites.swing_anticipation_anim_layout.clone_weak();
+        sprite.layout = sprites.swing_anticipation_anim_layout.clone();
         *player_anim = PlayerAnimation::SwingAnticipation;
         sprite.index = 0;
         timer.set_duration(Duration::from_millis(
@@ -100,10 +100,10 @@ fn animate(
         if sprite.index == 0 && !player_anim.is_idle() {
             // todo: busy anticipation when the current anim is swing anticipation
             if *player_anim == PlayerAnimation::SwingAnticipation {
-                sprite.layout = sprites.swing_anticipation_idle_anim_layout.clone_weak();
+                sprite.layout = sprites.swing_anticipation_idle_anim_layout.clone();
                 *player_anim = PlayerAnimation::SwingAnticipationIdle;
             } else {
-                sprite.layout = sprites.idle_anim_layout.clone_weak();
+                sprite.layout = sprites.idle_anim_layout.clone();
                 *player_anim = PlayerAnimation::Idle;
             }
         }
