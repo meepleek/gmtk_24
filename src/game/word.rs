@@ -4,7 +4,7 @@ use bevy_trauma_shake::Shakes;
 
 pub(super) fn plugin(app: &mut App) {
     app.register_type::<WordTile>()
-        .add_event::<WordTileEvent>()
+        .add_message::<WordTileEvent>()
         .add_systems(OnExit(Screen::Loading), update_word_list)
         .add_systems(
             Update,
@@ -239,7 +239,8 @@ fn tile_word_text_sections(
         if i < (words.len() - 1) {
             res.last_mut()
                 .expect("At least 1 section has been added")
-                .value += "\n";
+                .0
+                .0 += "\n";
         }
     }
 
@@ -272,14 +273,14 @@ fn spawn_tile_words(
                         Transform::from_translation(Vec2::ZERO.extend(0.1))
                             .with_scale(Vec2::splat(0.25).extend(1.)),
                         HIGH_RES_RENDER_LAYER,
-                        children![tile_word_text_sections(
+                        Children::spawn(tile_word_text_sections(
                             &words,
                             0,
                             0,
                             WordTileStatus::Pristine,
                             0.0,
                             fonts.tile.clone(),
-                        )],
+                        )),
                     ))
                     .id(),
                 );
@@ -290,15 +291,26 @@ fn spawn_tile_words(
 }
 
 fn update_ground_text_sections(
+    mut cmd: Commands,
     mut word_tile_msg_r: MessageReader<WordTileEvent>,
     word_q: Query<&WordTile>,
-    mut text_q: Query<&mut Text>,
+    mut children_q: Query<&Children>,
+    mut textspan_q: Query<Entity, With<TextSpan>>,
     fonts: Res<FontAssets>,
 ) {
     for ev in word_tile_msg_r.read() {
         let word = or_continue!(word_q.get(ev.e));
-        let mut text = or_continue!(text_q.get_mut(word.text_e));
-        text.sections = word.text_sections(1.0, fonts.tile.clone());
+        let text_children = or_continue!(children_q.get_mut(word.text_e));
+        for e in text_children.iter().filter(|e| textspan_q.contains(*e)) {
+            let mut e_cmd = or_continue!(cmd.get_entity(e));
+            e_cmd.despawn();
+        }
+        let mut text_cmd = or_continue!(cmd.get_entity(word.text_e));
+        text_cmd.with_children(|c| {
+            for bundle in word.text_sections(1.0, fonts.tile.clone()) {
+                c.spawn(bundle);
+            }
+        });
     }
 }
 
@@ -390,13 +402,13 @@ fn spawn_cracks(
                     image: sprites.tilemap.clone(),
                     // todo: tween
                     // color: Color::NONE,
+                    texture_atlas: Some(TextureAtlas {
+                        layout: sprites.tilemap_cracks_layout.clone(),
+                        index: i,
+                    }),
                     ..default()
                 },
                 Transform::from_translation(Vec3::Z),
-                TextureAtlas {
-                    layout: sprites.tilemap_cracks_layout.clone(),
-                    index: i,
-                },
                 // sprite_color_anim(Color::WHITE, 70, EaseFunction::QuadraticOut),
             ));
         });
