@@ -58,8 +58,8 @@ fn animate(
 ) {
     let (mut timer, mut player_anim, mut sprite) = or_return!(player_q.single_mut());
 
+    let mut atlas = or_return!(sprite.texture_atlas.as_mut());
     for ev in word_tile_msg_r.read() {
-        let mut atlas = or_continue!(sprite.texture_atlas);
         if match ev.kind {
             WordTileEventKind::WordStarted => {
                 atlas.layout = sprites.swing_anticipation_anim_layout.clone();
@@ -75,7 +75,7 @@ fn animate(
         } {
             atlas.index = 0;
             timer.set_duration(Duration::from_millis(
-                player_anim.frame_base_duration_ms(sprite.index),
+                player_anim.frame_base_duration_ms(atlas.index),
             ));
             timer.reset();
             break;
@@ -85,30 +85,30 @@ fn animate(
         .read()
         .any(|ev| ev.kind == WordTileEventKind::WordStarted)
     {
-        sprite.layout = sprites.swing_anticipation_anim_layout.clone();
+        atlas.layout = sprites.swing_anticipation_anim_layout.clone();
         *player_anim = PlayerAnimation::SwingAnticipation;
-        sprite.index = 0;
+        atlas.index = 0;
         timer.set_duration(Duration::from_millis(
-            player_anim.frame_base_duration_ms(sprite.index),
+            player_anim.frame_base_duration_ms(atlas.index),
         ));
         timer.reset();
     }
 
     timer.tick(time.delta());
     if timer.just_finished() {
-        sprite.index = (sprite.index + 1) % player_anim.len();
-        if sprite.index == 0 && !player_anim.is_idle() {
+        atlas.index = (atlas.index + 1) % player_anim.len();
+        if atlas.index == 0 && !player_anim.is_idle() {
             // todo: busy anticipation when the current anim is swing anticipation
             if *player_anim == PlayerAnimation::SwingAnticipation {
-                sprite.layout = sprites.swing_anticipation_idle_anim_layout.clone();
+                atlas.layout = sprites.swing_anticipation_idle_anim_layout.clone();
                 *player_anim = PlayerAnimation::SwingAnticipationIdle;
             } else {
-                sprite.layout = sprites.idle_anim_layout.clone();
+                atlas.layout = sprites.idle_anim_layout.clone();
                 *player_anim = PlayerAnimation::Idle;
             }
         }
         timer.set_duration(Duration::from_millis(
-            player_anim.frame_base_duration_ms(sprite.index),
+            player_anim.frame_base_duration_ms(atlas.index),
         ));
     }
 }
