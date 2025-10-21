@@ -1,7 +1,5 @@
 #![allow(dead_code)]
 
-use bevy::utils::HashSet;
-
 use crate::prelude::*;
 
 pub trait Vec2Ext {

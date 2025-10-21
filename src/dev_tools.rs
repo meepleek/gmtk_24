@@ -2,8 +2,7 @@
 
 use crate::prelude::*;
 use bevy::{
-    color::palettes::tailwind,
-    dev_tools::{states::log_transitions, ui_debug_overlay::DebugUiPlugin},
+    color::palettes::tailwind, dev_tools::states::log_transitions,
     input::common_conditions::input_toggle_active,
 };
 
@@ -12,7 +11,6 @@ use bevy_inspector_egui::quick::WorldInspectorPlugin;
 
 pub(super) fn plugin(app: &mut App) {
     app.add_systems(Update, log_transitions::<Screen>)
-        .add_plugins(DebugUiPlugin)
         .add_systems(
             Update,
             draw_level_grid.run_if(input_toggle_active(false, MouseButton::Right)),

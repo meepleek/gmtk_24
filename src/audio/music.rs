@@ -1,8 +1,5 @@
 use crate::prelude::*;
-use bevy::{
-    audio::PlaybackMode,
-    ecs::{system::RunSystemOnce as _, world::Command},
-};
+use bevy::{audio::PlaybackMode, ecs::system::RunSystemOnce as _};
 
 pub(super) fn plugin(app: &mut App) {
     app.register_type::<MusicSource>();
