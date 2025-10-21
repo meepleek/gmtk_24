@@ -26,10 +26,11 @@ pub(super) fn plugin(app: &mut App) {
 pub const FIXED_UPDATE_FPS: f32 = 64.0;
 pub const SKIN_WIDTH: f32 = 1.0;
 
-#[derive(PhysicsLayer)]
+#[derive(PhysicsLayer, Default)]
 pub(crate) enum GamePhysicsLayer {
-    Player,
+    #[default]
     Obstacle,
+    Player,
 }
 
 impl GamePhysicsLayer {
@@ -240,10 +241,9 @@ pub(crate) fn check_grounded(
                 origin,
                 0.,
                 Dir2::new(Vec2::NEG_Y).unwrap(),
-                SKIN_WIDTH,
                 u32::MAX,
-                false,
-                SpatialQueryFilter {
+                &ShapeCastConfig::from_max_distance(SKIN_WIDTH),
+                &SpatialQueryFilter {
                     mask: GamePhysicsLayer::Obstacle.into(),
                     excluded_entities: [e].into(),
                 },
@@ -287,10 +287,9 @@ pub(crate) fn check_horizontal_collisions(
                 origin,
                 0.,
                 Dir2::new(Vec2::X * sign).expect("Valid direction"),
-                TILE_SIZE as f32 * 0.25 + SKIN_WIDTH,
                 u32::MAX,
-                false,
-                SpatialQueryFilter {
+                &ShapeCastConfig::from_max_distance(TILE_SIZE as f32 * 0.25 + SKIN_WIDTH),
+                &SpatialQueryFilter {
                     mask: GamePhysicsLayer::Obstacle.into(),
                     excluded_entities: [e].into(),
                 },
@@ -299,11 +298,11 @@ pub(crate) fn check_horizontal_collisions(
             // horizontal hit
             .filter(|hit| hit.normal1.x != 0.)
             .min_by(|hit1, hit2| {
-                hit1.time_of_impact
-                    .partial_cmp(&hit2.time_of_impact)
+                hit1.distance
+                    .partial_cmp(&hit2.distance)
                     .expect("Valid TOI")
             })
-            .map(|h| h.time_of_impact - SKIN_WIDTH)
+            .map(|h| h.distance - SKIN_WIDTH)
         };
         *coll = HorizontalObstacleDetection::new(distance(-1.), distance(1.));
     }
@@ -366,10 +365,9 @@ fn apply_vertical_velocity(
                 sensor.translation(t.translation),
                 0.,
                 Dir2::new(Vec2::Y * vel.y).expect("Non-zero y velocity"),
-                vel.y.abs() + SKIN_WIDTH,
                 u32::MAX,
-                false,
-                SpatialQueryFilter {
+                &ShapeCastConfig::from_max_distance(vel.y.abs() + SKIN_WIDTH),
+                &SpatialQueryFilter {
                     mask: GamePhysicsLayer::Obstacle.into(),
                     excluded_entities: [e].into(),
                 },
@@ -377,8 +375,8 @@ fn apply_vertical_velocity(
             .into_iter()
             .filter(|hit| hit.normal1.y != 0.)
             .min_by(|hit1, hit2| {
-                hit1.time_of_impact
-                    .partial_cmp(&hit2.time_of_impact)
+                hit1.distance
+                    .partial_cmp(&hit2.distance)
                     .expect("Valid TOI")
             }) {
             Some(hit) => {
@@ -387,7 +385,7 @@ fn apply_vertical_velocity(
                     vel.y = 0.;
                 }
 
-                (hit.time_of_impact - SKIN_WIDTH).max(0.) * vel.y.signum()
+                (hit.distance - SKIN_WIDTH).max(0.) * vel.y.signum()
             }
             None => vel.y,
         };
@@ -421,10 +419,9 @@ fn apply_horizontal_velocity(
                 sensor.translation(t.translation),
                 0.,
                 Dir2::new(Vec2::X * x.signum()).expect("Non-zero y velocity"),
-                x.abs() + SKIN_WIDTH,
                 u32::MAX,
-                false,
-                SpatialQueryFilter {
+                &ShapeCastConfig::from_max_distance(x.abs() + SKIN_WIDTH),
+                &SpatialQueryFilter {
                     mask: GamePhysicsLayer::Obstacle.into(),
                     excluded_entities: [e].into(),
                 },
@@ -432,11 +429,11 @@ fn apply_horizontal_velocity(
             .into_iter()
             .filter(|hit| hit.normal1.x != 0.)
             .min_by(|hit1, hit2| {
-                hit1.time_of_impact
-                    .partial_cmp(&hit2.time_of_impact)
+                hit1.distance
+                    .partial_cmp(&hit2.distance)
                     .expect("Valid TOI")
             }) {
-            Some(hit) => (hit.time_of_impact - SKIN_WIDTH).max(0.) * x.signum(),
+            Some(hit) => (hit.distance - SKIN_WIDTH).max(0.) * x.signum(),
             None => x,
         };
 
