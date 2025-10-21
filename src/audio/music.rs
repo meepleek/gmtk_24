@@ -28,7 +28,7 @@ impl Command for PlayMusic {
     /// This command will despawn the current soundtrack, then spawn a new one
     /// if necessary.
     fn apply(self, world: &mut World) {
-        world.run_system_once_with(self, play_music);
+        world.run_system_once_with(play_music, self);
     }
 }
 
@@ -73,10 +73,10 @@ pub trait MusicCommands {
 
 impl MusicCommands for Commands<'_, '_> {
     fn play_music(&mut self, track: MusicTrack) {
-        self.add(PlayMusic::Track(track));
+        self.queue(PlayMusic::Track(track));
     }
 
     fn stop_music(&mut self) {
-        self.add(PlayMusic::Disable);
+        self.queue(PlayMusic::Disable);
     }
 }
