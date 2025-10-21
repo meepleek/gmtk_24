@@ -32,11 +32,11 @@ pub struct TransitionScreen(Screen);
 impl Command for TransitionScreen {
     fn apply(self, world: &mut World) {
         world.run_system_once_with(
-            self,
             |In(trans_screen): In<TransitionScreen>,
              mut next: ResMut<NextState<ScreenTransition>>| {
                 next.set(ScreenTransition::TransitioningOut(trans_screen.0));
             },
+            self,
         );
     }
 }
@@ -47,7 +47,7 @@ pub(crate) trait TransitionScreenCommandExt {
 
 impl<'w, 's> TransitionScreenCommandExt for Commands<'w, 's> {
     fn transition_to_screen(&mut self, next_screen: Screen) {
-        self.add(TransitionScreen(next_screen));
+        self.queue(TransitionScreen(next_screen));
     }
 }
 

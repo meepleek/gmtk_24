@@ -1,5 +1,4 @@
 use crate::prelude::*;
-use bevy::ecs::world::Command;
 
 pub(super) fn plugin(_app: &mut App) {
     // No setup required for this plugin.
@@ -56,6 +55,6 @@ impl SfxCommands for Commands<'_, '_> {
     // accept: &str literals are better for prototyping and data-driven sound
     // effects, but enums are nicer for special-cased effects
     fn play_sfx_with_settings(&mut self, sfx: Sfx, settings: PlaybackSettings) {
-        self.add(PlaySfx { sfx, settings });
+        self.queue(PlaySfx { sfx, settings });
     }
 }
