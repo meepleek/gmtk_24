@@ -30,7 +30,6 @@ fn draw_level_grid(mut gizmos: Gizmos) {
     gizmos
         .grid_2d(
             Vec2::ZERO,
-            0.0,
             UVec2::splat(64),
             Vec2::splat(TILE_SIZE as f32),
             // Dark gray
@@ -46,7 +45,6 @@ fn draw_kinematic_sensor_gizmos(
     for (sensor, t, grounded) in &sensor_q {
         gizmos.rect_2d(
             sensor.translation(t.translation),
-            0.,
             sensor.size,
             if grounded.is_grounded() {
                 tailwind::BLUE_400
