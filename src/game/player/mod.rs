@@ -30,12 +30,15 @@ fn on_player_spawned(
 ) {
     for (e, coords) in &player_q {
         cmd.entity(e).try_insert((
-            Sprite::from_image(sprites.player_sheet.clone()),
-            Transform::from_translation(coords.to_world()),
-            TextureAtlas {
-                layout: sprites.idle_anim_layout.clone(),
-                index: 0,
+            Sprite {
+                image: sprites.player_sheet.clone(),
+                texture_atlas: Some(TextureAtlas {
+                    layout: sprites.idle_anim_layout.clone(),
+                    index: 0,
+                }),
+                ..default()
             },
+            Transform::from_translation(coords.to_world()),
             animation::PlayerAnimation::default(),
             animation::AnimationTimer(Timer::new(
                 Duration::from_millis(animation::PlayerAnimation::Idle.frame_base_duration_ms(0)),
