@@ -42,8 +42,8 @@ fn check_goal_reached(
     mut lvl_index: ResMut<LevelIndex>,
     mut cmd: Commands,
 ) {
-    let player_coords = or_return_quiet!(player_q.get_single());
-    let goal_coords = or_return_quiet!(goal_q.get_single());
+    let player_coords = or_return_quiet!(player_q.single());
+    let goal_coords = or_return_quiet!(goal_q.single());
     if player_coords == goal_coords {
         lvl_index.0 += 1;
         cmd.transition_to_screen(Screen::RestartGame);

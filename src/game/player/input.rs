@@ -125,7 +125,7 @@ fn collect_intent(
     input: PlayerInput,
     time: Res<Time>,
 ) {
-    let mut intent = or_return!(player_q.get_single_mut());
+    let mut intent = or_return!(player_q.single_mut());
     let horizontal_movement = input.clamped_value(&PlayerAction::Move);
     let jump_btn_data = input
         .button_data(&PlayerAction::Jump)
