@@ -1,5 +1,4 @@
 use crate::{
-    anim::StableInterpolate,
     game::physics::{SKIN_WIDTH, apply_gravity, check_horizontal_collisions},
     prelude::*,
 };
