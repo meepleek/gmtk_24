@@ -28,7 +28,9 @@ impl Command for PlayMusic {
     /// This command will despawn the current soundtrack, then spawn a new one
     /// if necessary.
     fn apply(self, world: &mut World) {
-        world.run_system_once_with(play_music, self);
+        world
+            .run_system_once_with(play_music, self)
+            .expect("play music");
     }
 }
 

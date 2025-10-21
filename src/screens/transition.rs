@@ -31,13 +31,15 @@ enum ScreenTransition {
 pub struct TransitionScreen(Screen);
 impl Command for TransitionScreen {
     fn apply(self, world: &mut World) {
-        world.run_system_once_with(
-            |In(trans_screen): In<TransitionScreen>,
-             mut next: ResMut<NextState<ScreenTransition>>| {
-                next.set(ScreenTransition::TransitioningOut(trans_screen.0));
-            },
-            self,
-        );
+        world
+            .run_system_once_with(
+                |In(trans_screen): In<TransitionScreen>,
+                 mut next: ResMut<NextState<ScreenTransition>>| {
+                    next.set(ScreenTransition::TransitioningOut(trans_screen.0));
+                },
+                self,
+            )
+            .expect("transition screen");
     }
 }
 
