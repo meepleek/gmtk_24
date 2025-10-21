@@ -16,8 +16,7 @@ pub const FOG_OF_WAR_RENDER_LAYER: RenderLayers = RenderLayers::layer(2);
 pub(crate) const BACKGROUND_COLOR: Color = Color::srgb(0.157, 0.157, 0.157);
 
 pub(super) fn plugin(app: &mut App) {
-    app.insert_resource(Msaa::Off)
-        .insert_resource(ClearColor(BACKGROUND_COLOR))
+    app.insert_resource(ClearColor(BACKGROUND_COLOR))
         .add_systems(Startup, spawn_camera)
         .add_plugins(TraumaPlugin);
 }
@@ -51,6 +50,7 @@ fn spawn_camera(
             target: RenderTarget::Image(fog_of_war_mask_handle.clone()),
             ..default()
         },
+        Msaa::Off,
         FOG_OF_WAR_RENDER_LAYER,
     ));
 
@@ -82,6 +82,7 @@ fn spawn_camera(
         },
         PixelPerfectCamera,
         IsDefaultUiCamera,
+        Msaa::Off,
     ));
 
     // spawn the canvas
@@ -107,6 +108,7 @@ fn spawn_camera(
         Transform::from_translation(Vec2::splat(1024.0 / 8.0).extend(0.0)),
         HighResCamera,
         HIGH_RES_RENDER_LAYER,
+        Msaa::Off,
         Shake::default(),
     ));
 }
