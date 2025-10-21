@@ -1,12 +1,8 @@
 use bevy::{
-    render::{
-        camera::RenderTarget,
-        render_resource::{
-            Extent3d, TextureDescriptor, TextureDimension, TextureFormat, TextureUsages,
-        },
-        view::RenderLayers,
+    camera::{RenderTarget, visibility::RenderLayers},
+    render::render_resource::{
+        Extent3d, TextureDescriptor, TextureDimension, TextureFormat, TextureUsages,
     },
-    sprite::MaterialMesh2dBundle,
 };
 use bevy_trauma_shake::{Shake, TraumaPlugin};
 
@@ -91,26 +87,24 @@ fn spawn_camera(
     // spawn the canvas
     cmd.spawn((
         Name::new("pixel_canvas"),
-        MaterialMesh2dBundle {
-            mesh: meshes.add(Rectangle::default()).into(),
-            transform: Transform::from_scale(Vec2::splat(512.0).extend(1.)),
-            material: fog_of_war_mats.add(FogOfWarMaterial {
-                texture: pixel_perfect_canvas_handle,
-                mask_texture: Some(fog_of_war_mask_handle),
-                blur: 1.0,
-            }),
-            ..default()
-        },
+        Mesh2d(meshes.add(Rectangle::default())),
+        MeshMaterial2d(fog_of_war_mats.add(FogOfWarMaterial {
+            texture: pixel_perfect_canvas_handle,
+            mask_texture: Some(fog_of_war_mask_handle),
+            blur: 1.0,
+        })),
+        Transform::from_scale(Vec2::splat(512.0).extend(1.)),
         LowResCanvas,
         HIGH_RES_RENDER_LAYER,
     ));
 
-    let mut screen_camera = Camera2d::default();
-    screen_camera.projection.scale = 0.25;
-    screen_camera.transform.translation = Vec2::splat(1024.0 / 8.0).extend(0.0);
+    let mut cam_projection = OrthographicProjection::default_2d();
+    cam_projection.scale = 0.25;
     cmd.spawn((
         Name::new("screen_cam"),
-        screen_camera,
+        Camera2d,
+        Projection::Orthographic(cam_projection),
+        Transform::from_translation(Vec2::splat(1024.0 / 8.0).extend(0.0)),
         HighResCamera,
         HIGH_RES_RENDER_LAYER,
         Shake::default(),
