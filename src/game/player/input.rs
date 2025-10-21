@@ -167,8 +167,8 @@ impl UiAction {
 
         // MKB
         input_map
-            .insert_axis(Self::Move, VirtualAxis::WS)
-            .insert_axis(Self::Move, VirtualAxis::VERTICAL_ARROW_KEYS)
+            .insert_axis(Self::Move, VirtualAxis::ws())
+            .insert_axis(Self::Move, VirtualAxis::vertical_arrow_keys())
             .insert(Self::Select, KeyCode::Space)
             .insert(Self::Select, KeyCode::Enter)
             .insert(Self::Back, KeyCode::Escape)
