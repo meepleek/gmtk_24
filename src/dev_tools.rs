@@ -6,9 +6,6 @@ use bevy::{
     input::common_conditions::input_toggle_active,
 };
 
-#[cfg(feature = "dev")]
-use bevy_inspector_egui::quick::WorldInspectorPlugin;
-
 pub(super) fn plugin(app: &mut App) {
     app.add_systems(Update, log_transitions::<Screen>)
         .add_systems(
@@ -19,7 +16,9 @@ pub(super) fn plugin(app: &mut App) {
     #[cfg(feature = "dev")]
     {
         app.add_plugins((
-            WorldInspectorPlugin::new().run_if(input_toggle_active(false, MouseButton::Right)),
+            bevy_inspector_egui::bevy_egui::EguiPlugin::default(),
+            bevy_inspector_egui::quick::WorldInspectorPlugin::new()
+                .run_if(input_toggle_active(false, MouseButton::Right)),
             avian2d::debug_render::PhysicsDebugPlugin::default(),
         ));
         app.add_systems(FixedUpdate, draw_kinematic_sensor_gizmos);
