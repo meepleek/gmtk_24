@@ -52,7 +52,9 @@ fn apply_interaction_palette(
             Interaction::Hovered => palette.hovered,
             Interaction::Pressed => palette.pressed,
         };
-        // cmd.tween_ui_bg_color(e, color, 200, EaseFunction::QuadraticInOut);
+        cmd.tween_to(e, UiBackgroundColorLens(color), 200)
+            .uniq("interaction_bg") // todo: might wanna move that to the base tween_to fn if it's always used anyway
+            .spawn();
     }
 }
 
@@ -66,12 +68,14 @@ fn apply_button_interaction_size(
             Interaction::Hovered => 1.1,
             Interaction::Pressed => 1.25,
         };
-        // cmd.tween_style_size(
-        //     e,
-        //     Vec2::new(BUTTON_WIDTH, BUTTON_HEIGHT) * scale,
-        //     350,
-        //     EaseFunction::BackOut,
-        // );
+        cmd.tween_to(
+            e,
+            StyleRelativeSizeLens(Vec2::new(BUTTON_WIDTH, BUTTON_HEIGHT) * scale),
+            350,
+        )
+        .uniq("interaction_bg") // todo: might wanna move that to the base tween_to fn if it's always used anyway
+        .ease(EaseFunction::BackOut)
+        .spawn();
     }
 }
 

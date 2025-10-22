@@ -2,6 +2,8 @@ use bevy::ecs::system::RunSystemOnce;
 
 use crate::{camera::BACKGROUND_COLOR, prelude::*};
 
+const TRANSITION_TWEEN_BG_COL_KEY: &str = "transition_overlay";
+
 pub(super) fn plugin(app: &mut App) {
     app.init_state::<ScreenTransition>()
         .add_systems(Startup, setup_transition_overlay)
@@ -68,7 +70,7 @@ struct TransitionImage;
 fn setup_transition_overlay(mut cmd: Commands, speed_factor: Res<TransitionSpeedFactor>) {
     cmd.spawn((
         Name::new("transition"),
-        // ImageNode::new(),
+        ImageNode::new(),
         Node {
             position_type: PositionType::Absolute,
             width: Val::Vw(100.),
@@ -78,15 +80,13 @@ fn setup_transition_overlay(mut cmd: Commands, speed_factor: Res<TransitionSpeed
         BackgroundColor(BACKGROUND_COLOR.into()),
         TransitionImage,
     ))
-    // .insert(Animator::new(delay_tween(
-    //     ui_bg_color_tween(
-    //         BACKGROUND_COLOR.with_alpha(0.0),
-    //         speed_factor.duration(800),
-    //         EaseFunction::QuadraticInOut,
-    //     ),
-    //     speed_factor.duration(300),
-    // )))
-    ;
+    .tween_to(
+        UiBackgroundColorLens(BACKGROUND_COLOR.with_alpha(0.0)),
+        speed_factor.duration(800),
+    )
+    .delay_ms(speed_factor.duration(300))
+    .uniq(TRANSITION_TWEEN_BG_COL_KEY)
+    .spawn();
 }
 
 fn start_transition_out(
@@ -103,12 +103,13 @@ fn start_transition_out(
     }
 
     let e = or_return!(transition_img_q.single());
-    // cmd.tween_ui_bg_color(
-    //     e,
-    //     BACKGROUND_COLOR,
-    //     speed_factor.duration(600),
-    //     EaseFunction::QuadraticInOut,
-    // );
+    cmd.tween_to(
+        e,
+        UiBackgroundColorLens(BACKGROUND_COLOR),
+        speed_factor.duration(600),
+    )
+    .uniq(TRANSITION_TWEEN_BG_COL_KEY)
+    .spawn();
 }
 
 fn start_transition_in(
@@ -116,25 +117,27 @@ fn start_transition_in(
     mut next_screen_trans: ResMut<NextState<ScreenTransition>>,
     mut next_screen: ResMut<NextState<Screen>>,
     mut cmd: Commands,
-    // mut tween_msg_r: MessageReader<TweenCompleted>,
+    mut tween_msg_r: MessageReader<AnimCompletedEvent>,
     transition_img_q: Query<Entity, With<TransitionImage>>,
     speed_factor: Res<TransitionSpeedFactor>,
 ) {
-    // if let ScreenTransition::TransitioningOut(screen) = screen_trans.get() {
-    //     let e = or_return_quiet!(
-    //         tween_msg_r
-    //             .read()
-    //             .find(|ev| transition_img_q.contains(ev.entity))
-    //     )
-    //     .entity;
+    if let ScreenTransition::TransitioningOut(screen) = screen_trans.get() {
+        let e = or_return_quiet!(
+            tween_msg_r
+                .read()
+                .find(|ev| transition_img_q.contains(ev.entity))
+        )
+        .entity;
 
-    //     next_screen_trans.set(ScreenTransition::TransitioningIn);
-    //     next_screen.set(screen.clone());
-    //     cmd.tween_ui_bg_color(
-    //         e,
-    //         BACKGROUND_COLOR.with_alpha(0.0),
-    //         speed_factor.duration(600),
-    //         EaseFunction::QuadraticInOut,
-    //     );
-    // }
+        next_screen_trans.set(ScreenTransition::TransitioningIn);
+        next_screen.set(screen.clone());
+
+        cmd.tween_to(
+            e,
+            UiBackgroundColorLens(BACKGROUND_COLOR.with_alpha(0.0)),
+            speed_factor.duration(600),
+        )
+        .uniq(TRANSITION_TWEEN_BG_COL_KEY)
+        .spawn();
+    }
 }

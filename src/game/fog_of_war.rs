@@ -87,11 +87,17 @@ fn update_tile_visibility(
         let mut cmd_e = or_continue_quiet!(cmd.get_entity(tile_vis.sprite_e));
         if tile_vis.visibility <= new_visibility {
             tile_vis.visibility = new_visibility;
-            // cmd_e.tween_sprite_color(
-            //     Color::linear_rgb(new_visibility, new_visibility, new_visibility),
-            //     350,
-            //     EaseFunction::QuadraticInOut,
-            // );
+            // cmd_e
+            //     .tween_to(
+            //         SpriteColorRelativeLens(Color::linear_rgb(
+            //             new_visibility,
+            //             new_visibility,
+            //             new_visibility,
+            //         )),
+            //         350,
+            //     )
+            //     .uniq("tile_visibility")
+            //     .spawn();
         }
     }
 }

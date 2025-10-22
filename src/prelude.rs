@@ -39,9 +39,7 @@ pub(crate) use bevy::prelude::*;
 pub(crate) use bevy_platform::collections::{HashMap, HashSet};
 
 pub(crate) use bevy_ecs_ldtk::prelude::*;
-// pub(crate) use bevy_tweening::{
-//     asset_animator_system, component_animator_system, Animator, AssetAnimator, Ease, TweenCompleted,
-// };
+pub(crate) use bevy_tweening::AnimCompletedEvent;
 pub(crate) use leafwing_input_manager::buttonlike::ButtonState;
 pub(crate) use rand::prelude::*;
 pub(crate) use tiny_bail::prelude::{or_continue, or_continue_quiet, or_return, or_return_quiet};

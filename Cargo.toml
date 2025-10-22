@@ -9,7 +9,7 @@ bevy = { version = "0.17", features = ["wayland"] }
 bevy-inspector-egui = { version = "0.34", optional = true }
 bevy_asset_loader = { version = "0.24.0-rc.1", features = ["2d"] }
 bevy_trauma_shake = "0.6.0"
-# bevy_tweening = { git = "https://github.com/SecretPocketCat/bevy_tweening.git", rev = "5f0edc7a9cb3cd39740582015c419f02cb2cbd71" }
+bevy_tweening = "0.14"
 rand = "0.8"
 # Compile low-severity logs out of native builds for performance.
 log = { version = "0.4", features = [
