@@ -1,9 +1,115 @@
-// #![allow(dead_code)]
+#![allow(dead_code)]
 
-// use bevy::{ecs::system::EntityCommands, prelude::*};
-// use bevy_ecs_tilemap::tiles::TileColor;
-// use bevy_tweening::*;
-// use std::{marker::PhantomData, time::Duration};
+use bevy::{ecs::system::EntityCommands, prelude::*};
+use bevy_ecs_tilemap::tiles::TileColor;
+use bevy_tweening::*;
+use std::{marker::PhantomData, time::Duration};
+
+// cmd.tween_to(
+//     e,
+//     UiBackgroundColorLens(BACKGROUND_COLOR.with_alpha(0.0)),
+//     speed_factor.duration(600),
+// )
+//
+
+pub trait CommandsTweenBuilderExt<'w> {
+    #[must_use]
+    fn tween_to<TComponent: Component>(
+        &mut self,
+        entity: Entity,
+        lens: impl Lens<TComponent>,
+        duration_ms: impl Into<u64>,
+    ) -> EntityTweenBuilder<'w>;
+}
+impl<'w, 's> CommandsTweenBuilderExt<'w> for Commands<'w, 's> {
+    fn tween_to<TComponent: Component>(
+        &mut self,
+        entity: Entity,
+        lens: impl Lens<TComponent>,
+        duration_ms: impl Into<u64>,
+    ) -> EntityTweenBuilder<'w> {
+        // self.get_entity(entity)
+        todo!()
+    }
+}
+
+pub trait EntityCommandsTweenBuilderExt<'a> {
+    #[must_use]
+    fn tween_to<TComponent: Component>(
+        self,
+        lens: impl Lens<TComponent>,
+        duration_ms: impl Into<u64>,
+    ) -> EntityTweenBuilder<'a>;
+}
+impl<'a> EntityCommandsTweenBuilderExt<'a> for EntityCommands<'a> {
+    fn tween_to<TComponent: Component>(
+        self,
+        lens: impl Lens<TComponent>,
+        duration_ms: impl Into<u64>,
+    ) -> EntityTweenBuilder<'a> {
+        EntityTweenBuilder::new(self)
+    }
+}
+
+pub struct EntityTweenBuilder<'a> {
+    entity_cmds: EntityCommands<'a>,
+    easing: Option<EaseFunction>,
+    delay: Option<Duration>,
+    uniq_key: Option<String>,
+    despawn_on_completion: bool,
+}
+impl<'a> EntityTweenBuilder<'a> {
+    #[must_use]
+    pub fn new(entity_cmds: EntityCommands<'a>) -> Self {
+        Self {
+            entity_cmds,
+            easing: None,
+            delay: None,
+            uniq_key: None,
+            despawn_on_completion: false,
+        }
+    }
+
+    #[must_use]
+    pub fn easing(&mut self, easing: EaseFunction) -> &mut Self {
+        self.easing = Some(easing);
+        self
+    }
+
+    #[must_use]
+    pub fn delay_ms(&mut self, delay_ms: impl Into<u64>) -> &mut Self {
+        self.delay = Some(Duration::from_millis(delay_ms.into()));
+        self
+    }
+
+    #[must_use]
+    pub fn delay_secs(&mut self, delay_secs: f32) -> &mut Self {
+        self.delay = Some(Duration::from_secs_f32(delay_secs));
+        self
+    }
+
+    // todo: try to just use the lens type name if possible?
+    #[must_use]
+    pub fn uniq(&mut self, key: impl Into<String>) -> &mut Self {
+        self.uniq_key = Some(key.into());
+        self
+    }
+
+    #[must_use]
+    pub fn despawn_target_on_completion(&mut self) -> &mut Self {
+        self.despawn_on_completion = true;
+        self
+    }
+
+    pub fn spawn<'b>(mut self) -> EntityCommands<'b>
+    where
+        'a: 'b,
+    {
+        todo!()
+        // let mut cmds = self.entity_cmds.commands();
+        // cmds.spawn((Name::new("todo")))
+    }
+}
 
 // #[derive(Component)]
 // pub enum DespawnOnTweenCompleted {

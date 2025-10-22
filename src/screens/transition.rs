@@ -1,4 +1,5 @@
 use bevy::ecs::system::RunSystemOnce;
+use bevy_tweening::AnimTargetKind;
 
 use crate::{camera::BACKGROUND_COLOR, prelude::*};
 
@@ -70,7 +71,7 @@ struct TransitionImage;
 fn setup_transition_overlay(mut cmd: Commands, speed_factor: Res<TransitionSpeedFactor>) {
     cmd.spawn((
         Name::new("transition"),
-        ImageNode::new(),
+        // ImageNode::new(),
         Node {
             position_type: PositionType::Absolute,
             width: Val::Vw(100.),
@@ -122,12 +123,14 @@ fn start_transition_in(
     speed_factor: Res<TransitionSpeedFactor>,
 ) {
     if let ScreenTransition::TransitioningOut(screen) = screen_trans.get() {
-        let e = or_return_quiet!(
-            tween_msg_r
-                .read()
-                .find(|ev| transition_img_q.contains(ev.entity))
-        )
-        .entity;
+        let e = or_return_quiet!(tween_msg_r.read().find_map(|ev| {
+            if let AnimTargetKind::Component { entity } = ev.target
+                && transition_img_q.contains(entity)
+            {
+                return Some(entity);
+            }
+            None
+        }));
 
         next_screen_trans.set(ScreenTransition::TransitioningIn);
         next_screen.set(screen.clone());

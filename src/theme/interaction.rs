@@ -74,7 +74,7 @@ fn apply_button_interaction_size(
             350,
         )
         .uniq("interaction_bg") // todo: might wanna move that to the base tween_to fn if it's always used anyway
-        .ease(EaseFunction::BackOut)
+        .easing(EaseFunction::BackOut)
         .spawn();
     }
 }

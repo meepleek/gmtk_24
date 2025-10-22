@@ -1,7 +1,7 @@
 // prelude module to simplify common imports
 #![allow(unused_imports)]
 
-// pub(crate) use crate::tween::*;
+pub(crate) use crate::tween::*;
 pub(crate) use crate::{
     AppSet,
     anim::FadeOutSpriteHiearchy,
