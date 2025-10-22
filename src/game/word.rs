@@ -329,15 +329,14 @@ fn tween_out_finished_tiles(
             // DespawnOnTweenCompleted::Itself,
             FadeOutSpriteHiearchy { duration_ms: 150 },
         ));
-        cmd_e
-            .tween_to(TileColorLens(Color::NONE), 150)
-            .uniq("tile_color")
+        // todo:
+        // cmd_e
+        //     .tween_to(TileColorLens(Color::NONE), 150)
+        //     .easing(EaseFunction::QuadraticIn)
+        //     .despawn_target_on_completion()
+        //     .spawn();
+        or_return!(cmd.tween_to(word.text_e, TextAlphaLensEnd(0.0), 110))
             .easing(EaseFunction::QuadraticIn)
-            .despawn_target_on_completion()
-            .spawn();
-        cmd.tween_to(word.text_e, TextAlphaLens(0.0), 110)
-            .easing(EaseFunction::QuadraticIn)
-            .uniq("tile_text_alpha")
             .spawn();
     }
 }
@@ -364,9 +363,8 @@ fn tween_ground_texts(
         let word = or_continue_quiet!(word_q.get(*out_tile_e));
         if let Ok(mut cmd_e) = cmd.get_entity(*out_tile_e) {
             cmd_e.remove::<TileWordVisible>();
-            cmd.tween_to(word.text_e, TextAlphaLens(0.0), 110)
+            or_continue!(cmd.tween_to(word.text_e, TextAlphaLensEnd(0.0), 110))
                 .easing(EaseFunction::QuadraticOut)
-                .uniq("tile_text_alpha")
                 .spawn();
         }
     }
@@ -376,9 +374,8 @@ fn tween_ground_texts(
         let word = or_continue_quiet!(word_q.get(tile_e));
         if let Ok(mut cmd_e) = cmd.get_entity(tile_e) {
             cmd_e.try_insert(TileWordVisible);
-            cmd.tween_to(word.text_e, TextAlphaLens(1.0), 110)
+            or_continue!(cmd.tween_to(word.text_e, TextAlphaLensEnd(1.0), 110))
                 .easing(EaseFunction::QuadraticOut)
-                .uniq("tile_text_alpha")
                 .spawn();
         }
     }

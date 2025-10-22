@@ -5,98 +5,89 @@ use bevy_ecs_tilemap::tiles::TileColor;
 use bevy_tweening::*;
 use std::{marker::PhantomData, time::Duration};
 
-// cmd.tween_to(
-//     e,
-//     UiBackgroundColorLens(BACKGROUND_COLOR.with_alpha(0.0)),
-//     speed_factor.duration(600),
-// )
-//
-
-pub trait CommandsTweenBuilderExt<'w> {
+pub trait CommandsTweenBuilderExt<'a> {
     #[must_use]
-    fn tween_to<TComponent: Component>(
+    fn tween_to<TComponent: Component, TLens: Lens<TComponent>>(
         &mut self,
         entity: Entity,
-        lens: impl Lens<TComponent>,
-        duration_ms: impl Into<u64>,
-    ) -> EntityTweenBuilder<'w>;
+        lens: impl LensEndToLens<TComponent, TLens> + 'static,
+        duration_ms: u64,
+    ) -> Result<EntityTweenBuilder<'_, TComponent, TLens>>;
 }
-impl<'w, 's> CommandsTweenBuilderExt<'w> for Commands<'w, 's> {
-    fn tween_to<TComponent: Component>(
+impl<'a, 'w, 's> CommandsTweenBuilderExt<'a> for Commands<'w, 's> {
+    fn tween_to<TComponent: Component, TLens: Lens<TComponent>>(
         &mut self,
         entity: Entity,
-        lens: impl Lens<TComponent>,
-        duration_ms: impl Into<u64>,
-    ) -> EntityTweenBuilder<'w> {
-        // self.get_entity(entity)
-        todo!()
+        lens_end: impl LensEndToLens<TComponent, TLens> + 'static,
+        duration_ms: u64,
+    ) -> Result<EntityTweenBuilder<'_, TComponent, TLens>> {
+        Ok(EntityTweenBuilder::new(self.get_entity(entity)?, lens_end))
     }
 }
 
 pub trait EntityCommandsTweenBuilderExt<'a> {
     #[must_use]
-    fn tween_to<TComponent: Component>(
+    fn tween_to<TComponent: Component, TLens: Lens<TComponent>>(
         self,
-        lens: impl Lens<TComponent>,
-        duration_ms: impl Into<u64>,
-    ) -> EntityTweenBuilder<'a>;
+        lens: impl LensEndToLens<TComponent, TLens> + 'static,
+        duration_ms: u64,
+    ) -> EntityTweenBuilder<'a, TComponent, TLens>;
 }
 impl<'a> EntityCommandsTweenBuilderExt<'a> for EntityCommands<'a> {
-    fn tween_to<TComponent: Component>(
+    fn tween_to<TComponent: Component, TLens: Lens<TComponent>>(
         self,
-        lens: impl Lens<TComponent>,
-        duration_ms: impl Into<u64>,
-    ) -> EntityTweenBuilder<'a> {
-        EntityTweenBuilder::new(self)
+        lens_end: impl LensEndToLens<TComponent, TLens> + 'static,
+        duration_ms: u64,
+    ) -> EntityTweenBuilder<'a, TComponent, TLens> {
+        EntityTweenBuilder::new(self, lens_end)
     }
 }
 
-pub struct EntityTweenBuilder<'a> {
+pub struct EntityTweenBuilder<'a, TComponent: Component, TLens: Lens<TComponent>> {
     entity_cmds: EntityCommands<'a>,
+    // todo: boxed thingy
+    lens_end: Box<dyn LensEndToLens<TComponent, TLens>>,
+    uniq_key: &'static str,
     easing: Option<EaseFunction>,
     delay: Option<Duration>,
-    uniq_key: Option<String>,
     despawn_on_completion: bool,
 }
-impl<'a> EntityTweenBuilder<'a> {
+impl<'a, TComponent: Component, TLens: Lens<TComponent>> EntityTweenBuilder<'a, TComponent, TLens> {
     #[must_use]
-    pub fn new(entity_cmds: EntityCommands<'a>) -> Self {
+    pub fn new(
+        entity_cmds: EntityCommands<'a>,
+        lens_end: impl LensEndToLens<TComponent, TLens> + 'static,
+    ) -> Self {
         Self {
-            entity_cmds,
             easing: None,
             delay: None,
-            uniq_key: None,
+            uniq_key: std::any::type_name_of_val(&lens_end),
             despawn_on_completion: false,
+            entity_cmds,
+            lens_end: Box::new(lens_end),
         }
     }
 
     #[must_use]
-    pub fn easing(&mut self, easing: EaseFunction) -> &mut Self {
+    pub fn easing(mut self, easing: EaseFunction) -> Self {
         self.easing = Some(easing);
         self
     }
 
     #[must_use]
-    pub fn delay_ms(&mut self, delay_ms: impl Into<u64>) -> &mut Self {
+    pub fn delay_ms(mut self, delay_ms: impl Into<u64>) -> Self {
         self.delay = Some(Duration::from_millis(delay_ms.into()));
         self
     }
 
     #[must_use]
-    pub fn delay_secs(&mut self, delay_secs: f32) -> &mut Self {
+    pub fn delay_secs(mut self, delay_secs: f32) -> Self {
         self.delay = Some(Duration::from_secs_f32(delay_secs));
         self
     }
 
-    // todo: try to just use the lens type name if possible?
     #[must_use]
-    pub fn uniq(&mut self, key: impl Into<String>) -> &mut Self {
-        self.uniq_key = Some(key.into());
-        self
-    }
-
-    #[must_use]
-    pub fn despawn_target_on_completion(&mut self) -> &mut Self {
+    pub fn despawn_target_on_completion(mut self) -> Self {
         self.despawn_on_completion = true;
         self
     }
@@ -105,9 +96,82 @@ impl<'a> EntityTweenBuilder<'a> {
     where
         'a: 'b,
     {
-        todo!()
+        self.entity_cmds
+        // todo!()
         // let mut cmds = self.entity_cmds.commands();
         // cmds.spawn((Name::new("todo")))
+    }
+}
+
+pub trait LensEndToLens<TComponent: Component, TLens: Lens<TComponent>> {
+    fn lens(self, component: &TComponent) -> TLens;
+}
+
+pub struct TextAlphaLensEnd(pub f32);
+impl TextAlphaLensEnd {
+    pub fn new(value: impl Into<f32>) -> Self {
+        Self(value.into())
+    }
+}
+impl LensEndToLens<TextColor, bevy_tweening::lens::TextColorLens> for TextAlphaLensEnd {
+    fn lens(self, component: &TextColor) -> bevy_tweening::lens::TextColorLens {
+        bevy_tweening::lens::TextColorLens {
+            start: component.0,
+            end: component.0.with_alpha(self.0),
+        }
+    }
+}
+
+pub struct UiBgColorLensEnd(pub Color);
+impl UiBgColorLensEnd {
+    pub fn new(value: impl Into<Color>) -> Self {
+        Self(value.into())
+    }
+}
+impl LensEndToLens<BackgroundColor, bevy_tweening::lens::UiBackgroundColorLens>
+    for UiBgColorLensEnd
+{
+    fn lens(self, component: &BackgroundColor) -> bevy_tweening::lens::UiBackgroundColorLens {
+        bevy_tweening::lens::UiBackgroundColorLens {
+            start: component.0,
+            end: self.0,
+        }
+    }
+}
+
+pub struct NodeSizePxLens {
+    pub start: Vec2,
+    pub end: Vec2,
+}
+
+impl Lens<Node> for NodeSizePxLens {
+    fn lerp(&mut self, mut target: Mut<'_, Node>, ratio: f32) {
+        let size = self.start + (self.end - self.start) * ratio;
+        target.width = Val::Px(size.x);
+        target.height = Val::Px(size.y);
+    }
+}
+
+pub struct NodeSizeLensEnd(pub Vec2);
+impl NodeSizeLensEnd {
+    pub fn new(value: impl Into<Vec2>) -> Self {
+        Self(value.into())
+    }
+}
+impl LensEndToLens<Node, NodeSizePxLens> for NodeSizeLensEnd {
+    fn lens(self, component: &Node) -> NodeSizePxLens {
+        if let (Val::Px(x), Val::Px(y)) = (component.width, component.height) {
+            NodeSizePxLens {
+                start: Vec2::new(x, y),
+                end: self.0,
+            }
+        } else {
+            // todo: return None or bevy Error instead of using a sentinel value here?
+            NodeSizePxLens {
+                start: self.0,
+                end: self.0,
+            }
+        }
     }
 }
 

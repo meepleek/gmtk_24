@@ -3,8 +3,6 @@ use bevy_tweening::AnimTargetKind;
 
 use crate::{camera::BACKGROUND_COLOR, prelude::*};
 
-const TRANSITION_TWEEN_BG_COL_KEY: &str = "transition_overlay";
-
 pub(super) fn plugin(app: &mut App) {
     app.init_state::<ScreenTransition>()
         .add_systems(Startup, setup_transition_overlay)
@@ -82,11 +80,10 @@ fn setup_transition_overlay(mut cmd: Commands, speed_factor: Res<TransitionSpeed
         TransitionImage,
     ))
     .tween_to(
-        UiBackgroundColorLens(BACKGROUND_COLOR.with_alpha(0.0)),
+        UiBgColorLensEnd::new(BACKGROUND_COLOR.with_alpha(0.0)),
         speed_factor.duration(800),
     )
     .delay_ms(speed_factor.duration(300))
-    .uniq(TRANSITION_TWEEN_BG_COL_KEY)
     .spawn();
 }
 
@@ -104,12 +101,11 @@ fn start_transition_out(
     }
 
     let e = or_return!(transition_img_q.single());
-    cmd.tween_to(
+    or_return!(cmd.tween_to(
         e,
-        UiBackgroundColorLens(BACKGROUND_COLOR),
+        UiBgColorLensEnd(BACKGROUND_COLOR),
         speed_factor.duration(600),
-    )
-    .uniq(TRANSITION_TWEEN_BG_COL_KEY)
+    ))
     .spawn();
 }
 
@@ -135,12 +131,11 @@ fn start_transition_in(
         next_screen_trans.set(ScreenTransition::TransitioningIn);
         next_screen.set(screen.clone());
 
-        cmd.tween_to(
+        or_return!(cmd.tween_to(
             e,
-            UiBackgroundColorLens(BACKGROUND_COLOR.with_alpha(0.0)),
+            UiBgColorLensEnd(BACKGROUND_COLOR.with_alpha(0.0)),
             speed_factor.duration(600),
-        )
-        .uniq(TRANSITION_TWEEN_BG_COL_KEY)
+        ))
         .spawn();
     }
 }

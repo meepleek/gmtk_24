@@ -96,7 +96,6 @@ fn update_tile_visibility(
             //         )),
             //         350,
             //     )
-            //     .uniq("tile_visibility")
             //     .spawn();
         }
     }
