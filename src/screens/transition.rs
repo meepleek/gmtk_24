@@ -101,11 +101,11 @@ fn start_transition_out(
     }
 
     let e = or_return!(transition_img_q.single());
-    or_return!(cmd.tween_to(
+    cmd.tween_to(
         e,
         UiBgColorLensEnd(BACKGROUND_COLOR),
         speed_factor.duration(600),
-    ))
+    )
     .spawn();
 }
 
@@ -131,11 +131,11 @@ fn start_transition_in(
         next_screen_trans.set(ScreenTransition::TransitioningIn);
         next_screen.set(screen.clone());
 
-        or_return!(cmd.tween_to(
+        cmd.tween_to(
             e,
             UiBgColorLensEnd(BACKGROUND_COLOR.with_alpha(0.0)),
             speed_factor.duration(600),
-        ))
+        )
         .spawn();
     }
 }

@@ -52,7 +52,7 @@ fn apply_interaction_palette(
             Interaction::Hovered => palette.hovered,
             Interaction::Pressed => palette.pressed,
         };
-        or_continue!(cmd.tween_to(e, UiBgColorLensEnd(color), 200)).spawn();
+        cmd.tween_to(e, UiBgColorLensEnd(color), 200).spawn();
     }
 }
 
@@ -66,11 +66,11 @@ fn apply_button_interaction_size(
             Interaction::Hovered => 1.1,
             Interaction::Pressed => 1.25,
         };
-        or_continue!(cmd.tween_to(
+        cmd.tween_to(
             e,
             NodeSizeLensEnd(Vec2::new(BUTTON_WIDTH, BUTTON_HEIGHT) * scale),
             350,
-        ))
+        )
         .easing(EaseFunction::BackOut)
         .spawn();
     }

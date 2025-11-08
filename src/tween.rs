@@ -5,46 +5,55 @@ use bevy_ecs_tilemap::tiles::TileColor;
 use bevy_tweening::*;
 use std::{marker::PhantomData, time::Duration};
 
-pub trait CommandsTweenBuilderExt<'a> {
+// todo: use relationship to link to the original tween target
+#[derive(Component)]
+pub struct QueuedTween(Entity);
+
+pub trait CommandsTweenBuilderExt<'a, 'b> {
     #[must_use]
     fn tween_to<TComponent: Component, TLens: Lens<TComponent>>(
-        &mut self,
+        &'a mut self,
         entity: Entity,
         lens: impl LensEndToLens<TComponent, TLens> + 'static,
         duration_ms: u64,
-    ) -> Result<EntityTweenBuilder<'_, TComponent, TLens>>;
+    ) -> EntityTweenBuilder<'a, 'b, TComponent, TLens>;
 }
-impl<'a, 'w, 's> CommandsTweenBuilderExt<'a> for Commands<'w, 's> {
+impl<'a, 'b> CommandsTweenBuilderExt<'a, 'b> for Commands<'b, 'b> {
     fn tween_to<TComponent: Component, TLens: Lens<TComponent>>(
-        &mut self,
+        &'a mut self,
         entity: Entity,
         lens_end: impl LensEndToLens<TComponent, TLens> + 'static,
         duration_ms: u64,
-    ) -> Result<EntityTweenBuilder<'_, TComponent, TLens>> {
-        Ok(EntityTweenBuilder::new(self.get_entity(entity)?, lens_end))
+    ) -> EntityTweenBuilder<'a, 'b, TComponent, TLens> {
+        // todo: use reborrow like cmd.entity() does?
+        EntityTweenBuilder::new(self, entity, lens_end)
     }
 }
 
-pub trait EntityCommandsTweenBuilderExt<'a> {
+pub trait EntityCommandsTweenBuilderExt<'a, 'b> {
     #[must_use]
     fn tween_to<TComponent: Component, TLens: Lens<TComponent>>(
-        self,
+        &'a mut self,
         lens: impl LensEndToLens<TComponent, TLens> + 'static,
         duration_ms: u64,
-    ) -> EntityTweenBuilder<'a, TComponent, TLens>;
+    ) -> EntityTweenBuilder<'a, 'b, TComponent, TLens>;
 }
-impl<'a> EntityCommandsTweenBuilderExt<'a> for EntityCommands<'a> {
+impl<'a, 'b> EntityCommandsTweenBuilderExt<'a, 'b> for EntityCommands<'b> {
     fn tween_to<TComponent: Component, TLens: Lens<TComponent>>(
-        self,
+        &'a mut self,
         lens_end: impl LensEndToLens<TComponent, TLens> + 'static,
         duration_ms: u64,
-    ) -> EntityTweenBuilder<'a, TComponent, TLens> {
-        EntityTweenBuilder::new(self, lens_end)
+    ) -> EntityTweenBuilder<'a, 'b, TComponent, TLens> {
+        let entity = self.id();
+        let cmd = self.commands_mut();
+        EntityTweenBuilder::new(cmd, entity, lens_end)
     }
 }
 
-pub struct EntityTweenBuilder<'a, TComponent: Component, TLens: Lens<TComponent>> {
-    entity_cmds: EntityCommands<'a>,
+pub struct EntityTweenBuilder<'a, 'b, TComponent: Component, TLens: Lens<TComponent>> {
+    // todo: replace with a ref to commands & Entity?
+    cmd: &'a mut Commands<'b, 'b>,
+    entity: Entity,
     // todo: boxed thingy
     lens_end: Box<dyn LensEndToLens<TComponent, TLens>>,
     uniq_key: &'static str,
@@ -52,10 +61,13 @@ pub struct EntityTweenBuilder<'a, TComponent: Component, TLens: Lens<TComponent>
     delay: Option<Duration>,
     despawn_on_completion: bool,
 }
-impl<'a, TComponent: Component, TLens: Lens<TComponent>> EntityTweenBuilder<'a, TComponent, TLens> {
+impl<'a, 'b, TComponent: Component, TLens: Lens<TComponent>>
+    EntityTweenBuilder<'a, 'b, TComponent, TLens>
+{
     #[must_use]
     pub fn new(
-        entity_cmds: EntityCommands<'a>,
+        cmd: &'a mut Commands<'b, 'b>,
+        entity: Entity,
         lens_end: impl LensEndToLens<TComponent, TLens> + 'static,
     ) -> Self {
         Self {
@@ -63,7 +75,8 @@ impl<'a, TComponent: Component, TLens: Lens<TComponent>> EntityTweenBuilder<'a, 
             delay: None,
             uniq_key: std::any::type_name_of_val(&lens_end),
             despawn_on_completion: false,
-            entity_cmds,
+            cmd,
+            entity,
             lens_end: Box::new(lens_end),
         }
     }
@@ -92,11 +105,9 @@ impl<'a, TComponent: Component, TLens: Lens<TComponent>> EntityTweenBuilder<'a, 
         self
     }
 
-    pub fn spawn<'b>(mut self) -> EntityCommands<'b>
-    where
-        'a: 'b,
-    {
-        self.entity_cmds
+    pub fn spawn(mut self) -> &'a mut Commands<'b, 'b> {
+        self.cmd.spawn(QueuedTween(self.entity));
+        self.cmd
         // todo!()
         // let mut cmds = self.entity_cmds.commands();
         // cmds.spawn((Name::new("todo")))
@@ -666,7 +677,7 @@ impl LensEndToLens<Node, NodeSizePxLens> for NodeSizeLensEnd {
 //                 );
 //             }
 
-//             impl<'w, 's> [<Tween_ $name TweenCommands>] for Commands<'w, 's> {
+//             impl<'a> [<Tween_ $name TweenCommands>] for Commands<'a, 'a> {
 //                 fn [<tween_ $name>](
 //                     &mut self,
 //                     entity: Entity,

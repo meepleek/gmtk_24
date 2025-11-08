@@ -335,7 +335,7 @@ fn tween_out_finished_tiles(
         //     .easing(EaseFunction::QuadraticIn)
         //     .despawn_target_on_completion()
         //     .spawn();
-        or_return!(cmd.tween_to(word.text_e, TextAlphaLensEnd(0.0), 110))
+        cmd.tween_to(word.text_e, TextAlphaLensEnd(0.0), 110)
             .easing(EaseFunction::QuadraticIn)
             .spawn();
     }
@@ -363,7 +363,7 @@ fn tween_ground_texts(
         let word = or_continue_quiet!(word_q.get(*out_tile_e));
         if let Ok(mut cmd_e) = cmd.get_entity(*out_tile_e) {
             cmd_e.remove::<TileWordVisible>();
-            or_continue!(cmd.tween_to(word.text_e, TextAlphaLensEnd(0.0), 110))
+            cmd.tween_to(word.text_e, TextAlphaLensEnd(0.0), 110)
                 .easing(EaseFunction::QuadraticOut)
                 .spawn();
         }
@@ -374,7 +374,7 @@ fn tween_ground_texts(
         let word = or_continue_quiet!(word_q.get(tile_e));
         if let Ok(mut cmd_e) = cmd.get_entity(tile_e) {
             cmd_e.try_insert(TileWordVisible);
-            or_continue!(cmd.tween_to(word.text_e, TextAlphaLensEnd(1.0), 110))
+            cmd.tween_to(word.text_e, TextAlphaLensEnd(1.0), 110)
                 .easing(EaseFunction::QuadraticOut)
                 .spawn();
         }
