@@ -1,3 +1,5 @@
+use std::time::Duration;
+
 use bevy::ecs::system::RunSystemOnce;
 use bevy_tweening::AnimTargetKind;
 
@@ -58,8 +60,8 @@ impl<'w, 's> TransitionScreenCommandExt for Commands<'w, 's> {
 pub struct TransitionSpeedFactor(pub f32);
 
 impl TransitionSpeedFactor {
-    pub fn duration(&self, base_duration: u64) -> u64 {
-        (base_duration as f32 * self.0) as u64
+    pub fn duration(&self, base_duration_ms: u64) -> Duration {
+        ms((base_duration_ms as f32 * self.0) as u64)
     }
 }
 
@@ -78,13 +80,15 @@ fn setup_transition_overlay(mut cmd: Commands, speed_factor: Res<TransitionSpeed
         },
         BackgroundColor(BACKGROUND_COLOR.into()),
         TransitionImage,
-    ))
-    .tween_to(
-        UiBgColorLensEnd::new(BACKGROUND_COLOR.with_alpha(0.0)),
-        speed_factor.duration(800),
-    )
-    .delay_ms(speed_factor.duration(300))
-    .spawn();
+    ));
+
+    cmd.spawn(
+        TweenBuilder::new(
+            UiBgColorLensEnd::new(BACKGROUND_COLOR.with_alpha(0.0)),
+            speed_factor.duration(800),
+        )
+        .delay(speed_factor.duration(300)),
+    );
 }
 
 fn start_transition_out(
@@ -101,12 +105,13 @@ fn start_transition_out(
     }
 
     let e = or_return!(transition_img_q.single());
-    cmd.tween_to(
+    cmd.try_insert_to(
         e,
-        UiBgColorLensEnd(BACKGROUND_COLOR),
-        speed_factor.duration(600),
-    )
-    .spawn();
+        TweenBuilder::new(
+            UiBgColorLensEnd(BACKGROUND_COLOR),
+            speed_factor.duration(600),
+        ),
+    );
 }
 
 fn start_transition_in(
@@ -131,11 +136,12 @@ fn start_transition_in(
         next_screen_trans.set(ScreenTransition::TransitioningIn);
         next_screen.set(screen.clone());
 
-        cmd.tween_to(
+        cmd.try_insert_to(
             e,
-            UiBgColorLensEnd(BACKGROUND_COLOR.with_alpha(0.0)),
-            speed_factor.duration(600),
-        )
-        .spawn();
+            TweenBuilder::new(
+                UiBgColorLensEnd(BACKGROUND_COLOR.with_alpha(0.0)),
+                speed_factor.duration(600),
+            ),
+        );
     }
 }

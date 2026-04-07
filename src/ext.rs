@@ -219,3 +219,15 @@ impl GridCoordsExt for GridCoords {
         self.to_vec2().distance(rhl.to_vec2())
     }
 }
+
+pub trait CommandsExt {
+    /** Try to insert a bundle to an entity */
+    fn try_insert_to(&mut self, entity: Entity, bundle: impl Bundle);
+}
+impl CommandsExt for Commands<'_, '_> {
+    fn try_insert_to(&mut self, entity: Entity, bundle: impl Bundle) {
+        if let Ok(mut e_cmd) = self.get_entity(entity) {
+            e_cmd.try_insert(bundle);
+        }
+    }
+}
