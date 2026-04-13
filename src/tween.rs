@@ -1,12 +1,15 @@
 #![allow(dead_code)]
 
-use bevy::{ecs::system::EntityCommands, prelude::*};
+use crate::prelude::*;
+use bevy::{
+    ecs::{lifecycle::HookContext, system::EntityCommands, world::DeferredWorld},
+    prelude::*,
+};
 use bevy_ecs_tilemap::tiles::TileColor;
 use bevy_tweening::*;
 use std::{marker::PhantomData, time::Duration};
+use tiny_bail::or_return;
 
-// todo:
-// add sec(u64) & ms(u64) ctor fns for Duration instead of using u64 directly
 pub fn sec(secs: u64) -> Duration {
     Duration::from_secs(secs)
 }
@@ -14,16 +17,23 @@ pub fn ms(ms: u64) -> Duration {
     Duration::from_millis(ms)
 }
 
+pub enum TweenBuilderLensSource<TComponent: Component, TLens: Lens<TComponent>> {
+    Lens(TLens),
+    LensEnd(Box<dyn LensEndToLens<TComponent, TLens> + Send + Sync>),
+}
+
 #[derive(Component)]
 pub struct TweenBuilder<TComponent: Component, TLens: Lens<TComponent>> {
-    lens_end: Box<dyn LensEndToLens<TComponent, TLens> + Send + Sync>,
+    lens_source: Option<TweenBuilderLensSource<TComponent, TLens>>,
     duration: Duration,
     uniq_key: &'static str,
     easing: Option<EaseFunction>,
     delay: Option<Duration>,
     despawn_on_completion: bool,
 }
-impl<TComponent: Component, TLens: Lens<TComponent>> TweenBuilder<TComponent, TLens> {
+impl<TComponent: Component, TLens: Lens<TComponent> + Send + Sync + 'static>
+    TweenBuilder<TComponent, TLens>
+{
     #[must_use]
     pub fn new(
         lens_end: impl LensEndToLens<TComponent, TLens> + Send + Sync + 'static,
@@ -34,7 +44,19 @@ impl<TComponent: Component, TLens: Lens<TComponent>> TweenBuilder<TComponent, TL
             delay: None,
             uniq_key: std::any::type_name_of_val(&lens_end),
             despawn_on_completion: false,
-            lens_end: Box::new(lens_end),
+            lens_source: Some(TweenBuilderLensSource::LensEnd(Box::new(lens_end))),
+            duration,
+        }
+    }
+
+    #[must_use]
+    pub fn from_lens(lens: TLens, duration: Duration) -> Self {
+        Self {
+            easing: None,
+            delay: None,
+            uniq_key: std::any::type_name_of_val(&lens),
+            despawn_on_completion: false,
+            lens_source: Some(TweenBuilderLensSource::Lens(lens)),
             duration,
         }
     }
@@ -56,10 +78,44 @@ impl<TComponent: Component, TLens: Lens<TComponent>> TweenBuilder<TComponent, TL
         self.despawn_on_completion = true;
         self
     }
+
+    #[must_use]
+    fn to_anim(&mut self, component: &TComponent) -> TweenAnim {
+        let lens = match self.lens_source.take().unwrap() {
+            TweenBuilderLensSource::Lens(lens) => lens,
+            TweenBuilderLensSource::LensEnd(lens_end) => lens_end.lens(component),
+        };
+        TweenAnim::new(Tween::new(
+            self.easing.unwrap_or(EaseFunction::QuadraticInOut),
+            self.duration,
+            lens,
+        ))
+    }
+
+    fn on_insert(
+        ev: On<Insert, TweenBuilder<TComponent, TLens>>,
+        mut cmd: Commands,
+        mut builder_q: Query<(&mut TweenBuilder<TComponent, TLens>, &TComponent)>,
+    ) {
+        // todo: if no delay, insert tweenanim, else a timer
+        let e = ev.event_target();
+        let (mut builder, component) = or_return!(builder_q.get_mut(e));
+        match builder.delay {
+            Some(delay) => {
+                cmd.try_insert_to(e, TweenBuilderDelay(Timer::new(delay, TimerMode::Once)));
+            }
+            None => {
+                cmd.try_insert_to(e, builder.to_anim(component));
+            }
+        }
+    }
 }
 
+#[derive(Component, Deref, DerefMut)]
+struct TweenBuilderDelay(Timer);
+
 pub trait LensEndToLens<TComponent: Component, TLens: Lens<TComponent>> {
-    fn lens(self, component: &TComponent) -> TLens;
+    fn lens(&self, component: &TComponent) -> TLens;
 }
 
 pub struct TextAlphaLensEnd(pub f32);
@@ -69,7 +125,7 @@ impl TextAlphaLensEnd {
     }
 }
 impl LensEndToLens<TextColor, bevy_tweening::lens::TextColorLens> for TextAlphaLensEnd {
-    fn lens(self, component: &TextColor) -> bevy_tweening::lens::TextColorLens {
+    fn lens(&self, component: &TextColor) -> bevy_tweening::lens::TextColorLens {
         bevy_tweening::lens::TextColorLens {
             start: component.0,
             end: component.0.with_alpha(self.0),
@@ -86,7 +142,7 @@ impl UiBgColorLensEnd {
 impl LensEndToLens<BackgroundColor, bevy_tweening::lens::UiBackgroundColorLens>
     for UiBgColorLensEnd
 {
-    fn lens(self, component: &BackgroundColor) -> bevy_tweening::lens::UiBackgroundColorLens {
+    fn lens(&self, component: &BackgroundColor) -> bevy_tweening::lens::UiBackgroundColorLens {
         bevy_tweening::lens::UiBackgroundColorLens {
             start: component.0,
             end: self.0,
@@ -114,7 +170,7 @@ impl NodeSizeLensEnd {
     }
 }
 impl LensEndToLens<Node, NodeSizePxLens> for NodeSizeLensEnd {
-    fn lens(self, component: &Node) -> NodeSizePxLens {
+    fn lens(&self, component: &Node) -> NodeSizePxLens {
         if let (Val::Px(x), Val::Px(y)) = (component.width, component.height) {
             NodeSizePxLens {
                 start: Vec2::new(x, y),
@@ -178,16 +234,18 @@ impl LensEndToLens<Node, NodeSizePxLens> for NodeSizeLensEnd {
 //     }
 // }
 
-// pub(super) fn plugin(app: &mut App) {
-//     app.add_plugins(TweeningPlugin).add_systems(
-//         Update,
-//         (
-//             component_animator_system::<BackgroundColor>,
-//             component_animator_system::<TileColor>,
-//             despawn_after_tween,
-//         ),
-//     );
-// }
+pub(super) fn plugin(app: &mut App) {
+    app.add_plugins(TweeningPlugin)
+    //     .add_systems(
+    //     Update,
+    //     (
+    //         component_animator_system::<BackgroundColor>,
+    //         component_animator_system::<TileColor>,
+    //         despawn_after_tween,
+    //     ),
+    // )
+    ;
+}
 
 // fn despawn_after_tween(
 //     mut cmd: Commands,

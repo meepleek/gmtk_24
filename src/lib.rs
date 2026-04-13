@@ -87,7 +87,7 @@ impl Plugin for AppPlugin {
             theme::plugin,
             assets::plugin,
             audio::plugin,
-            // tween::plugin,
+            tween::plugin,
             anim::plugin,
             camera::plugin,
         ));
