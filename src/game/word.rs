@@ -256,7 +256,7 @@ fn spawn_tile_words(
     wordlist: Res<WordList>,
     fonts: Res<FontAssets>,
 ) {
-    let mut rng = thread_rng();
+    let mut rng = rng();
     for e in &ground_q {
         let words: Vec<_> = wordlist
             .ground_words
@@ -337,7 +337,9 @@ fn tween_out_finished_tiles(
         //     .spawn();
         cmd.try_insert_to(
             word.text_e,
-            TweenBuilder::new(TextAlphaLensEnd(0.0), ms(110)).easing(EaseFunction::QuadraticIn),
+            TextAlphaLensSrc::new(0.0)
+                .duration(ms(110))
+                .easing(EaseFunction::QuadraticIn),
         );
     }
 }
@@ -366,7 +368,8 @@ fn tween_ground_texts(
             cmd_e.remove::<TileWordVisible>();
             cmd.try_insert_to(
                 word.text_e,
-                TweenBuilder::new(TextAlphaLensEnd(0.0), ms(110))
+                TextAlphaLensSrc::new(0.0)
+                    .duration(ms(110))
                     .easing(EaseFunction::QuadraticOut),
             );
         }
@@ -379,7 +382,8 @@ fn tween_ground_texts(
             cmd_e.try_insert(TileWordVisible);
             cmd.try_insert_to(
                 word.text_e,
-                TweenBuilder::new(TextAlphaLensEnd(1.0), ms(110))
+                TextAlphaLensSrc::new(1.0)
+                    .duration(ms(110))
                     .easing(EaseFunction::QuadraticOut),
             );
         }

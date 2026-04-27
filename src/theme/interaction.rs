@@ -52,7 +52,7 @@ fn apply_interaction_palette(
             Interaction::Hovered => palette.hovered,
             Interaction::Pressed => palette.pressed,
         };
-        cmd.try_insert_to(e, TweenBuilder::new(UiBgColorLensEnd(color), ms(200)));
+        cmd.try_insert_to(e, UiBgColorLensSrc::new(color).duration(ms(200)));
     }
 }
 
@@ -66,14 +66,13 @@ fn apply_button_interaction_size(
             Interaction::Hovered => 1.1,
             Interaction::Pressed => 1.25,
         };
-        cmd.try_insert_to(
-            e,
-            TweenBuilder::new(
-                NodeSizeLensEnd(Vec2::new(BUTTON_WIDTH, BUTTON_HEIGHT) * scale),
-                ms(350),
-            )
-            .easing(EaseFunction::BackOut),
-        );
+        // todo:
+        // cmd.try_insert_to(
+        //     e,
+        //     NodeSizeLensSrc(Vec2::new(BUTTON_WIDTH, BUTTON_HEIGHT) * scale)
+        //         .duration(ms(350))
+        //         .easing(EaseFunction::BackOut),
+        // );
     }
 }
 

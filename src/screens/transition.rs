@@ -83,11 +83,9 @@ fn setup_transition_overlay(mut cmd: Commands, speed_factor: Res<TransitionSpeed
     ));
 
     cmd.spawn(
-        TweenBuilder::new(
-            UiBgColorLensEnd::new(BACKGROUND_COLOR.with_alpha(0.0)),
-            speed_factor.duration(800),
-        )
-        .delay(speed_factor.duration(300)),
+        UiBgColorLensSrc::new(BACKGROUND_COLOR.with_alpha(0.0))
+            .duration(speed_factor.duration(800))
+            .delay(speed_factor.duration(300)),
     );
 }
 
@@ -107,10 +105,7 @@ fn start_transition_out(
     let e = or_return!(transition_img_q.single());
     cmd.try_insert_to(
         e,
-        TweenBuilder::new(
-            UiBgColorLensEnd(BACKGROUND_COLOR),
-            speed_factor.duration(600),
-        ),
+        UiBgColorLensSrc::new(BACKGROUND_COLOR).duration(speed_factor.duration(600)),
     );
 }
 
@@ -138,10 +133,7 @@ fn start_transition_in(
 
         cmd.try_insert_to(
             e,
-            TweenBuilder::new(
-                UiBgColorLensEnd(BACKGROUND_COLOR.with_alpha(0.0)),
-                speed_factor.duration(600),
-            ),
+            UiBgAlphaLensSrc::new(0.).duration(speed_factor.duration(600)),
         );
     }
 }

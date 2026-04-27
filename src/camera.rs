@@ -47,9 +47,9 @@ fn spawn_camera(
         Camera2d,
         Camera {
             order: -2,
-            target: RenderTarget::Image(fog_of_war_mask_handle.clone().into()),
             ..default()
         },
+        RenderTarget::Image(fog_of_war_mask_handle.clone().into()),
         Msaa::Off,
         FOG_OF_WAR_RENDER_LAYER,
     ));
@@ -77,9 +77,9 @@ fn spawn_camera(
         Camera {
             // render before the "main pass" camera
             order: -1,
-            target: RenderTarget::Image(pixel_perfect_canvas_handle.clone().into()),
             ..default()
         },
+        RenderTarget::Image(pixel_perfect_canvas_handle.clone().into()),
         PixelPerfectCamera,
         IsDefaultUiCamera,
         Msaa::Off,

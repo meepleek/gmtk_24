@@ -1,6 +1,6 @@
 use crate::prelude::*;
 use bevy::{
-    asset::{io::Reader, AssetLoader, AsyncReadExt, LoadContext},
+    asset::{AssetLoader, AsyncReadExt, LoadContext, io::Reader},
     reflect::TypePath,
 };
 
@@ -12,13 +12,17 @@ pub(super) fn plugin(app: &mut App) {
 #[derive(Asset, TypePath, Debug)]
 pub(crate) struct WordListSource(pub Vec<String>);
 
-#[derive(Default)]
+#[derive(Default, TypePath)]
 struct WordListLoader;
 
 impl AssetLoader for WordListLoader {
     type Asset = WordListSource;
     type Settings = ();
     type Error = std::io::Error;
+    fn extensions(&self) -> &[&str] {
+        &["words.txt"]
+    }
+
     async fn load(
         &self,
         reader: &mut dyn Reader,
@@ -35,9 +39,5 @@ impl AssetLoader for WordListLoader {
             .filter(|w| !w.is_empty())
             .collect();
         Ok(WordListSource(words))
-    }
-
-    fn extensions(&self) -> &[&str] {
-        &["words.txt"]
     }
 }

@@ -14,7 +14,7 @@ pub(crate) enum Sfx {
 
 impl SfxAssets {
     fn play(&self, sfx: Sfx, world: &mut World, settings: PlaybackSettings) {
-        let rng = &mut thread_rng();
+        let rng = &mut rng();
         let source = match sfx {
             Sfx::ButtonClick => self.button_click.clone(),
             Sfx::ButtonHover => self.button_hover.clone(),

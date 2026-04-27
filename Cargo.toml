@@ -28,6 +28,10 @@ bevy_ecs_ldtk = "0.14"
 bevy_ecs_tilemap = "0.18.1"
 avian2d = "0.6"
 bevy_platform = "0.18"
+mplk_tween = { git = "https://github.com/meepleek/mplk_bevy_toolkit.git", tag = "v0.18.0" }
+mplk_ext = { git = "https://github.com/meepleek/mplk_bevy_toolkit.git", tag = "v0.18.0" }
+mplk_utils = { git = "https://github.com/meepleek/mplk_bevy_toolkit.git", tag = "v0.18.0" }
+
 
 [dev-dependencies]
 test-case = "3.3"

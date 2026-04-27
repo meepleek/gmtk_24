@@ -1,7 +1,6 @@
 // prelude module to simplify common imports
 #![allow(unused_imports)]
 
-pub(crate) use crate::tween::*;
 pub(crate) use crate::{
     AppSet,
     anim::FadeOutSpriteHiearchy,
@@ -28,7 +27,6 @@ pub(crate) use crate::{
         rock::Rock,
         word::{WordTile, WordTileEvent, WordTileEventKind, WordTileStatus},
     },
-    math::*,
     screens::{Screen, in_game, transition::TransitionScreenCommandExt},
     theme::prelude::*,
     time::*,
@@ -41,5 +39,8 @@ pub(crate) use bevy_platform::collections::{HashMap, HashSet};
 pub(crate) use bevy_ecs_ldtk::prelude::*;
 pub(crate) use bevy_tweening::AnimCompletedEvent;
 pub(crate) use leafwing_input_manager::buttonlike::ButtonState;
-pub(crate) use rand::prelude::*;
+pub(crate) use mplk_ext::prelude::*;
+pub(crate) use mplk_tween::prelude::*;
+pub(crate) use mplk_utils::prelude::*;
+pub(crate) use rand::{prelude::*, rng};
 pub(crate) use tiny_bail::prelude::{or_continue, or_continue_quiet, or_return, or_return_quiet};

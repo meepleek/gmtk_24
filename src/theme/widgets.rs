@@ -75,16 +75,14 @@ where
     button_base(
         text,
         action,
-        (
-            Node {
-                width: px(BUTTON_WIDTH),
-                height: px(BUTTON_HEIGHT),
-                align_items: AlignItems::Center,
-                justify_content: JustifyContent::Center,
-                ..default()
-            },
-            BorderRadius::MAX,
-        ),
+        (Node {
+            width: px(BUTTON_WIDTH),
+            height: px(BUTTON_HEIGHT),
+            align_items: AlignItems::Center,
+            justify_content: JustifyContent::Center,
+            border_radius: BorderRadius::MAX,
+            ..default()
+        },),
     )
 }
 

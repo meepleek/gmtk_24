@@ -6,12 +6,10 @@ mod camera;
 mod dev_tools;
 mod ext;
 mod game;
-mod math;
 mod prelude;
 mod screens;
 mod theme;
 mod time;
-mod tween;
 mod word_loader;
 
 use bevy::{
@@ -87,7 +85,6 @@ impl Plugin for AppPlugin {
             theme::plugin,
             assets::plugin,
             audio::plugin,
-            tween::plugin,
             anim::plugin,
             camera::plugin,
         ));
